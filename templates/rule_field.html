@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Regras x Campos — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-rf">
+  <div class="page-header">
+    <h1>Regras x Campos</h1>
+    <p>Defina os campos de cada regra de conciliação</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openRfForm()" style="margin-left:auto">
+      + Nova regra x campo
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleRfFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Conciliação</th>
+          <th>Regra</th>
+          <th style="width:150px">Tipo</th>
+          <th>Campo 1</th>
+          <th style="width:150px">Operador</th>
+          <th>Campo 2</th>
+          <th style="width:120px">Agregação</th>
+          <th style="width:100px; text-align:right">Tolerância</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-rf" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-rf-recon" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-rule" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-type" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-field-1" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-operator" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-field-2" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-rf-aggregation" class="filter-select" onchange="filterRfByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <input id="filter-rf-tolerance" class="filter-select" type="text" placeholder="Todos" oninput="filterRfByColumn()">
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-rf"></tbody>
+    </table>
+    <div id="empty-rf" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma regra x campo cadastrada</strong>
+      <p>Clique em "+ Nova regra x campo" para começar</p>
+    </div>
+    <div class="pagination" id="pag-rf">
+      <span id="pag-info-rf"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeRfPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-rf"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnRfEdit" disabled onclick="footerRfEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnRfDuplicate" disabled onclick="footerRfDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnRfDelete" disabled onclick="footerRfDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- RULE FIELD FORM MODAL -->
+<div class="modal-overlay" id="ruleFieldFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rfFormTitle">Nova regra x campo</h2>
+      <button class="modal-close" onclick="closeModal('ruleFieldFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="rfFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="rfFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Regra</label>
+        <select id="rfFormRule">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfRule">Regra é obrigatória</div>
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="rfFormType">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfType">Tipo é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Campo (Lado 1)</label>
+        <select id="rfFormField1">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfField1">Campo 1 é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Operador</label>
+        <select id="rfFormOperator">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfOperator">Operador é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Campo (Lado 2)</label>
+        <select id="rfFormField2">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfField2">Campo 2 é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Agregação</label>
+        <select id="rfFormAggregation">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errRfAggregation" style="display:none">Agregação inválida</div>
+      </div>
+      <div class="form-group">
+        <label>Tolerância</label>
+        <input type="text" id="rfFormTolerance" placeholder="Ex: 0 ou 0.5"
+          oninput="this.value=this.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1')">
+        <div class="form-error" id="errRfTolerance">Tolerância inválida (deve ser ≥ 0)</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ruleFieldFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRuleField()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadRuleField();</script>
+{% endblock %}

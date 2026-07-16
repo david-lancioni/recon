@@ -1,0 +1,5 @@
+os.environ['DB_HOSTNAME'] = 'localhost'
+os.environ['DB_USERNAME'] = 'root'
+os.environ['DB_PASSWORD'] = 'admin'
+os.environ['DB_NAME'] = 'recon'
+os.environ['FILE_PATH'] = '/home/dlancioni/www/recon/upload'

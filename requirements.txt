@@ -1,0 +1,12 @@
+flask
+flask-sqlalchemy
+pymysql
+python-dateutil
+
+# Database
+pyodbc
+psycopg2
+mysql-connector-python
+
+# Programming
+pconst

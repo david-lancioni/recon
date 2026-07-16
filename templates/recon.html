@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Conciliação — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-conciliacao">
+  <div class="page-header">
+    <h1>Conciliação</h1>
+    <p>Gerencie as regras de conciliação entre arquivos</p>
+  </div>
+
+  <div class="toolbar">
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="triggerImport()">Importar</button>
+      <button class="btn btn-primary" onclick="openReconForm()">+ Nova conciliação</button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleReconFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Nome</th>
+          <th>Descrição</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-recon" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-recon-name" class="filter-select" onchange="filterReconByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-recon-desc" class="filter-select" onchange="filterReconByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-recon"></tbody>
+    </table>
+    <div id="empty-recon" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma conciliação cadastrada</strong>
+      <p>Clique em "Nova conciliação" para começar</p>
+    </div>
+    <div class="pagination" id="pag-recon">
+      <span id="pag-info-recon"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeReconPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-recon"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnReconEdit" disabled onclick="footerReconEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnReconDuplicate" disabled onclick="footerReconDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnReconDelete" disabled onclick="footerReconDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" id="btnReconExport" disabled onclick="footerReconExport()">Exportar</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <h2 id="exportTitle">Exportar Conciliação</h2>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <pre id="exportContent" style="margin:0;padding:20px 24px;max-height:60vh;overflow:auto;font-size:12.5px;line-height:1.6;background:var(--gray-50,#f9fafb);border-radius:0;white-space:pre-wrap;word-break:break-all"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="copyExport()">Copiar</button>
+      <button class="btn btn-secondary" onclick="downloadExport()">Baixar JSON</button>
+      <button class="btn btn-secondary" onclick="closeModal('exportModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECON FORM MODAL -->
+<div class="modal-overlay" id="reconFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="reconFormTitle">Nova conciliação</h2>
+      <button class="modal-close" onclick="closeModal('reconFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="reconFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="reconFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="reconFormName" placeholder="Nome da conciliação">
+        <div class="form-error" id="errReconName">Nome é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <textarea id="reconFormDescription" placeholder="Descreva esta conciliação" rows="3" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('reconFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRecon()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadRecon();</script>
+{% endblock %}

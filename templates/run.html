@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Executar — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-run">
+  <div class="page-header">
+    <h1>Executar Conciliação</h1>
+    <p>Selecione uma conciliação e clique em Executar</p>
+  </div>
+
+  <div style="max-width:480px; margin:48px auto 0">
+    <div class="form-group">
+      <label>Conciliação</label>
+      <select id="runSelect" onchange="onReconChange()">
+        <option value="">Selecione uma conciliação...</option>
+      </select>
+    </div>
+
+    <div id="runFiles" style="display:none"></div>
+
+    <div style="margin-top:20px">
+      <button class="btn btn-primary" style="width:100%;padding:13px" onclick="doRun()">Executar</button>
+    </div>
+
+    <div id="runResult" style="display:none; margin-top:24px; padding:16px 20px; border-radius:10px; font-size:14px; text-align:center"></div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let _fileDsList = [];
+
+(async function loadRecons() {
+  const result = document.getElementById('runResult');
+  try {
+    const recons = await apiFetch('GET', '/api/run/options');
+    const sel = document.getElementById('runSelect');
+    recons.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    result.style.display = 'block';
+    result.style.background = '#f8fafc';
+    result.style.color = '#334155';
+    result.style.border = '1px solid #e2e8f0';
+    result.textContent = e.error || 'Erro ao carregar conciliações.';
+  }
+})();
+
+function updateFileName(input) {
+  const span = document.getElementById(input.id + '_name');
+  if (span) span.textContent = input.files[0] ? input.files[0].name : 'Nenhum arquivo selecionado';
+}
+
+function clearFileInputs() {
+  _fileDsList.forEach(ds => {
+    const input = document.getElementById(`file_${ds.id}`);
+    if (input) input.value = '';
+    const span = document.getElementById(`file_${ds.id}_name`);
+    if (span) span.textContent = 'Nenhum arquivo selecionado';
+  });
+}
+
+async function onReconChange() {
+  const id = document.getElementById('runSelect').value;
+  const container = document.getElementById('runFiles');
+  const result = document.getElementById('runResult');
+
+  container.style.display = 'none';
+  container.innerHTML = '';
+  result.style.display = 'none';
+  _fileDsList = [];
+
+  if (!id) return;
+
+  try {
+    const dsList = await apiFetch('GET', `/api/run/${id}/ds`);
+    _fileDsList = dsList;
+    if (!dsList.length) return;
+
+    container.style.display = 'block';
+    const groups = new Map();
+    dsList.forEach(ds => {
+      const key = ds.id_side || 0;
+      if (!groups.has(key)) groups.set(key, { label: ds.side_name || 'Sem lado definido', items: [] });
+      groups.get(key).items.push(ds);
+    });
+    [...groups.values()].forEach(group => {
+      const heading = document.createElement('div');
+      heading.style.cssText = 'font-weight:600;margin-top:20px;margin-bottom:4px';
+      heading.textContent = group.label;
+      container.appendChild(heading);
+      group.items.forEach(ds => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.style.marginTop = '12px';
+        div.innerHTML = `
+          <label>${esc(ds.name)}</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+            <input type="file" id="file_${ds.id}" style="display:none" onchange="updateFileName(this)">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('file_${ds.id}').click()">Selecionar arquivo</button>
+            <span id="file_${ds.id}_name" style="font-size:13px;color:#64748b">Nenhum arquivo selecionado</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    });
+  } catch (e) {
+    result.style.display = 'block';
+    result.style.background = '#f8fafc';
+    result.style.color = '#334155';
+    result.style.border = '1px solid #e2e8f0';
+    result.textContent = e.error || 'Erro ao carregar datasources.';
+  }
+}
+
+async function doRun() {
+  const id = document.getElementById('runSelect').value;
+  const result = document.getElementById('runResult');
+
+  if (!id) {
+    result.style.display = 'block';
+    result.style.background = '#fff7ed';
+    result.style.color = '#c2410c';
+    result.style.border = '1px solid #fed7aa';
+    result.textContent = 'Selecione uma conciliação antes de executar.';
+    return;
+  }
+
+  if (_fileDsList.length) {
+    const missing = _fileDsList.some(ds => {
+      const input = document.getElementById(`file_${ds.id}`);
+      return !input || !input.files[0];
+    });
+    if (missing) {
+      result.style.display = 'block';
+      result.style.background = '#fff7ed';
+      result.style.color = '#c2410c';
+      result.style.border = '1px solid #fed7aa';
+      result.textContent = 'Selecione todos os arquivos antes de executar.';
+      return;
+    }
+  }
+
+  result.style.display = 'block';
+  result.style.background = '#f8fafc';
+  result.style.color = '#64748b';
+  result.style.border = '1px solid #e2e8f0';
+  result.textContent = 'Processando...';
+
+  try {
+    let res;
+    if (_fileDsList.length) {
+      const form = new FormData();
+      _fileDsList.forEach(ds => {
+        const input = document.getElementById(`file_${ds.id}`);
+        if (input && input.files[0]) form.append(`file_${ds.id}`, input.files[0]);
+      });
+      const resp = await fetch(`/api/run/${id}`, { method: 'POST', body: form });
+      res = await resp.json();
+      if (!resp.ok) throw res;
+    } else {
+      res = await apiFetch('POST', `/api/run/${id}`);
+    }
+    result.style.background = '#f8fafc';
+    result.style.color = '#334155';
+    result.style.border = '1px solid #e2e8f0';
+    result.textContent = res.message || 'Conciliação executada com sucesso.';
+    clearFileInputs();
+  } catch (e) {
+    result.style.background = '#f8fafc';
+    result.style.color = '#334155';
+    result.style.border = '1px solid #e2e8f0';
+    result.textContent = e.error || 'Erro ao executar conciliação.';
+    clearFileInputs();
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Fonte de Dados — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-datasource">
+  <div class="page-header">
+    <h1>Fonte de Dados</h1>
+    <p>Defina a estrutura dos arquivos importados</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openDsForm()" style="margin-left:auto">
+      + Nova fonte de dados
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleDsFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Conciliação</th>
+          <th>Nome</th>
+          <th style="width:120px">Lado</th>
+          <th style="width:140px">Tipo</th>
+          <th style="width:220px">Credenciais</th>
+          <th style="width:260px">Query</th>
+          <th style="width:140px">Arquivo</th>
+          <th style="width:240px">URL</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-ds" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-ds-recon" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-name" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-side" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-type" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-credentials" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-query" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-filename" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-ds-url" class="filter-select" onchange="filterDsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-ds"></tbody>
+    </table>
+    <div id="empty-ds" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M8 16h24M16 8v24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma fonte de dados cadastrada</strong>
+      <p>Clique em "Nova fonte de dados" para começar</p>
+    </div>
+    <div class="pagination" id="pag-ds">
+      <span id="pag-info-ds"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeDsPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-ds"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnDsEdit" disabled onclick="footerDsEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnDsDuplicate" disabled onclick="footerDsDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnDsDelete" disabled onclick="footerDsDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- DATASOURCE FORM MODAL -->
+<div class="modal-overlay" id="dsFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="dsFormTitle">Nova fonte de dados</h2>
+      <button class="modal-close" onclick="closeModal('dsFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="dsFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="dsFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="dsFormName" placeholder="Nome da fonte de dados">
+        <div class="form-error" id="errDsName">Nome é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Conciliação</label>
+        <select id="dsFormRecon">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errDsRecon">Conciliação é obrigatória</div>
+      </div>
+      <div class="form-group">
+        <label>Lado</label>
+        <select id="dsFormSide">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errDsSide">Lado é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="dsFormType">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errDsType">Tipo é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Credenciais</label>
+        <textarea id="dsFormCredentials" rows="3" placeholder="Servidor; Usuário; Senha; Banco de Dados"></textarea>
+        <div class="form-error" id="errDsCredentials">Credenciais é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Query</label>
+        <textarea id="dsFormQuery" rows="4" placeholder="Consulta SQL ou comando da fonte"></textarea>
+        <div class="form-error" id="errDsQuery">Query é obrigatória</div>
+      </div>
+      <div class="form-group">
+        <label>Arquivo</label>
+        <input type="text" id="dsFormFilename" placeholder="Nome do arquivo ou caminho">
+        <div class="form-error" id="errDsFilename">Arquivo é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Delimitador</label>
+        <input type="text" id="dsFormDelimiter" placeholder='Ex: , ou ; ou |'>
+        <div class="form-error" id="errDsDelimiter">Delimitador é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>URL</label>
+        <input type="text" id="dsFormUrl" placeholder="URL da origem dos dados">
+        <div class="form-error" id="errDsUrl">URL é obrigatória</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btnTestConnection" style="display:none" onclick="testDsConnection()">Testar Conexão</button>
+      <button class="btn btn-secondary" onclick="closeModal('dsFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDs()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadDatasource();</script>
+{% endblock %}

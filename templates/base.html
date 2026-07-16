@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Recon{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-brand" onclick="window.location.href='/'" style="cursor:pointer">
+    <span></span>
+    Recon
+  </div>
+
+  <div class="nav-items" id="navItems"></div>
+
+  <div class="nav-right">
+    <button class="btn-login" id="btnLogin" onclick="openModal('loginModal')">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M1.5 12.5c0-2.485 2.462-4.5 5.5-4.5s5.5 2.015 5.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Entrar
+    </button>
+    <div class="user-badge" id="userBadge" onclick="openLogoutConfirm()" title="Clique para sair" style="cursor:pointer">
+      <div class="user-avatar" id="userAvatarNav"></div>
+      <span id="userNameNav" style="font-size:13px"></span>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:28px 28px 0">
+      <div class="login-logo">
+        <div class="login-logo-mark"></div>
+        <h2>Acessar sistema</h2>
+        <p>Entre com suas credenciais</p>
+      </div>
+      <div class="alert alert-danger" id="loginError" style="display:none;text-align:center"></div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <input type="password" id="loginSenha">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:20px 28px 24px">
+      <button class="btn btn-secondary" onclick="closeModal('loginModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="doLogin()" style="flex:1">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="formTitle">Novo registro</h2>
+      <button class="modal-close" onclick="closeModal('formModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Código</label>
+        <input type="text" id="formCodigo" placeholder="Ex: CONC001" oninput="this.value=this.value.toUpperCase()">
+        <div class="form-error" id="errCodigo">Código é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="formDescricao" placeholder="Descreva este registro">
+        <div class="form-error" id="errDescricao">Descrição é obrigatória</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('formModal')">Cancelar</button>
+      <button class="btn btn-primary" id="formSaveBtn" onclick="saveRecord()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:28px">
+      <div class="del-confirm">
+        <div class="del-icon">🗑</div>
+        <h3>Excluir registro</h3>
+        <p>Tem certeza que deseja excluir <strong id="deleteItemName"></strong>? Esta ação não pode ser desfeita.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- DUPLICATE CONFIRM MODAL -->
+<div class="modal-overlay" id="duplicateModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:28px">
+      <div class="del-confirm">
+        <div class="del-icon">⧉</div>
+        <h3>Duplicar registro</h3>
+        <p>Tem certeza que deseja duplicar <strong id="duplicateItemName"></strong>?</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('duplicateModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmDuplicate()">Duplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRM MODAL -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="padding:28px">
+      <div class="del-confirm">
+        <div class="del-icon">👤</div>
+        <h3>Sair do sistema</h3>
+        <p>Tem certeza que deseja encerrar sua sessão?</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('logoutModal')">Cancelar</button>
+      <button class="btn btn-secondary" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_modals %}{% endblock %}
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  checkSession();
+  if (new URLSearchParams(location.search).get('login') !== null) openModal('loginModal');
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

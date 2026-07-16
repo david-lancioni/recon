@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório Analítico — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-report-analitic">
+  <div class="page-header">
+    <h1 id="pageTitle">Relatório Analítico</h1>
+  </div>
+
+  <div class="form-group" style="max-width:420px; margin-bottom:24px">
+    <label>Conciliação</label>
+    <select id="reconPicker">
+      <option value="">Selecione uma conciliação...</option>
+    </select>
+  </div>
+
+  <div id="block-lado1">
+    <div style="font-weight:600; margin-bottom:10px">Lado 1</div>
+    <div class="table-wrap" style="margin-bottom:32px">
+      <table>
+        <thead id="thead-lado1"></thead>
+        <tbody id="tbody-lado1"></tbody>
+      </table>
+      <div id="empty-lado1" class="empty-state" style="display:none">
+        <strong>Nenhum dado encontrado</strong>
+      </div>
+      <div class="pagination" id="pag-lado1">
+        <span id="pag-info-lado1"></span>
+        <div class="pag-right">
+          <label class="page-size-label">Linhas por página
+            <select class="page-size-select" id="pageSizeSelectLado1">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+          <div class="pag-btns" id="pag-btns-lado1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="block-lado2">
+    <div style="font-weight:600; margin-bottom:10px">Lado 2</div>
+    <div class="table-wrap">
+      <table>
+        <thead id="thead-lado2"></thead>
+        <tbody id="tbody-lado2"></tbody>
+      </table>
+      <div id="empty-lado2" class="empty-state" style="display:none">
+        <strong>Nenhum dado encontrado</strong>
+      </div>
+      <div class="pagination" id="pag-lado2">
+        <span id="pag-info-lado2"></span>
+        <div class="pag-right">
+          <label class="page-size-label">Linhas por página
+            <select class="page-size-select" id="pageSizeSelectLado2">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+          <div class="pag-btns" id="pag-btns-lado2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" id="btnExportar" class="btn-voltar">Exportar</button>
+    <button type="button" id="btnVoltar" class="btn-voltar">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function loadReportAnalitic() {
+  const idReconParam = new URLSearchParams(location.search).get('id_recon');
+  const ladoParam = new URLSearchParams(location.search).get('lado');
+  const statusParam = new URLSearchParams(location.search).get('status');
+  const BASE_TITLE = 'Relatório Analítico';
+  const picker = document.getElementById('reconPicker');
+
+  function setTitle(executionDate) {
+    document.getElementById('pageTitle').textContent = executionDate
+      ? `${BASE_TITLE} (${executionDate})`
+      : BASE_TITLE;
+  }
+
+  function showOnlySide(lado) {
+    document.getElementById('block-lado1').style.display = (!lado || lado === '1') ? '' : 'none';
+    document.getElementById('block-lado2').style.display = (!lado || lado === '2') ? '' : 'none';
+  }
+
+  function setResultsVisible(visible) {
+    document.getElementById('btnExportar').style.display = visible ? '' : 'none';
+    if (visible) {
+      showOnlySide(ladoParam);
+    } else {
+      document.getElementById('block-lado1').style.display = 'none';
+      document.getElementById('block-lado2').style.display = 'none';
+    }
+  }
+
+  function createSideController(theadId, tbodyId, emptyId, pagId, pagInfoId, pagBtnsId) {
+    const thead = document.getElementById(theadId);
+    const tbody = document.getElementById(tbodyId);
+    const empty = document.getElementById(emptyId);
+    const pag = document.getElementById(pagId);
+    const pagInfo = document.getElementById(pagInfoId);
+    const pagBtns = document.getElementById(pagBtnsId);
+    let columns = [];
+    let rows = [];
+    let filters = [];
+    let filterRowVisible = false;
+    let pageNum = 1;
+
+    function distinctValues(colIndex) {
+      const vals = new Set();
+      rows.forEach(r => vals.add(r[colIndex] === null || r[colIndex] === undefined ? '' : String(r[colIndex])));
+      return [...vals].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    }
+
+    function toggleFilterRow() {
+      filterRowVisible = !filterRowVisible;
+      if (!filterRowVisible) filters = columns.map(() => '');
+      pageNum = 1;
+      renderHead();
+      renderBody();
+    }
+
+    function renderHead() {
+      let html = '<tr>' + columns.map(c => `<th style="cursor:pointer" title="Duplo clique para filtrar">${esc(c)}</th>`).join('') + '</tr>';
+      if (filterRowVisible) {
+        html += '<tr class="filter-row">' + columns.map((c, i) => {
+          const options = distinctValues(i).map(v => `<option value="${esc(v)}" ${filters[i] === v ? 'selected' : ''}>${esc(v)}</option>`).join('');
+          return `<th><select class="filter-select" data-col="${i}"><option value="">Todos</option>${options}</select></th>`;
+        }).join('') + '</tr>';
+      }
+      thead.innerHTML = html;
+
+      thead.querySelectorAll('tr').forEach((tr, idx) => {
+        if (idx === 0) tr.addEventListener('dblclick', toggleFilterRow);
+      });
+      if (filterRowVisible) {
+        thead.querySelectorAll('select[data-col]').forEach(sel => {
+          sel.addEventListener('change', () => {
+            filters[Number(sel.dataset.col)] = sel.value;
+            pageNum = 1;
+            renderBody();
+          });
+        });
+      }
+    }
+
+    function getFiltered() {
+      return rows.filter(r => filters.every((f, i) => !f || String(r[i] === null || r[i] === undefined ? '' : r[i]) === f));
+    }
+
+    function renderBody() {
+      const filtered = getFiltered();
+      const total = filtered.length;
+      if (!columns.length || !total) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        pag.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      pag.style.display = 'flex';
+
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      pageNum = Math.min(pageNum, totalPages);
+      const slice = filtered.slice((pageNum - 1) * PAGE_SIZE, pageNum * PAGE_SIZE);
+
+      tbody.innerHTML = slice.map(row =>
+        '<tr>' + row.map(v => `<td>${v === null || v === undefined ? '' : esc(String(v))}</td>`).join('') + '</tr>'
+      ).join('');
+
+      const start = (pageNum - 1) * PAGE_SIZE + 1;
+      const end = Math.min(pageNum * PAGE_SIZE, total);
+      pagInfo.textContent = `${start}–${end} de ${total}`;
+
+      const maxButtons = 10;
+      let startPage = Math.max(1, pageNum - Math.floor(maxButtons / 2));
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      startPage = Math.max(1, endPage - maxButtons + 1);
+
+      let html = `<button class="pag-btn" data-dir="-1" ${pageNum === 1 ? 'disabled' : ''}>&#8249;</button>`;
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="pag-btn ${i === pageNum ? 'active' : ''}" data-page="${i}">${i}</button>`;
+      }
+      html += `<button class="pag-btn" data-dir="1" ${pageNum === totalPages ? 'disabled' : ''}>&#8250;</button>`;
+      pagBtns.innerHTML = html;
+
+      pagBtns.querySelectorAll('button[data-dir]').forEach(b => {
+        b.addEventListener('click', () => {
+          pageNum = Math.max(1, Math.min(totalPages, pageNum + Number(b.dataset.dir)));
+          renderBody();
+        });
+      });
+      pagBtns.querySelectorAll('button[data-page]').forEach(b => {
+        b.addEventListener('click', () => {
+          pageNum = Number(b.dataset.page);
+          renderBody();
+        });
+      });
+    }
+
+    return {
+      setData(data) {
+        columns = (data && data.columns) || [];
+        rows = (data && data.rows) || [];
+        filters = columns.map(() => '');
+        filterRowVisible = false;
+        pageNum = 1;
+        if (!columns.length) {
+          thead.innerHTML = '';
+          tbody.innerHTML = '';
+          empty.style.display = 'block';
+          pag.style.display = 'none';
+          return;
+        }
+        renderHead();
+        renderBody();
+      },
+      resetPage() {
+        pageNum = 1;
+        renderBody();
+      },
+      clear() {
+        columns = []; rows = []; filters = []; filterRowVisible = false; pageNum = 1;
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        pag.style.display = 'none';
+      },
+      getExportData() {
+        return { columns, rows: getFiltered() };
+      },
+      filterByColumn(columnLabel, value) {
+        const idx = columns.indexOf(columnLabel);
+        if (idx === -1) return;
+        filters[idx] = value;
+        pageNum = 1;
+        renderBody();
+      }
+    };
+  }
+
+  const side1 = createSideController('thead-lado1', 'tbody-lado1', 'empty-lado1', 'pag-lado1', 'pag-info-lado1', 'pag-btns-lado1');
+  const side2 = createSideController('thead-lado2', 'tbody-lado2', 'empty-lado2', 'pag-lado2', 'pag-info-lado2', 'pag-btns-lado2');
+
+  function changeAnaliticoPageSize(value) {
+    applyPageSize(value);
+    side1.resetPage();
+    side2.resetPage();
+  }
+  document.getElementById('pageSizeSelectLado1').addEventListener('change', e => changeAnaliticoPageSize(e.target.value));
+  document.getElementById('pageSizeSelectLado2').addEventListener('change', e => changeAnaliticoPageSize(e.target.value));
+
+  function clearSides() {
+    side1.clear();
+    side2.clear();
+    setTitle(null);
+    setResultsVisible(false);
+  }
+
+  async function loadData(id) {
+    clearSides();
+    if (!id) return;
+    try {
+      const data = await apiFetch('GET', `/api/report_analitic/${id}`);
+      side1.setData(data.lado1);
+      side2.setData(data.lado2);
+      if (statusParam) {
+        side1.filterByColumn('Status', statusParam);
+        side2.filterByColumn('Status', statusParam);
+      }
+      setTitle(data.execution_date);
+      setResultsVisible(true);
+    } catch (e) {
+      clearSides();
+    }
+  }
+
+  try {
+    const recons = await apiFetch('GET', '/api/run/options');
+    recons.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      picker.appendChild(opt);
+    });
+  } catch (e) { /* mantém dropdown vazio */ }
+
+  document.getElementById('btnVoltar').addEventListener('click', () => {
+    const id = picker.value;
+    location.href = id ? `/report_sintetic?id_recon=${id}` : '/report_sintetic';
+  });
+
+  function downloadCsv(filename, columns, rows) {
+    const lines = [columns.join('|')];
+    rows.forEach(row => {
+      lines.push(row.map(v => v === null || v === undefined ? '' : v).join('|'));
+    });
+    const content = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('btnExportar').addEventListener('click', () => {
+    const opt = picker.options[picker.selectedIndex];
+    const reconName = (opt && opt.value ? opt.textContent : '').trim();
+    if (!reconName) {
+      toast('Selecione uma conciliação antes de exportar');
+      return;
+    }
+    const safeName = reconName.replace(/\s+/g, '_');
+    const showLado1 = document.getElementById('block-lado1').style.display !== 'none';
+    const showLado2 = document.getElementById('block-lado2').style.display !== 'none';
+
+    if (showLado1) {
+      const data1 = side1.getExportData();
+      if (data1.columns.length) downloadCsv(`${safeName}_Lado1.csv`, data1.columns, data1.rows);
+    }
+    if (showLado2) {
+      const data2 = side2.getExportData();
+      if (data2.columns.length) downloadCsv(`${safeName}_Lado2.csv`, data2.columns, data2.rows);
+    }
+  });
+
+  picker.addEventListener('change', () => {
+    const url = new URL(location.href);
+    if (picker.value) url.searchParams.set('id_recon', picker.value);
+    else url.searchParams.delete('id_recon');
+    url.searchParams.delete('lado');
+    history.replaceState(null, '', url);
+    loadData(picker.value);
+  });
+
+  setResultsVisible(false);
+
+  if (idReconParam) {
+    picker.value = idReconParam;
+    await loadData(idReconParam);
+  }
+})();
+</script>
+{% endblock %}

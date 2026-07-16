@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Campos — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-fields">
+  <div class="page-header">
+    <h1>Campos</h1>
+    <p>Defina os campos de cada fonte de dados</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openFieldForm()" style="margin-left:auto">
+      + Novo campo
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleFieldFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Conciliação</th>
+          <th>Fonte de Dados</th>
+          <th style="width:80px; text-align:center">Posição</th>
+          <th>Nome</th>
+          <th style="width:140px">Tipo</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-fields" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-field-recon" class="filter-select" onchange="filterFieldsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-field-ds" class="filter-select" onchange="filterFieldsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-field-pos" class="filter-select" onchange="filterFieldsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-field-name" class="filter-select" onchange="filterFieldsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-field-type" class="filter-select" onchange="filterFieldsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-fields"></tbody>
+    </table>
+    <div id="empty-fields" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="12" width="24" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M14 12V10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 24h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhum campo cadastrado</strong>
+      <p>Clique em "Novo campo" para começar</p>
+    </div>
+    <div class="pagination" id="pag-fields">
+      <span id="pag-info-fields"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeFieldsPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-fields"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnFieldEdit" disabled onclick="footerFieldEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnFieldDuplicate" disabled onclick="footerFieldDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnFieldDelete" disabled onclick="footerFieldDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- FIELD FORM MODAL -->
+<div class="modal-overlay" id="fieldFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="fieldFormTitle">Novo campo</h2>
+      <button class="modal-close" onclick="closeModal('fieldFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="fieldFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="fieldFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Fonte de Dados</label>
+        <select id="fieldFormDs" onchange="onFieldFormDsChange()">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errFieldDs">Fonte de dados é obrigatória</div>
+      </div>
+      <div class="form-group">
+        <label>Posição</label>
+        <input type="text" id="fieldFormPosition" placeholder="Ex: 1" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <div class="form-error" id="errFieldPosition">Posição é obrigatória</div>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="fieldFormName" placeholder="Nome do campo">
+        <div class="form-error" id="errFieldName">Nome é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="fieldFormType">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errFieldType">Tipo é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Valor</label>
+        <textarea id="fieldFormValue" placeholder="Valor padrão ou expressão" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('fieldFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveField()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadFields();</script>
+{% endblock %}

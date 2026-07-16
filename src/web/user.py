@@ -1,0 +1,97 @@
+from flask import render_template, jsonify, request, abort
+from src.web.models import db, User, Profile, next_id
+
+
+def register(app):
+    @app.route('/user')
+    def users():
+        return render_template('user.html', current_page='users')
+
+    @app.route('/api/user/options')
+    def api_users_options():
+        profiles = db.session.execute(db.select(Profile).order_by(Profile.name)).scalars().all()
+        return jsonify({'profiles': [p.to_dict() for p in profiles]})
+
+    @app.route('/api/user', methods=['GET'])
+    def api_users_list():
+        rows = db.session.execute(
+            db.select(User, Profile.name.label('profile_name'))
+            .outerjoin(Profile, User.id_profile == Profile.id)
+            .order_by(User.id)
+        ).all()
+        result = []
+        for user, profile_name in rows:
+            d = user.to_dict()
+            d['profile_name'] = profile_name or ''
+            result.append(d)
+        return jsonify(result)
+
+    @app.route('/api/user', methods=['POST'])
+    def api_users_create():
+        data       = request.get_json()
+        name       = (data.get('name')     or '').strip()
+        email      = (data.get('email')    or '').strip().lower()
+        password   = (data.get('password') or '').strip()
+        id_profile = data.get('id_profile') or None
+        if not name or not email or not password:
+            return jsonify({'error': 'Nome, e-mail e senha são obrigatórios'}), 400
+        if not id_profile:
+            return jsonify({'error': 'Perfil é obrigatório'}), 400
+        if db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none():
+            return jsonify({'error': 'E-mail já cadastrado'}), 409
+        user = User(id=next_id(User), name=name, email=email, password=password, id_profile=id_profile)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify(user.to_dict()), 201
+
+    @app.route('/api/user/<int:user_id>', methods=['PUT'])
+    def api_users_update(user_id):
+        user = db.session.get(User, user_id)
+        if not user:
+            abort(404)
+        data       = request.get_json()
+        name       = (data.get('name')     or '').strip()
+        email      = (data.get('email')    or '').strip().lower()
+        password   = (data.get('password') or '').strip()
+        id_profile = data.get('id_profile') or None
+        if not name or not email:
+            return jsonify({'error': 'Nome e e-mail são obrigatórios'}), 400
+        if not id_profile:
+            return jsonify({'error': 'Perfil é obrigatório'}), 400
+        dup = db.session.execute(
+            db.select(User).filter(User.email == email, User.id != user_id)
+        ).scalar_one_or_none()
+        if dup:
+            return jsonify({'error': 'E-mail já cadastrado'}), 409
+        user.name       = name
+        user.email      = email
+        user.id_profile = id_profile
+        if password:
+            user.password = password
+        db.session.commit()
+        return jsonify(user.to_dict())
+
+    @app.route('/api/user/<int:user_id>/duplicate', methods=['POST'])
+    def api_users_duplicate(user_id):
+        user = db.session.get(User, user_id)
+        if not user:
+            abort(404)
+        base_email = user.email.split('@')
+        new_email = f"{base_email[0]}_copia@{base_email[1]}"
+        counter = 1
+        while db.session.execute(db.select(User).filter_by(email=new_email)).scalar_one_or_none():
+            new_email = f"{base_email[0]}_copia{counter}@{base_email[1]}"
+            counter += 1
+        new_user = User(id=next_id(User), name=user.name, email=new_email, password=user.password, id_profile=user.id_profile)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(new_user.to_dict()), 201
+
+    @app.route('/api/user/<int:user_id>', methods=['DELETE'])
+    def api_users_delete(user_id):
+        user = db.session.get(User, user_id)
+        if not user:
+            abort(404)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'ok': True})

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Transações — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-transactions">
+  <div class="page-header">
+    <h1>Transações</h1>
+    <p>Gerencie os itens de menu</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openTransactionForm()" style="margin-left:auto">
+      + Nova transação
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleTransactionFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Nome</th>
+          <th>Menu pai</th>
+          <th>Link</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-transactions" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-tx-name" class="filter-select" onchange="filterTransactionsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-tx-parent" class="filter-select" onchange="filterTransactionsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-tx-link" class="filter-select" onchange="filterTransactionsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-transactions"></tbody>
+    </table>
+    <div id="empty-transactions" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma transação cadastrada</strong>
+      <p>Clique em "+ Nova transação" para começar</p>
+    </div>
+    <div class="pagination" id="pag-transactions">
+      <span id="pag-info-transactions"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeTransactionsPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-transactions"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnTransactionEdit" disabled onclick="footerTransactionEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnTransactionDuplicate" disabled onclick="footerTransactionDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnTransactionDelete" disabled onclick="footerTransactionDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- TRANSACTION FORM MODAL -->
+<div class="modal-overlay" id="transactionFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="transactionFormTitle">Nova transação</h2>
+      <button class="modal-close" onclick="closeModal('transactionFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="transactionFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="transactionFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Menu pai</label>
+        <select id="transactionFormParent">
+          <option value="0">Raiz (sem pai)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="transactionFormName" placeholder="Nome do item de menu">
+        <div class="form-error" id="errTransactionName">Nome é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Link</label>
+        <input type="text" id="transactionFormLink" placeholder="/pagina">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('transactionFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTransaction()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadTransactions();</script>
+{% endblock %}

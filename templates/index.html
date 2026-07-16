@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Recon — Conciliação de Dados{% endblock %}
+
+{% block content %}
+<style>
+.landing { display:flex; flex-direction:column; background:#f8fafc; }
+
+/* ── HERO ── */
+.land-hero {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f4ff 100%);
+  padding: 88px 24px 80px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+.land-container { max-width: 1080px; margin: 0 auto; }
+.land-badge {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+  padding: 5px 16px;
+  border-radius: 100px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.land-title {
+  font-size: clamp(28px, 4.5vw, 48px);
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.18;
+  margin: 0 0 20px;
+  letter-spacing: -.5px;
+}
+.land-title em { font-style:normal; color:#4f46e5; }
+.land-sub {
+  font-size: 16.5px;
+  color: #64748b;
+  max-width: 500px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+.land-cta { font-size: 14.5px; padding: 13px 32px; border-radius: 10px; }
+
+/* ── DEMO ── */
+.land-demo {
+  padding: 72px 24px;
+  background: #f8fafc;
+}
+.land-demo-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-bottom: 40px;
+}
+.land-demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 200px 1fr;
+  align-items: center;
+  gap: 0;
+}
+
+/* Tables */
+.land-tbl {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(15,23,42,.06);
+}
+.land-tbl-head {
+  padding: 14px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+}
+.land-tbl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.land-tbl-cols {
+  display: grid;
+  padding: 8px 20px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: #cbd5e1;
+  border-bottom: 1px solid #f1f5f9;
+}
+.land-row {
+  display: grid;
+  padding: 11px 20px;
+  font-size: 12.5px;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.land-row:last-child { border-bottom: none; }
+.land-row span:nth-child(2) { color: #334155; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10.5px; font-weight: 500;
+  padding: 3px 9px; border-radius: 100px;
+}
+.badge.ok  { background:#dcfce7; color:#16a34a; }
+.badge.dif { background:#fff7ed; color:#c2410c; }
+.badge.orf { background:#f1f5f9; color:#94a3b8; }
+
+/* Center engine */
+.land-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0 16px;
+}
+.land-line {
+  width: 1px;
+  flex: 1;
+  min-height: 24px;
+  background: linear-gradient(to bottom, transparent, #e2e8f0 40%, #e2e8f0 60%, transparent);
+}
+.land-engine {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 18px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(15,23,42,.07);
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+.land-engine-icon {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  box-shadow: 0 4px 14px rgba(79,70,229,.3);
+}
+.land-engine-lbl {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .7px;
+  color: #94a3b8; margin-bottom: 16px;
+}
+.land-stat-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+}
+.land-stat-row:first-of-type { border-top: none; }
+.land-stat-lbl {
+  font-size: 11px; color: #94a3b8;
+  display:flex; align-items:center; gap:6px;
+}
+.land-stat-lbl::before {
+  content:''; display:inline-block;
+  width:5px; height:5px; border-radius:50%; flex-shrink:0;
+}
+.land-stat-num { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.s-ok  .land-stat-lbl::before { background:#22c55e; }
+.s-ok  .land-stat-num { color:#16a34a; }
+.s-dif .land-stat-lbl::before { background:#f97316; }
+.s-dif .land-stat-num { color:#c2410c; }
+.s-orf .land-stat-lbl::before { background:#cbd5e1; }
+.s-orf .land-stat-num { color:#94a3b8; }
+
+/* ── FEATURES ── */
+.land-features {
+  padding: 80px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+.land-sec-tag {
+  text-align: center; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: #4f46e5; margin-bottom: 10px;
+}
+.land-sec-title {
+  text-align: center;
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 600; color: #0f172a;
+  margin: 0 0 52px; letter-spacing: -.3px;
+}
+.land-feats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.land-feat {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 30px 28px;
+}
+.land-feat-icon {
+  width: 44px; height: 44px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+}
+.land-feat h3 { font-size: 15px; font-weight: 600; color: #1e293b; margin: 0 0 10px; }
+.land-feat p  { font-size: 13.5px; color: #64748b; line-height: 1.65; margin: 0; }
+
+@media(max-width:860px) {
+  .land-demo-grid { grid-template-columns: 1fr; }
+  .land-mid { flex-direction:row; padding:16px 0; }
+  .land-line { width:28px; height:1px; min-height:unset; background:linear-gradient(to right,transparent,#e2e8f0 40%,#e2e8f0 60%,transparent); }
+  .land-feats { grid-template-columns: 1fr; }
+}
+</style>
+
+{% if not logged_in %}
+<div class="landing">
+
+  <!-- ── HERO ── -->
+  <section class="land-hero">
+    <div class="land-container" style="max-width:640px">
+      <div class="land-badge">Plataforma de Conciliação de Dados</div>
+      <h1 class="land-title">Dados em harmonia,<br><em>decisões sem dúvidas</em></h1>
+      <p class="land-sub">Compare registros de múltiplas fontes automaticamente. Identifique batimentos, divergências e órfãos com rastreabilidade completa.</p>
+      <button class="btn btn-primary land-cta" onclick="openModal('loginModal')">Acessar o sistema →</button>
+    </div>
+  </section>
+
+  <!-- ── DEMO ── -->
+  <section class="land-demo">
+    <div class="land-container">
+      <p class="land-demo-label">Visualização de conciliação em tempo real</p>
+      <div class="land-demo-grid">
+
+        <!-- Saldos -->
+        <div class="land-tbl">
+          <div class="land-tbl-head">
+            <div class="land-tbl-dot" style="background:#6366f1"></div>
+            Saldos
+            <span style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:400">1.284 registros</span>
+          </div>
+          <div class="land-tbl-cols" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>Agência</span><span>Conta</span><span style="text-align:right">Valor</span><span style="text-align:right">Status</span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>12847-3</span><span style="text-align:right;color:#334155">4.250,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>29103-7</span><span style="text-align:right;color:#334155">18.700,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0892</span><span>00451-2</span><span style="text-align:right;color:#334155">3.190,00</span><span style="text-align:right"><span class="badge dif">≠ Divergente</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>77820-9</span><span style="text-align:right;color:#334155">9.450,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>1074</span><span>33612-1</span><span style="text-align:right;color:#334155">650,00</span><span style="text-align:right"><span class="badge orf">⊘ Órfão</span></span>
+          </div>
+        </div>
+
+        <!-- Motor -->
+        <div class="land-mid">
+          <div class="land-line"></div>
+          <div class="land-engine">
+            <div class="land-engine-icon" style="background:#1a6aff; border-radius:11px; box-shadow:0 4px 14px rgba(26,106,255,.35)">
+              <div style="width:22px;height:22px;border:2.5px solid rgba(255,255,255,0.75);border-radius:4px"></div>
+            </div>
+            <div class="land-engine-lbl">Resultados</div>
+            <div class="land-stat-row s-ok">
+              <span class="land-stat-lbl">Batidos</span>
+              <span class="land-stat-num">1.247</span>
+            </div>
+            <div class="land-stat-row s-dif">
+              <span class="land-stat-lbl">Divergentes</span>
+              <span class="land-stat-num">28</span>
+            </div>
+            <div class="land-stat-row s-orf">
+              <span class="land-stat-lbl">Órfãos</span>
+              <span class="land-stat-num">9</span>
+            </div>
+          </div>
+          <div class="land-line"></div>
+        </div>
+
+        <!-- Extrato -->
+        <div class="land-tbl">
+          <div class="land-tbl-head">
+            <div class="land-tbl-dot" style="background:#7c3aed"></div>
+            Extrato
+            <span style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:400">1.275 registros</span>
+          </div>
+          <div class="land-tbl-cols" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>Agência</span><span>Conta</span><span style="text-align:right">Valor</span><span style="text-align:right">Status</span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>12847-3</span><span style="text-align:right;color:#334155">4.250,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>29103-7</span><span style="text-align:right;color:#334155">18.700,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0892</span><span>00451-2</span><span style="text-align:right;color:#334155">3.215,00</span><span style="text-align:right"><span class="badge dif">≠ Divergente</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span>0341</span><span>77820-9</span><span style="text-align:right;color:#334155">9.450,00</span><span style="text-align:right"><span class="badge ok">✓ Batido</span></span>
+          </div>
+          <div class="land-row" style="grid-template-columns:60px 90px 1fr 90px">
+            <span style="color:#cbd5e1">—</span><span style="color:#cbd5e1">não encontrado</span><span style="text-align:right;color:#cbd5e1">—</span><span style="text-align:right"><span class="badge orf">⊘ Órfão</span></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section class="land-features">
+    <div class="land-container">
+      <p class="land-sec-tag">Por que usar</p>
+      <h2 class="land-sec-title">Conciliação que escala com o seu negócio</h2>
+      <div class="land-feats">
+
+        <div class="land-feat">
+          <div class="land-feat-icon" style="background:#eef2ff">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="2" y="2" width="8" height="5" rx="1.5" stroke="#4f46e5" stroke-width="1.5"/>
+              <rect x="2" y="10" width="8" height="5" rx="1.5" stroke="#4f46e5" stroke-width="1.5"/>
+              <rect x="12" y="2" width="8" height="5" rx="1.5" stroke="#4f46e5" stroke-width="1.5"/>
+              <rect x="12" y="10" width="8" height="5" rx="1.5" stroke="#4f46e5" stroke-width="1.5"/>
+              <path d="M6 7v3M16 7v3" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Regras configuráveis</h3>
+          <p>Defina critérios de cruzamento por campo, tolerâncias numéricas e operadores de comparação. Adapte o motor para qualquer tipo de dado ou processo.</p>
+        </div>
+
+        <div class="land-feat">
+          <div class="land-feat-icon" style="background:#f0fdf4">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M9 11l2 2 4-4" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="2" y="2" width="18" height="18" rx="4" stroke="#16a34a" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <h3>Rastreabilidade total</h3>
+          <p>Cada batimento, divergência e órfão é registrado com contexto completo. Auditores e equipes de controle têm visibilidade sobre cada decisão.</p>
+        </div>
+
+        <div class="land-feat">
+          <div class="land-feat-icon" style="background:#fff7ed">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M18 20V10M12 20V4M6 20v-6" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Resultados em tempo real</h3>
+          <p>Acompanhe instantaneamente quantos registros bateram, quais divergem e o que ficou sem par. Identifique problemas antes que virem prejuízo.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endif %}
+{% endblock %}

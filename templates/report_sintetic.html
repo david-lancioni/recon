@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório Sintético — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-report-sintetic">
+  <div class="page-header">
+    <h1>Relatório Sintético</h1>
+  </div>
+
+  <div class="form-group" style="max-width:420px; margin-bottom:24px">
+    <label>Conciliação</label>
+    <select id="reconFilter">
+      <option value="">Todas as conciliações</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleSinteticoFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="text-align:center">Dt. Execução</th>
+          <th style="border-left:1px solid var(--border); text-align:center">Recon</th>
+          <th style="text-align:center">Lado</th>
+          <th style="text-align:center">Batido</th>
+          <th style="text-align:center">Divergente</th>
+          <th style="text-align:center">Órfão</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-sintetico" style="display:none">
+          <th>
+            <select id="filter-sint-dtexec" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-sint-recon" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-sint-lado" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-sint-batido" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-sint-divergente" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-sint-orfao" class="filter-select" onchange="filterSinteticoByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-report-sintetic"></tbody>
+    </table>
+    <div id="empty-report-sintetic" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhum resultado encontrado</strong>
+      <p>Execute uma conciliação para visualizar os resultados aqui</p>
+    </div>
+    <div class="pagination" id="pag-sintetico">
+      <span id="pag-info-sintetico"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeSinteticoPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-sintetico"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" onclick="exportSintetico()">Exportar</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function loadReportSintetic() {
+  const tbody = document.getElementById('tbody-report-sintetic');
+  const empty = document.getElementById('empty-report-sintetic');
+  const pag = document.getElementById('pag-sintetico');
+  const pagInfo = document.getElementById('pag-info-sintetico');
+  const pagBtns = document.getElementById('pag-btns-sintetico');
+  const filter = document.getElementById('reconFilter');
+  let allRows = [];
+
+  const sintState = { colDtExec: '', colRecon: '', colLado: '', colBatido: '', colDivergente: '', colOrfao: '' };
+  let currentGroupList = [];
+  let sintPageNum = 1;
+
+  function buildGroupList(rows) {
+    const groups = new Map();
+    rows.forEach(r => {
+      const key = r.id_recon + ' ' + r.lado;
+      if (!groups.has(key)) {
+        groups.set(key, { id_recon: r.id_recon, recon: r.recon, execution_date: r.execution_date, lado: r.lado, Batido: 0, Divergente: 0, 'Órfão': 0 });
+      }
+      groups.get(key)[r.status] = r.total;
+    });
+    return [...groups.values()];
+  }
+
+  function getSinteticoFiltered(groupList) {
+    return groupList.filter(g =>
+      (!sintState.colDtExec || g.execution_date === sintState.colDtExec) &&
+      (!sintState.colRecon || g.recon === sintState.colRecon) &&
+      (!sintState.colLado || g.lado === sintState.colLado) &&
+      (!sintState.colBatido || String(g.Batido) === sintState.colBatido) &&
+      (!sintState.colDivergente || String(g.Divergente) === sintState.colDivergente) &&
+      (!sintState.colOrfao || String(g['Órfão']) === sintState.colOrfao)
+    );
+  }
+
+  function populateSinteticoFilters() {
+    const fullGroupList = buildGroupList(allRows);
+    const cols = [
+      { id: 'filter-sint-dtexec',     vals: [...new Set(fullGroupList.map(g => g.execution_date))],       key: 'colDtExec' },
+      { id: 'filter-sint-recon',      vals: [...new Set(fullGroupList.map(g => g.recon))],               key: 'colRecon' },
+      { id: 'filter-sint-lado',       vals: [...new Set(fullGroupList.map(g => g.lado))],                key: 'colLado' },
+      { id: 'filter-sint-batido',     vals: [...new Set(fullGroupList.map(g => String(g.Batido)))],      key: 'colBatido' },
+      { id: 'filter-sint-divergente', vals: [...new Set(fullGroupList.map(g => String(g.Divergente)))],  key: 'colDivergente' },
+      { id: 'filter-sint-orfao',      vals: [...new Set(fullGroupList.map(g => String(g['Órfão'])))],    key: 'colOrfao' },
+    ];
+    cols.forEach(({ id, vals, key }) => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">Todos</option>' +
+        vals.sort((a, b) => a.localeCompare(b, 'pt-BR'))
+            .map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      sel.value = sintState[key];
+    });
+  }
+
+  function toggleSinteticoFilters() {
+    const row = document.getElementById('filter-row-sintetico');
+    const hiding = row.style.display !== 'none';
+    row.style.display = hiding ? 'none' : '';
+    if (hiding) {
+      Object.keys(sintState).forEach(k => { sintState[k] = ''; });
+      populateSinteticoFilters();
+      sintPageNum = 1;
+      applyFilter();
+    }
+  }
+  window.toggleSinteticoFilters = toggleSinteticoFilters;
+
+  function filterSinteticoByColumn() {
+    sintState.colDtExec     = document.getElementById('filter-sint-dtexec').value;
+    sintState.colRecon      = document.getElementById('filter-sint-recon').value;
+    sintState.colLado       = document.getElementById('filter-sint-lado').value;
+    sintState.colBatido     = document.getElementById('filter-sint-batido').value;
+    sintState.colDivergente = document.getElementById('filter-sint-divergente').value;
+    sintState.colOrfao      = document.getElementById('filter-sint-orfao').value;
+    sintPageNum = 1;
+    applyFilter();
+  }
+  window.filterSinteticoByColumn = filterSinteticoByColumn;
+
+  function changeSinteticoPageSize(value) {
+    applyPageSize(value);
+    sintPageNum = 1;
+    renderCurrent();
+  }
+  window.changeSinteticoPageSize = changeSinteticoPageSize;
+
+  function renderPagination(totalBlocks) {
+    const totalPages = Math.max(1, Math.ceil(totalBlocks / PAGE_SIZE));
+    sintPageNum = Math.min(sintPageNum, totalPages);
+
+    const start = (sintPageNum - 1) * PAGE_SIZE + 1;
+    const end = Math.min(sintPageNum * PAGE_SIZE, totalBlocks);
+    pagInfo.textContent = `${start}–${end} de ${totalBlocks}`;
+
+    const maxButtons = 10;
+    let startPage = Math.max(1, sintPageNum - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    startPage = Math.max(1, endPage - maxButtons + 1);
+
+    let html = `<button class="pag-btn" data-dir="-1" ${sintPageNum === 1 ? 'disabled' : ''}>&#8249;</button>`;
+    for (let i = startPage; i <= endPage; i++) {
+      html += `<button class="pag-btn ${i === sintPageNum ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    html += `<button class="pag-btn" data-dir="1" ${sintPageNum === totalPages ? 'disabled' : ''}>&#8250;</button>`;
+    pagBtns.innerHTML = html;
+
+    pagBtns.querySelectorAll('button[data-dir]').forEach(b => {
+      b.addEventListener('click', () => {
+        sintPageNum = Math.max(1, Math.min(totalPages, sintPageNum + Number(b.dataset.dir)));
+        renderCurrent();
+      });
+    });
+    pagBtns.querySelectorAll('button[data-page]').forEach(b => {
+      b.addEventListener('click', () => {
+        sintPageNum = Number(b.dataset.page);
+        renderCurrent();
+      });
+    });
+  }
+
+  function renderGroupList(groupList) {
+    let html = '';
+    let i = 0;
+    let blockIdx = 0;
+    while (i < groupList.length) {
+      const idRecon = groupList[i].id_recon;
+      let count = 0;
+      while (i + count < groupList.length && groupList[i + count].id_recon === idRecon) {
+        count++;
+      }
+      const isLastBlock = (i + count === groupList.length);
+      const rowspanBorder = isLastBlock ? 'border-bottom:none;' : '';
+      for (let j = 0; j < count; j++) {
+        const g = groupList[i + j];
+        html += `<tr data-block="${blockIdx}">`;
+        if (j === 0) {
+          html += `<td rowspan="${count}" style="text-align:center;${rowspanBorder}">${esc(g.execution_date || '')}</td>`;
+          html += `<td rowspan="${count}" style="border-left:1px solid var(--border); text-align:center;${rowspanBorder}"><a href="/report_analitic?id_recon=${g.id_recon}" style="color:#000">${esc(g.recon)}</a></td>`;
+        }
+        html += `<td style="text-align:center;border-left:1px solid var(--border)"><a href="/report_analitic?id_recon=${g.id_recon}&lado=${g.lado.slice(-1)}" style="color:#000">${esc(g.lado)}</a></td>`;
+        html += `<td style="text-align:center"><a href="/report_analitic?id_recon=${g.id_recon}&status=${encodeURIComponent('Batido')}" style="color:#000">${g.Batido}</a></td>`;
+        html += `<td style="text-align:center"><a href="/report_analitic?id_recon=${g.id_recon}&status=${encodeURIComponent('Divergente')}" style="color:#000">${g.Divergente}</a></td>`;
+        html += `<td style="text-align:center"><a href="/report_analitic?id_recon=${g.id_recon}&status=${encodeURIComponent('Órfão')}" style="color:#000">${g['Órfão']}</a></td>`;
+        html += '</tr>';
+      }
+      i += count;
+      blockIdx++;
+    }
+    tbody.innerHTML = html;
+
+    tbody.querySelectorAll('tr').forEach(tr => {
+      tr.addEventListener('mouseenter', () => {
+        tbody.querySelectorAll(`tr[data-block="${tr.dataset.block}"]`).forEach(t => t.classList.add('row-group-hover'));
+      });
+      tr.addEventListener('mouseleave', () => {
+        tbody.querySelectorAll(`tr[data-block="${tr.dataset.block}"]`).forEach(t => t.classList.remove('row-group-hover'));
+      });
+    });
+  }
+
+  let currentFilteredRows = [];
+
+  function renderCurrent() {
+    const groupList = getSinteticoFiltered(buildGroupList(currentFilteredRows));
+    currentGroupList = groupList;
+
+    const blocksMap = new Map();
+    groupList.forEach(g => {
+      if (!blocksMap.has(g.id_recon)) blocksMap.set(g.id_recon, []);
+      blocksMap.get(g.id_recon).push(g);
+    });
+    const blocks = [...blocksMap.values()];
+
+    if (!blocks.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      pag.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    pag.style.display = 'flex';
+
+    const totalPages = Math.max(1, Math.ceil(blocks.length / PAGE_SIZE));
+    sintPageNum = Math.min(sintPageNum, totalPages);
+    const pageBlocks = blocks.slice((sintPageNum - 1) * PAGE_SIZE, sintPageNum * PAGE_SIZE);
+    renderGroupList(pageBlocks.flat());
+    renderPagination(blocks.length);
+  }
+
+  function render(rows) {
+    currentFilteredRows = rows;
+    renderCurrent();
+  }
+
+  function applyFilter() {
+    sintPageNum = 1;
+    const idRecon = filter.value;
+    render(idRecon ? allRows.filter(r => String(r.id_recon) === idRecon) : allRows);
+  }
+
+  function exportSintetico() {
+    const header = ['Dt. Execucao', 'Recon', 'Lado', 'Batido', 'Divergente', 'Orfao'];
+    const lines = [header.join('|')];
+    currentGroupList.forEach(g => {
+      lines.push([g.execution_date || '', g.recon, g.lado, g.Batido, g.Divergente, g['Órfão']].join('|'));
+    });
+    const content = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resultados.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  window.exportSintetico = exportSintetico;
+
+  try {
+    allRows = await apiFetch('GET', '/api/report_sintetic');
+
+    const recons = await apiFetch('GET', '/api/run/options');
+    recons.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      filter.appendChild(opt);
+    });
+
+    filter.addEventListener('change', applyFilter);
+    populateSinteticoFilters();
+
+    const idReconParam = new URLSearchParams(location.search).get('id_recon');
+    if (idReconParam && [...filter.options].some(o => o.value === idReconParam)) {
+      filter.value = idReconParam;
+      applyFilter();
+    } else {
+      render(allRows);
+    }
+  } catch (e) {
+    empty.style.display = 'block';
+  }
+})();
+</script>
+{% endblock %}

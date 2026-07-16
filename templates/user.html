@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-users">
+  <div class="page-header">
+    <h1>Usuários</h1>
+    <p>Cadastro de usuários do sistema</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openUserForm()" style="margin-left:auto">
+      + Novo usuário
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleUserFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th style="width:160px">Perfil</th>
+          <th>Nome</th>
+          <th>E-mail</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-users" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-col-profile" class="filter-select" onchange="filterUsersByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-col-name" class="filter-select" onchange="filterUsersByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-col-email" class="filter-select" onchange="filterUsersByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-users"></tbody>
+    </table>
+    <div id="empty-users" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="14" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M6 36c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhum usuário cadastrado</strong>
+      <p>Clique em "Novo usuário" para começar</p>
+    </div>
+    <div class="pagination" id="pag-users">
+      <span id="pag-info-users"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeUsersPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-users"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnUserEdit" disabled onclick="footerUserEdit()">Editar</button>
+    <button type="button" class="btn-voltar" id="btnUserDuplicate" disabled onclick="footerUserDuplicate()">Duplicar</button>
+    <button type="button" class="btn-voltar" id="btnUserDelete" disabled onclick="footerUserDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- USER FORM MODAL -->
+<div class="modal-overlay" id="userFormModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="userFormTitle">Novo usuário</h2>
+      <button class="modal-close" onclick="closeModal('userFormModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="userFormIdGroup" style="display:none">
+        <label>ID</label>
+        <input type="text" id="userFormId" disabled>
+      </div>
+      <div class="form-group">
+        <label>Perfil</label>
+        <select id="userFormProfile">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errUserProfile">Perfil é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="userFormName" placeholder="Nome completo">
+        <div class="form-error" id="errUserName">Nome é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="userFormEmail" placeholder="email@exemplo.com">
+        <div class="form-error" id="errUserEmail">E-mail é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label id="userPasswordLabel">Senha</label>
+        <input type="password" id="userFormPassword">
+        <div class="form-error" id="errUserPassword">Senha é obrigatória</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('userFormModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadUsers();</script>
+{% endblock %}

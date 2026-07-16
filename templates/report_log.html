@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Log — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-report-log">
+  <div class="page-header">
+    <h1>Log</h1>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead id="thead-log"></thead>
+      <tbody id="tbody-log"></tbody>
+    </table>
+    <div id="empty-log" class="empty-state" style="display:none">
+      <strong>Nenhum registro encontrado</strong>
+    </div>
+    <div class="pagination" id="footer-log" style="display:none">
+      <span id="footer-log-total"></span>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" id="btnExportar" class="btn-voltar">Exportar</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function loadReportLog() {
+  const thead = document.getElementById('thead-log');
+  const tbody = document.getElementById('tbody-log');
+  const empty = document.getElementById('empty-log');
+  const footer = document.getElementById('footer-log');
+  const footerTotal = document.getElementById('footer-log-total');
+
+  let columns = [];
+  let rows = [];
+  let filters = [];
+  let filterRowVisible = false;
+
+  function distinctValues(colIndex) {
+    const vals = new Set();
+    rows.forEach(r => vals.add(r[colIndex] === null || r[colIndex] === undefined ? '' : String(r[colIndex])));
+    return [...vals].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
+  function toggleFilterRow() {
+    filterRowVisible = !filterRowVisible;
+    if (!filterRowVisible) filters = columns.map(() => '');
+    renderHead();
+    renderBody();
+  }
+
+  function renderHead() {
+    let html = '<tr>' + columns.map(c => `<th style="cursor:pointer" title="Duplo clique para filtrar">${esc(c)}</th>`).join('') + '</tr>';
+    if (filterRowVisible) {
+      html += '<tr class="filter-row">' + columns.map((c, i) => {
+        const options = distinctValues(i).map(v => `<option value="${esc(v)}" ${filters[i] === v ? 'selected' : ''}>${esc(v)}</option>`).join('');
+        return `<th><select class="filter-select" data-col="${i}"><option value="">Todos</option>${options}</select></th>`;
+      }).join('') + '</tr>';
+    }
+    thead.innerHTML = html;
+
+    thead.querySelectorAll('tr').forEach((tr, idx) => {
+      if (idx === 0) tr.addEventListener('dblclick', toggleFilterRow);
+    });
+    if (filterRowVisible) {
+      thead.querySelectorAll('select[data-col]').forEach(sel => {
+        sel.addEventListener('change', () => {
+          filters[Number(sel.dataset.col)] = sel.value;
+          renderBody();
+        });
+      });
+    }
+  }
+
+  function getFiltered() {
+    return rows.filter(r => filters.every((f, i) => !f || String(r[i] === null || r[i] === undefined ? '' : r[i]) === f));
+  }
+
+  function renderBody() {
+    const filtered = getFiltered();
+    if (!columns.length || !filtered.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      footer.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    footer.style.display = 'flex';
+
+    const levelIdx = columns.indexOf('Nivel');
+
+    tbody.innerHTML = filtered.map(row => {
+      const rowClass = levelIdx !== -1 && row[levelIdx] === 'ERROR' ? ' class="row-error"' : '';
+      return '<tr' + rowClass + '>' + row.map(v => `<td>${v === null || v === undefined ? '' : esc(String(v))}</td>`).join('') + '</tr>';
+    }).join('');
+
+    const suffix = filtered.length !== rows.length ? ` (de ${rows.length} no total)` : '';
+    footerTotal.textContent = `${filtered.length} registro${filtered.length === 1 ? '' : 's'}${suffix}`;
+  }
+
+  function setData(data) {
+    columns = (data && data.columns) || [];
+    rows = (data && data.rows) || [];
+    filters = columns.map(() => '');
+    filterRowVisible = false;
+    if (!columns.length) {
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      footer.style.display = 'none';
+      return;
+    }
+    renderHead();
+    renderBody();
+  }
+
+  function downloadCsv(filename) {
+    const filtered = getFiltered();
+    const lines = [columns.join('|')];
+    filtered.forEach(row => {
+      lines.push(row.map(v => v === null || v === undefined ? '' : v).join('|'));
+    });
+    const content = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('btnExportar').addEventListener('click', () => {
+    if (!columns.length) {
+      toast('Nenhum dado para exportar');
+      return;
+    }
+    downloadCsv('log.csv');
+  });
+
+  try {
+    const res = await fetch('/api/report_log', { cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) throw data;
+    setData(data);
+  } catch (e) {
+    empty.style.display = 'block';
+  }
+})();
+</script>
+{% endblock %}

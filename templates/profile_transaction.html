@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil x Transação — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-profile-transaction">
+  <div class="page-header">
+    <h1>Perfil x Transação</h1>
+    <p>Associe itens de menu aos perfis</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openProfileTransactionBulkForm()" style="margin-left:auto">
+      + Perfil x Transação
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleProfileTransactionFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Perfil</th>
+          <th>Transação</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-profile-transaction" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-pt-profile" class="filter-select" onchange="filterProfileTransactionsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-pt-transaction" class="filter-select" onchange="filterProfileTransactionsByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-profile-transaction"></tbody>
+    </table>
+    <div id="empty-profile-transaction" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma associação cadastrada</strong>
+      <p>Clique em "+ Perfil x Transação" para começar</p>
+    </div>
+    <div class="pagination" id="pag-profile-transaction">
+      <span id="pag-info-profile-transaction"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeProfileTransactionsPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-profile-transaction"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnProfileTransactionDelete" disabled onclick="footerProfileTransactionDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- PROFILE TRANSACTION BULK MODAL -->
+<div class="modal-overlay" id="profileTransactionBulkModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Associar em massa</h2>
+      <button class="modal-close" onclick="closeModal('profileTransactionBulkModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Perfil</label>
+        <select id="profileTransactionBulkProfile" onchange="onProfileTransactionBulkProfileChange()">
+          <option value="">Selecione...</option>
+        </select>
+        <div class="form-error" id="errProfileTransactionBulkProfile">Perfil é obrigatório</div>
+      </div>
+      <div class="form-group">
+        <label>Transações</label>
+        <div id="profileTransactionBulkTree" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('profileTransactionBulkModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProfileTransactionBulk()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>loadProfileTransactions();</script>
+{% endblock %}
