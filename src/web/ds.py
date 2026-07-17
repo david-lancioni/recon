@@ -35,7 +35,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         recons   = db.session.execute(
-            db.select(Recon).filter_by(id_user=session['user_id']).order_by(Recon.name)
+            db.select(Recon).filter_by(id_company=session['company_id'], id_user=session['user_id']).order_by(Recon.name)
         ).scalars().all()
         sides    = db.session.execute(db.select(Side).order_by(Side.name)).scalars().all()
         ds_types = db.session.execute(db.select(DsType).order_by(DsType.name)).scalars().all()
@@ -54,7 +54,7 @@ def register(app):
             .join(Recon, Ds.id_recon == Recon.id)
             .outerjoin(Side, Ds.id_side == Side.id)
             .outerjoin(DsType, Ds.id_type == DsType.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Ds.id)
         )
         result = []
@@ -90,13 +90,14 @@ def register(app):
             return jsonify({'error': field_error}), 400
 
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=id_recon, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=id_recon, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not recon:
             return jsonify({'error': 'Conciliação inválida'}), 400
 
         ds = Ds(
             id=next_id(Ds),
+            id_company=session['company_id'],
             id_recon=id_recon,
             id_side=id_side,
             id_type=id_type,
@@ -117,7 +118,7 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         ds = db.session.execute(
             db.select(Ds).join(Recon, Ds.id_recon == Recon.id)
-                .filter(Ds.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Ds.id == record_id, Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not ds:
             abort(404)
@@ -204,12 +205,13 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         ds = db.session.execute(
             db.select(Ds).join(Recon, Ds.id_recon == Recon.id)
-                .filter(Ds.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Ds.id == record_id, Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not ds:
             abort(404)
         new_ds = Ds(
             id=next_id(Ds),
+            id_company=session['company_id'],
             id_recon=ds.id_recon,
             id_side=ds.id_side,
             id_type=ds.id_type,
@@ -229,6 +231,7 @@ def register(app):
         for f in fields:
             db.session.add(Field(
                 id=next_field_id,
+                id_company=session['company_id'],
                 id_ds=new_ds.id,
                 position=f.position,
                 name=f.name,
@@ -245,7 +248,7 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         ds = db.session.execute(
             db.select(Ds).join(Recon, Ds.id_recon == Recon.id)
-                .filter(Ds.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Ds.id == record_id, Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not ds:
             abort(404)

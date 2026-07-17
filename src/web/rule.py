@@ -12,7 +12,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         recons = db.session.execute(
-            db.select(Recon).filter_by(id_user=session['user_id']).order_by(Recon.name)
+            db.select(Recon).filter_by(id_company=session['company_id'], id_user=session['user_id']).order_by(Recon.name)
         ).scalars().all()
         return jsonify({'recons': [r.to_dict() for r in recons]})
 
@@ -23,7 +23,7 @@ def register(app):
         stmt = (
             db.select(Rule, Recon.name.label('recon_name'))
             .join(Recon, Rule.id_recon == Recon.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Rule.id)
         )
         result = []
@@ -45,11 +45,11 @@ def register(app):
         if not id_recon:
             return jsonify({'error': 'Conciliação é obrigatória'}), 400
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=id_recon, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=id_recon, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not recon:
             return jsonify({'error': 'Conciliação inválida'}), 400
-        rule = Rule(id=next_id(Rule), id_recon=int(id_recon), name=name)
+        rule = Rule(id=next_id(Rule), id_company=session['company_id'], id_recon=int(id_recon), name=name)
         db.session.add(rule)
         db.session.commit()
         return jsonify(rule.to_dict()), 201
@@ -60,7 +60,7 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         rule = db.session.execute(
             db.select(Rule).join(Recon, Rule.id_recon == Recon.id)
-                .filter(Rule.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Rule.id == record_id, Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rule:
             abort(404)
@@ -82,11 +82,11 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         rule = db.session.execute(
             db.select(Rule).join(Recon, Rule.id_recon == Recon.id)
-                .filter(Rule.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Rule.id == record_id, Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rule:
             abort(404)
-        new_rule = Rule(id=next_id(Rule), id_recon=rule.id_recon, name=rule.name)
+        new_rule = Rule(id=next_id(Rule), id_company=session['company_id'], id_recon=rule.id_recon, name=rule.name)
         db.session.add(new_rule)
         db.session.flush()
         rfs = db.session.execute(
@@ -96,6 +96,7 @@ def register(app):
         for rf in rfs:
             db.session.add(RuleField(
                 id=next_rf_id,
+                id_company=session['company_id'],
                 id_rule=new_rule.id,
                 id_rule_type=rf.id_rule_type,
                 id_field_1=rf.id_field_1,
@@ -114,7 +115,7 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         rule = db.session.execute(
             db.select(Rule).join(Recon, Rule.id_recon == Recon.id)
-                .filter(Rule.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Rule.id == record_id, Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rule:
             abort(404)

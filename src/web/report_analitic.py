@@ -57,7 +57,7 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         user_id = session['user_id']
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=id_recon, id_user=user_id)
+            db.select(Recon).filter_by(id=id_recon, id_company=session['company_id'], id_user=user_id)
         ).scalar_one_or_none()
         if not recon:
             abort(404)

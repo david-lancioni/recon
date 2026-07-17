@@ -13,7 +13,9 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         records = db.session.execute(
-            db.select(Recon).filter_by(id_user=session['user_id']).order_by(Recon.id)
+            db.select(Recon)
+            .filter_by(id_company=session['company_id'], id_user=session['user_id'])
+            .order_by(Recon.id)
         ).scalars().all()
         return jsonify([r.to_dict() for r in records])
 
@@ -26,7 +28,10 @@ def register(app):
         description = (data.get('description') or '').strip() or None
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
-        record = Recon(id=next_id(Recon), id_user=session['user_id'], name=name, description=description)
+        record = Recon(
+            id=next_id(Recon), id_company=session['company_id'], id_user=session['user_id'],
+            name=name, description=description
+        )
         db.session.add(record)
         db.session.commit()
         return jsonify(record.to_dict()), 201
@@ -36,7 +41,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         record = db.session.execute(
-            db.select(Recon).filter_by(id=record_id, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=record_id, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not record:
             abort(404)
@@ -55,7 +60,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         record = db.session.execute(
-            db.select(Recon).filter_by(id=record_id, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=record_id, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not record:
             abort(404)
@@ -87,6 +92,7 @@ def register(app):
     def api_recon_import():
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
+        id_company = session['company_id']
         data = request.get_json()
         name = (data.get('name') or '').strip()
         if not name:
@@ -101,7 +107,10 @@ def register(app):
         aggregations = {ag.name: ag.id for ag in db.session.execute(db.select(Aggregation)).scalars().all()}
 
         try:
-            recon = Recon(id=next_id(Recon), id_user=session['user_id'], name=name, description=description)
+            recon = Recon(
+                id=next_id(Recon), id_company=id_company, id_user=session['user_id'],
+                name=name, description=description
+            )
             db.session.add(recon)
             db.session.flush()
 
@@ -114,6 +123,7 @@ def register(app):
             for ds_data in (data.get('datasources') or []):
                 ds = Ds(
                     id=next_ds_id,
+                    id_company=id_company,
                     id_recon=recon.id,
                     id_side=sides.get(ds_data.get('side') or ''),
                     id_type=ds_types.get(ds_data.get('type') or ''),
@@ -130,6 +140,7 @@ def register(app):
                 for f_data in (ds_data.get('fields') or []):
                     field = Field(
                         id=next_field_id,
+                        id_company=id_company,
                         id_ds=ds.id,
                         position=int(f_data.get('position') or 0),
                         name=f_data.get('name') or '',
@@ -142,7 +153,7 @@ def register(app):
                     field_map[f'{ds.name} / {field.name}'] = field.id
 
             for rule_data in (data.get('rules') or []):
-                rule = Rule(id=next_rule_id, id_recon=recon.id, name=rule_data.get('name') or '')
+                rule = Rule(id=next_rule_id, id_company=id_company, id_recon=recon.id, name=rule_data.get('name') or '')
                 next_rule_id += 1
                 db.session.add(rule)
                 db.session.flush()
@@ -155,6 +166,7 @@ def register(app):
                         raise ValueError(f'Campo não encontrado: "{f1_key}" ou "{f2_key}"')
                     rf = RuleField(
                         id=next_rf_id,
+                        id_company=id_company,
                         id_rule=rule.id,
                         id_rule_type=rule_types.get(rf_data.get('type') or ''),
                         id_field_1=f1_id,
@@ -179,13 +191,17 @@ def register(app):
     def api_recon_duplicate(record_id):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
+        id_company = session['company_id']
         record = db.session.execute(
-            db.select(Recon).filter_by(id=record_id, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=record_id, id_company=id_company, id_user=session['user_id'])
         ).scalar_one_or_none()
         if not record:
             abort(404)
 
-        new_recon = Recon(id=next_id(Recon), id_user=session['user_id'], name=record.name, description=record.description)
+        new_recon = Recon(
+            id=next_id(Recon), id_company=id_company, id_user=session['user_id'],
+            name=record.name, description=record.description
+        )
         db.session.add(new_recon)
         db.session.flush()
 
@@ -200,6 +216,7 @@ def register(app):
         for ds in ds_rows:
             new_ds = Ds(
                 id=next_ds_id,
+                id_company=id_company,
                 id_recon=new_recon.id,
                 id_side=ds.id_side,
                 id_type=ds.id_type,
@@ -216,6 +233,7 @@ def register(app):
             for f in db.session.execute(db.select(Field).filter_by(id_ds=ds.id)).scalars().all():
                 new_field = Field(
                     id=next_field_id,
+                    id_company=id_company,
                     id_ds=new_ds.id,
                     position=f.position,
                     name=f.name,
@@ -229,13 +247,14 @@ def register(app):
 
         # Copy rules and rule_fields, remapping field references
         for rule in db.session.execute(db.select(Rule).filter_by(id_recon=record_id)).scalars().all():
-            new_rule = Rule(id=next_rule_id, id_recon=new_recon.id, name=rule.name)
+            new_rule = Rule(id=next_rule_id, id_company=id_company, id_recon=new_recon.id, name=rule.name)
             next_rule_id += 1
             db.session.add(new_rule)
             db.session.flush()
             for rf in db.session.execute(db.select(RuleField).filter_by(id_rule=rule.id)).scalars().all():
                 db.session.add(RuleField(
                     id=next_rf_id,
+                    id_company=id_company,
                     id_rule=new_rule.id,
                     id_rule_type=rf.id_rule_type,
                     id_field_1=field_id_map.get(rf.id_field_1, rf.id_field_1),
@@ -254,7 +273,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=record_id, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=record_id, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not recon:
             abort(404)

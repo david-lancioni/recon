@@ -18,14 +18,36 @@ DEFAULT CHARACTER SET = utf8mb3;
 
 
 -- -----------------------------------------------------
+-- Table `tb_company`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_company` ;
+
+CREATE TABLE IF NOT EXISTS `tb_company` (
+  `id` INT NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  `create_at` DATETIME NOT NULL,
+  `expire_date` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+
+-- -----------------------------------------------------
 -- Table `tb_profile`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `tb_profile` ;
 
 CREATE TABLE IF NOT EXISTS `tb_profile` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`id`))
+  PRIMARY KEY (`id`),
+  INDEX `fk_profile_company_idx` (`id_company` ASC) VISIBLE,
+  CONSTRAINT `fk_profile_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -38,15 +60,20 @@ DROP TABLE IF EXISTS `tb_user` ;
 CREATE TABLE IF NOT EXISTS `tb_user` (
   `id` INT NOT NULL,
   `id_profile` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `uk_user_username` (`username` ASC) VISIBLE,
+  UNIQUE INDEX `uk_user_company_username` (`id_company` ASC, `username` ASC) VISIBLE,
   INDEX `fk_user_profile_idx` (`id_profile` ASC) VISIBLE,
+  INDEX `fk_user_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_user_profile`
     FOREIGN KEY (`id_profile`)
-    REFERENCES `tb_profile` (`id`))
+    REFERENCES `tb_profile` (`id`),
+  CONSTRAINT `fk_user_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -58,14 +85,21 @@ DROP TABLE IF EXISTS `tb_recon` ;
 
 CREATE TABLE IF NOT EXISTS `tb_recon` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_user` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `description` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_recon_user_idx` (`id_user` ASC) VISIBLE,
+  INDEX `fk_recon_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_recon_user`
     FOREIGN KEY (`id_user`)
     REFERENCES `tb_user` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_recon_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
@@ -105,6 +139,7 @@ DROP TABLE IF EXISTS `tb_ds` ;
 
 CREATE TABLE IF NOT EXISTS `tb_ds` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_recon` INT NOT NULL,
   `id_side` INT NOT NULL,
   `id_type` INT NOT NULL,
@@ -118,6 +153,7 @@ CREATE TABLE IF NOT EXISTS `tb_ds` (
   INDEX `fk_ds_recon_idx` (`id_recon` ASC) VISIBLE,
   INDEX `fk_ds_side_idx` (`id_side` ASC) VISIBLE,
   INDEX `fk_ds_ds_type_idx` (`id_type` ASC) VISIBLE,
+  INDEX `fk_ds_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_ds_recon`
     FOREIGN KEY (`id_recon`)
     REFERENCES `tb_recon` (`id`)
@@ -131,6 +167,11 @@ CREATE TABLE IF NOT EXISTS `tb_ds` (
   CONSTRAINT `fk_ds_ds_type`
     FOREIGN KEY (`id_type`)
     REFERENCES `tb_ds_type` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ds_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
@@ -157,6 +198,7 @@ DROP TABLE IF EXISTS `tb_field` ;
 
 CREATE TABLE IF NOT EXISTS `tb_field` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_ds` INT NOT NULL,
   `position` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
@@ -165,6 +207,7 @@ CREATE TABLE IF NOT EXISTS `tb_field` (
   PRIMARY KEY (`id`),
   INDEX `fk_field_ds_idx` (`id_ds` ASC) VISIBLE,
   INDEX `fk_field_field_type_idx` (`id_field_type` ASC) VISIBLE,
+  INDEX `fk_field_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_field_ds`
     FOREIGN KEY (`id_ds`)
     REFERENCES `tb_ds` (`id`)
@@ -173,6 +216,11 @@ CREATE TABLE IF NOT EXISTS `tb_field` (
   CONSTRAINT `fk_field_field_type`
     FOREIGN KEY (`id_field_type`)
     REFERENCES `tb_field_type` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_field_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
@@ -185,6 +233,7 @@ DEFAULT CHARACTER SET = utf8mb3;
 DROP TABLE IF EXISTS `tb_log` ;
 
 CREATE TABLE IF NOT EXISTS `tb_log` (
+  `id_company` INT NOT NULL,
   `id_user` INT NOT NULL,
   `id_recon` INT NOT NULL,
   `level` VARCHAR(50) NOT NULL,
@@ -194,12 +243,16 @@ CREATE TABLE IF NOT EXISTS `tb_log` (
   `message` TEXT NULL DEFAULT NULL,
   INDEX `fk_log_user_idx` (`id_user` ASC) VISIBLE,
   INDEX `fk_log_recon_idx` (`id_recon` ASC) VISIBLE,
+  INDEX `fk_log_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_log_recon`
     FOREIGN KEY (`id_recon`)
     REFERENCES `tb_recon` (`id`),
   CONSTRAINT `fk_log_user`
     FOREIGN KEY (`id_user`)
-    REFERENCES `tb_user` (`id`))
+    REFERENCES `tb_user` (`id`),
+  CONSTRAINT `fk_log_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -224,13 +277,20 @@ DROP TABLE IF EXISTS `tb_rule` ;
 
 CREATE TABLE IF NOT EXISTS `tb_rule` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_recon` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_rule_recon_idx` (`id_recon` ASC) VISIBLE,
+  INDEX `fk_rule_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_rule_recon`
     FOREIGN KEY (`id_recon`)
     REFERENCES `tb_recon` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_rule_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
@@ -257,6 +317,7 @@ DROP TABLE IF EXISTS `tb_rule_field` ;
 
 CREATE TABLE IF NOT EXISTS `tb_rule_field` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_rule` INT NOT NULL,
   `id_rule_type` INT NOT NULL,
   `id_field_1` INT NOT NULL,
@@ -271,6 +332,12 @@ CREATE TABLE IF NOT EXISTS `tb_rule_field` (
   INDEX `fk_rule_field_aggregation_idx` (`id_aggregation` ASC) VISIBLE,
   INDEX `fk_rule_field_field_1_idx` (`id_field_1` ASC) VISIBLE,
   INDEX `fk_rule_field_field_2_idx` (`id_field_2` ASC) VISIBLE,
+  INDEX `fk_rule_field_company_idx` (`id_company` ASC) VISIBLE,
+  CONSTRAINT `fk_rule_field_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_rule_field_operator`
     FOREIGN KEY (`id_operator`)
     REFERENCES `tb_operator` (`id`)
@@ -321,12 +388,14 @@ DROP TABLE IF EXISTS `tb_profile_transaction` ;
 
 CREATE TABLE IF NOT EXISTS `tb_profile_transaction` (
   `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
   `id_profile` INT NOT NULL,
   `id_transaction` INT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `uk_profile_transaction` (`id_profile` ASC, `id_transaction` ASC) VISIBLE,
   INDEX `fk_profile_transaction_profile_idx` (`id_profile` ASC) VISIBLE,
   INDEX `fk_profile_transaction_transaction_idx` (`id_transaction` ASC) VISIBLE,
+  INDEX `fk_profile_transaction_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_profile_transaction_profile`
     FOREIGN KEY (`id_profile`)
     REFERENCES `tb_profile` (`id`)
@@ -335,6 +404,11 @@ CREATE TABLE IF NOT EXISTS `tb_profile_transaction` (
   CONSTRAINT `fk_profile_transaction_transaction`
     FOREIGN KEY (`id_transaction`)
     REFERENCES `tb_transaction` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_profile_transaction_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB

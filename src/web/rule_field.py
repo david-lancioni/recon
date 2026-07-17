@@ -16,14 +16,14 @@ def register(app):
         rule_rows = db.session.execute(
             db.select(Rule, Recon.id.label('recon_id'), Recon.name.label('recon_name'))
             .join(Recon, Rule.id_recon == Recon.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Recon.name, Rule.name)
         ).all()
         field_rows = db.session.execute(
             db.select(Field, Ds.id_recon.label('recon_id'), Ds.name.label('ds_name'), Ds.id.label('ds_id'), Ds.id_side.label('ds_side'))
             .join(Ds, Field.id_ds == Ds.id)
             .join(Recon, Ds.id_recon == Recon.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Field.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Ds.name, Field.position)
         ).all()
         aggregations = db.session.execute(db.select(Aggregation).order_by(Aggregation.id)).scalars().all()
@@ -61,7 +61,7 @@ def register(app):
             .outerjoin(F2, RuleField.id_field_2 == F2.id)
             .outerjoin(Operator, RuleField.id_operator == Operator.id)
             .outerjoin(Aggregation, RuleField.id_aggregation == Aggregation.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(RuleField.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(RuleField.id)
         )
         result = []
@@ -100,7 +100,7 @@ def register(app):
 
         rule = db.session.execute(
             db.select(Rule).join(Recon, Rule.id_recon == Recon.id)
-                .filter(Rule.id == int(id_rule), Recon.id_user == session['user_id'])
+                .filter(Rule.id == int(id_rule), Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rule:
             return jsonify({'error': 'Regra inválida'}), 400
@@ -108,7 +108,7 @@ def register(app):
         field1 = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == int(id_field_1), Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
+                .filter(Field.id == int(id_field_1), Field.id_company == session['company_id'], Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
         ).scalar_one_or_none()
         if not field1:
             return jsonify({'error': 'Campo (Lado 1) inválido'}), 400
@@ -116,7 +116,7 @@ def register(app):
         field2 = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == int(id_field_2), Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
+                .filter(Field.id == int(id_field_2), Field.id_company == session['company_id'], Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
         ).scalar_one_or_none()
         if not field2:
             return jsonify({'error': 'Campo (Lado 2) inválido'}), 400
@@ -128,6 +128,7 @@ def register(app):
 
         rf = RuleField(
             id           = next_id(RuleField),
+            id_company   = session['company_id'],
             id_rule      = int(id_rule),
             id_rule_type = int(id_rule_type) if id_rule_type else None,
             id_field_1   = int(id_field_1),
@@ -147,7 +148,7 @@ def register(app):
         rf = db.session.execute(
             db.select(RuleField).join(Rule, RuleField.id_rule == Rule.id)
                 .join(Recon, Rule.id_recon == Recon.id)
-                .filter(RuleField.id == record_id, Recon.id_user == session['user_id'])
+                .filter(RuleField.id == record_id, RuleField.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rf:
             abort(404)
@@ -170,7 +171,7 @@ def register(app):
 
         rule = db.session.execute(
             db.select(Rule).join(Recon, Rule.id_recon == Recon.id)
-                .filter(Rule.id == int(id_rule), Recon.id_user == session['user_id'])
+                .filter(Rule.id == int(id_rule), Rule.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rule:
             return jsonify({'error': 'Regra inválida'}), 400
@@ -178,7 +179,7 @@ def register(app):
         field1 = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == int(id_field_1), Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
+                .filter(Field.id == int(id_field_1), Field.id_company == session['company_id'], Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
         ).scalar_one_or_none()
         if not field1:
             return jsonify({'error': 'Campo (Lado 1) inválido'}), 400
@@ -186,7 +187,7 @@ def register(app):
         field2 = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == int(id_field_2), Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
+                .filter(Field.id == int(id_field_2), Field.id_company == session['company_id'], Recon.id_user == session['user_id'], Ds.id_recon == rule.id_recon)
         ).scalar_one_or_none()
         if not field2:
             return jsonify({'error': 'Campo (Lado 2) inválido'}), 400
@@ -213,12 +214,13 @@ def register(app):
         rf = db.session.execute(
             db.select(RuleField).join(Rule, RuleField.id_rule == Rule.id)
                 .join(Recon, Rule.id_recon == Recon.id)
-                .filter(RuleField.id == record_id, Recon.id_user == session['user_id'])
+                .filter(RuleField.id == record_id, RuleField.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rf:
             abort(404)
         new_rf = RuleField(
             id=next_id(RuleField),
+            id_company=session['company_id'],
             id_rule=rf.id_rule,
             id_rule_type=rf.id_rule_type,
             id_field_1=rf.id_field_1,
@@ -238,7 +240,7 @@ def register(app):
         rf = db.session.execute(
             db.select(RuleField).join(Rule, RuleField.id_rule == Rule.id)
                 .join(Recon, Rule.id_recon == Recon.id)
-                .filter(RuleField.id == record_id, Recon.id_user == session['user_id'])
+                .filter(RuleField.id == record_id, RuleField.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not rf:
             abort(404)

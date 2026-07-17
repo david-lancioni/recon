@@ -20,27 +20,34 @@ DELETE FROM `tb_log`;
 DELETE FROM `tb_recon`;
 DELETE FROM `tb_user`;
 DELETE FROM `tb_profile`;
+DELETE FROM `tb_company`;
+
+
+-- -----------------------------------------------------
+-- Data for table `tb_company`
+-- -----------------------------------------------------
+INSERT INTO `tb_company` (`id`, `name`, `create_at`, `expire_date`) VALUES (1, 'Recon', NOW(), NULL);
 
 
 -- -----------------------------------------------------
 -- Data for table `tb_profile`
 -- -----------------------------------------------------
-INSERT INTO `tb_profile` (`id`, `name`) VALUES (1, 'Administrador');
-INSERT INTO `tb_profile` (`id`, `name`) VALUES (2, 'Usuário');
+INSERT INTO `tb_profile` (`id`, `id_company`, `name`) VALUES (1, 1, 'Administrador');
+INSERT INTO `tb_profile` (`id`, `id_company`, `name`) VALUES (2, 1, 'Usuário');
 
 
 -- -----------------------------------------------------
 -- Data for table `tb_user`
 -- -----------------------------------------------------
-INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `username`, `password`) VALUES (1, 1, 'Administrador', 'admin', 'admin');
-INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `username`, `password`) VALUES (2, 2, 'Demo', 'demo', 'demo');
+INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (1, 1, 1, 'Administrador', 'admin', 'admin');
+INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (2, 2, 1, 'Demo', 'demo', 'demo');
 
 
 -- -----------------------------------------------------
 -- Data for table `tb_recon`
 -- -----------------------------------------------------
-INSERT INTO `tb_recon` (`id`, `id_user`, `name`, `description`) VALUES (1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
-INSERT INTO `tb_recon` (`id`, `id_user`, `name`, `description`) VALUES (2, 2, 'Saldos x Extrato', 'Conciliação para demonstração');
+INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `name`, `description`) VALUES (1, 1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
+INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `name`, `description`) VALUES (2, 1, 2, 'Saldos x Extrato', 'Conciliação para demonstração');
 
 
 -- -----------------------------------------------------
@@ -65,10 +72,10 @@ INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (7, 'SQLite');
 -- -----------------------------------------------------
 -- Data for table `tb_ds`
 -- -----------------------------------------------------
-INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (1, 1, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (2, 1, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (3, 2, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (4, 2, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (1, 1, 1, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (2, 1, 1, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (3, 1, 2, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (4, 1, 2, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
 
 
 -- -----------------------------------------------------
@@ -83,18 +90,18 @@ INSERT INTO `tb_field_type` (`id`, `name`) VALUES (4, 'Data');
 -- -----------------------------------------------------
 -- Data for table `tb_field`
 -- -----------------------------------------------------
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (1, 1, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (2, 1, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (3, 1, 3, 'Valor', 3, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 2, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 2, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 2, 3, 'Valor', 3, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (7, 3, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (8, 3, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (9, 3, 3, 'Valor', 3, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (10, 4, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (11, 4, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (12, 4, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (1, 1, 1, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (2, 1, 1, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (3, 1, 1, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 1, 2, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 1, 2, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 1, 2, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (7, 1, 3, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (8, 1, 3, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (9, 1, 3, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (10, 1, 4, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (11, 1, 4, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (12, 1, 4, 3, 'Valor', 3, NULL);
 
 
 -- -----------------------------------------------------
@@ -112,8 +119,8 @@ INSERT INTO `tb_operator` (`id`, `name`) VALUES (7, '<>');
 -- -----------------------------------------------------
 -- Data for table `tb_rule`
 -- -----------------------------------------------------
-INSERT INTO `tb_rule` (`id`, `id_recon`, `name`) VALUES (1, 1, 'Batimento de arquivos');
-INSERT INTO `tb_rule` (`id`, `id_recon`, `name`) VALUES (2, 2, 'Batimento de arquivos');
+INSERT INTO `tb_rule` (`id`, `id_company`, `id_recon`, `name`) VALUES (1, 1, 1, 'Batimento de arquivos');
+INSERT INTO `tb_rule` (`id`, `id_company`, `id_recon`, `name`) VALUES (2, 1, 2, 'Batimento de arquivos');
 
 
 -- -----------------------------------------------------
@@ -135,12 +142,12 @@ INSERT INTO `tb_aggregation` (`id`, `name`) VALUES (4, 'Média');
 -- -----------------------------------------------------
 -- Data for table `tb_rule_field`
 -- -----------------------------------------------------
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (1, 1, 1, 1, 1, NULL, 1, NULL);
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (2, 1, 1, 2, 2, NULL, 1, NULL);
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (3, 1, 2, 3, 3, NULL, 1, 1);
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (4, 2, 1, 7, 10, NULL, 1, NULL);
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (5, 2, 1, 8, 11, NULL, 1, NULL);
-INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (6, 2, 2, 9, 12, NULL, 1, 1);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (1, 1, 1, 1, 1, 1, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (2, 1, 1, 1, 2, 2, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (3, 1, 1, 2, 3, 3, NULL, 1, 1);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (4, 1, 2, 1, 7, 10, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (5, 1, 2, 1, 8, 11, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (6, 1, 2, 2, 9, 12, NULL, 1, 1);
 
 
 -- -----------------------------------------------------
@@ -162,32 +169,34 @@ INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12,
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Analitico', 'report_analitic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Logs', 'report_log');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (16, 1, 'Usuário', 'user');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 1, 'Empresa', 'company');
 
 
 -- -----------------------------------------------------
 -- Data for table `tb_profile_transaction`
 -- -----------------------------------------------------
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (1, 1, 1);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (2, 1, 2);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (3, 1, 3);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (4, 1, 4);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (5, 1, 5);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (6, 1, 6);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (7, 1, 7);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (8, 1, 8);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (9, 1, 9);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (10, 1, 10);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (11, 1, 11);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (12, 1, 12);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (13, 1, 13);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (14, 1, 14);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (15, 1, 15);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (16, 1, 16);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (17, 2, 12);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (18, 2, 11);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (19, 2, 13);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (20, 2, 14);
-INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (21, 2, 15);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (1, 1, 1, 1);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (2, 1, 1, 2);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (3, 1, 1, 3);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (4, 1, 1, 4);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (5, 1, 1, 5);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (6, 1, 1, 6);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (7, 1, 1, 7);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (8, 1, 1, 8);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (9, 1, 1, 9);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (10, 1, 1, 10);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (11, 1, 1, 11);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (12, 1, 1, 12);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (13, 1, 1, 13);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (14, 1, 1, 14);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (15, 1, 1, 15);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (16, 1, 1, 16);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (17, 1, 2, 12);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (18, 1, 2, 11);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (19, 1, 2, 13);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (20, 1, 2, 14);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (21, 1, 2, 15);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (22, 1, 1, 17);
 
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;

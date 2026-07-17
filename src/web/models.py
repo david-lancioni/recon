@@ -16,6 +16,7 @@ def _today():
 class Recon(db.Model):
     __tablename__ = 'tb_recon'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_user = db.Column(db.Integer, db.ForeignKey('tb_user.id'), nullable=True)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -23,6 +24,7 @@ class Recon(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'id_company': self.id_company,
             'id_user': self.id_user,
             'name': self.name,
             'description': self.description or ''
@@ -51,13 +53,30 @@ class Campo(db.Model):
         return {'id': self.id, 'codigo': self.codigo, 'descricao': self.descricao, 'criadoEm': self.criado_em}
 
 
+class Company(db.Model):
+    __tablename__ = 'tb_company'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    create_at = db.Column(db.DateTime, nullable=False)
+    expire_date = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'create_at': self.create_at.isoformat() if self.create_at else None,
+            'expire_date': self.expire_date.isoformat() if self.expire_date else None
+        }
+
+
 class Profile(db.Model):
     __tablename__ = 'tb_profile'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     name = db.Column(db.String(50), nullable=True)
 
     def to_dict(self):
-        return {'id': self.id, 'name': self.name}
+        return {'id': self.id, 'id_company': self.id_company, 'name': self.name}
 
 
 class Transaction(db.Model):
@@ -79,23 +98,39 @@ class Transaction(db.Model):
 class ProfileTransaction(db.Model):
     __tablename__ = 'tb_profile_transaction'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_profile = db.Column(db.Integer, db.ForeignKey('tb_profile.id'), nullable=False)
     id_transaction = db.Column(db.Integer, db.ForeignKey('tb_transaction.id'), nullable=False)
 
     def to_dict(self):
-        return {'id': self.id, 'id_profile': self.id_profile, 'id_transaction': self.id_transaction}
+        return {
+            'id': self.id,
+            'id_company': self.id_company,
+            'id_profile': self.id_profile,
+            'id_transaction': self.id_transaction
+        }
 
 
 class User(db.Model):
     __tablename__ = 'tb_user'
+    __table_args__ = (
+        db.UniqueConstraint('id_company', 'username', name='uk_user_company_username'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     id_profile = db.Column(db.Integer, db.ForeignKey('tb_profile.id'), nullable=False)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    username = db.Column(db.String(255), unique=True, nullable=False)
+    username = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(50), nullable=False)
 
     def to_dict(self):
-        return {'id': self.id, 'id_profile': self.id_profile, 'name': self.name, 'username': self.username}
+        return {
+            'id': self.id,
+            'id_profile': self.id_profile,
+            'id_company': self.id_company,
+            'name': self.name,
+            'username': self.username
+        }
 
 
 class Side(db.Model):
@@ -119,6 +154,7 @@ class DsType(db.Model):
 class Ds(db.Model):
     __tablename__ = 'tb_ds'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_recon = db.Column(db.Integer, db.ForeignKey('tb_recon.id'), nullable=True)
     id_side = db.Column(db.Integer, db.ForeignKey('tb_side.id'), nullable=True)
     id_type = db.Column(db.Integer, db.ForeignKey('tb_ds_type.id'), nullable=True)
@@ -132,6 +168,7 @@ class Ds(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'id_company': self.id_company,
             'id_recon': self.id_recon,
             'id_side': self.id_side,
             'id_type': self.id_type,
@@ -147,11 +184,12 @@ class Ds(db.Model):
 class Rule(db.Model):
     __tablename__ = 'tb_rule'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_recon = db.Column(db.Integer, db.ForeignKey('tb_recon.id'), nullable=True)
     name = db.Column(db.String(255), nullable=False)
 
     def to_dict(self):
-        return {'id': self.id, 'id_recon': self.id_recon, 'name': self.name}
+        return {'id': self.id, 'id_company': self.id_company, 'id_recon': self.id_recon, 'name': self.name}
 
 
 class FieldType(db.Model):
@@ -166,6 +204,7 @@ class FieldType(db.Model):
 class Field(db.Model):
     __tablename__ = 'tb_field'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_ds = db.Column(db.Integer, db.ForeignKey('tb_ds.id'), nullable=True)
     position = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(255), nullable=False)
@@ -174,6 +213,7 @@ class Field(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'id_company': self.id_company,
             'id_ds': self.id_ds,
             'position': self.position,
             'name': self.name,
@@ -212,6 +252,7 @@ class Aggregation(db.Model):
 class RuleField(db.Model):
     __tablename__ = 'tb_rule_field'
     id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_rule = db.Column(db.Integer, db.ForeignKey('tb_rule.id'), nullable=True)
     id_rule_type = db.Column(db.Integer, db.ForeignKey('tb_rule_type.id'), nullable=True)
     id_field_1 = db.Column(db.Integer, db.ForeignKey('tb_field.id'), nullable=False)
@@ -223,6 +264,7 @@ class RuleField(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'id_company': self.id_company,
             'id_rule': self.id_rule,
             'id_rule_type': self.id_rule_type,
             'id_field_1': self.id_field_1,
@@ -239,6 +281,7 @@ class Log(db.Model):
     # SQLAlchemy still requires at least one primary_key column for mapping, so the
     # NOT NULL columns are marked as a composite identity for that purpose only;
     # nothing in the app fetches a Log row by identity.
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_user = db.Column(db.Integer, db.ForeignKey('tb_user.id'), primary_key=True, nullable=False)
     id_recon = db.Column(db.Integer, db.ForeignKey('tb_recon.id'), primary_key=True, nullable=False)
     level = db.Column(db.String(50), primary_key=True, nullable=False)
@@ -249,6 +292,7 @@ class Log(db.Model):
 
     def to_dict(self):
         return {
+            'id_company': self.id_company,
             'id_user': self.id_user,
             'id_recon': self.id_recon,
             'level': self.level,

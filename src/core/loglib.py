@@ -30,6 +30,7 @@ class LogLib(BaseLib):
         sql = """
         INSERT INTO tb_log
         (
+            id_company,
             id_user,
             id_recon,
             level,
@@ -38,6 +39,7 @@ class LogLib(BaseLib):
             method_name,
             message
         ) VALUES (
+            (SELECT id_company FROM tb_recon WHERE id = %s),
             %s,
             %s,
             %s,
@@ -47,7 +49,7 @@ class LogLib(BaseLib):
             %s
         )
         """
-        params = (self.id_user, self.id_recon, level_name, class_name, method_name, message)
+        params = (self.id_recon, self.id_user, self.id_recon, level_name, class_name, method_name, message)
         dblib.execute_params(self.cn, sql, params)
 
     def elapsed_time(self, t1, t2):

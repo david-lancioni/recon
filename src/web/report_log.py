@@ -51,8 +51,9 @@ def register(app):
                 from tb_log l
                 left join tb_user u on l.id_user = u.id
                 left join tb_recon r on l.id_recon = r.id
+                where l.id_company = %s
                 order by l.created_at
-            """)
+            """, (session['company_id'],))
             all_columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             cursor.close()

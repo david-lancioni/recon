@@ -19,7 +19,9 @@ def register(app):
         user_id = session['user_id']
 
         recons = db.session.execute(
-            db.select(Recon.id, Recon.name).filter_by(id_user=user_id).order_by(Recon.id)
+            db.select(Recon.id, Recon.name)
+            .filter_by(id_company=session['company_id'], id_user=user_id)
+            .order_by(Recon.id)
         ).all()
 
         rows = []

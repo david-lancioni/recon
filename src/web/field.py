@@ -14,7 +14,7 @@ def register(app):
         ds_rows = db.session.execute(
             db.select(Ds, Recon.name.label('recon_name'))
             .join(Recon, Ds.id_recon == Recon.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Recon.name, Ds.name)
         ).all()
         field_types = db.session.execute(db.select(FieldType).order_by(FieldType.name)).scalars().all()
@@ -32,7 +32,7 @@ def register(app):
             .join(Ds, Field.id_ds == Ds.id)
             .join(Recon, Ds.id_recon == Recon.id)
             .outerjoin(FieldType, Field.id_field_type == FieldType.id)
-            .filter(Recon.id_user == session['user_id'])
+            .filter(Field.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Ds.id, Field.position)
         )
         result = []
@@ -60,7 +60,7 @@ def register(app):
             return jsonify({'error': 'Fonte de dados é obrigatória'}), 400
         recon = db.session.execute(
             db.select(Ds).join(Recon, Ds.id_recon == Recon.id)
-                .filter(Ds.id == int(id_ds), Recon.id_user == session['user_id'])
+                .filter(Ds.id == int(id_ds), Ds.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not recon:
             return jsonify({'error': 'Fonte de dados inválida'}), 400
@@ -70,6 +70,7 @@ def register(app):
             return jsonify({'error': 'Tipo é obrigatório'}), 400
         field = Field(
             id=next_id(Field),
+            id_company=session['company_id'],
             id_ds=int(id_ds), position=int(position), name=name,
             id_field_type=int(id_field_type) if id_field_type else None, value=value
         )
@@ -84,7 +85,7 @@ def register(app):
         field = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Field.id == record_id, Field.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not field:
             abort(404)
@@ -104,7 +105,8 @@ def register(app):
             return jsonify({'error': 'Tipo é obrigatório'}), 400
         dup = db.session.execute(
             db.select(Field).filter(
-                Field.id_ds == int(id_ds), Field.position == int(position), Field.id != record_id
+                Field.id_ds == int(id_ds), Field.id_company == session['company_id'],
+                Field.position == int(position), Field.id != record_id
             )
         ).scalar_one_or_none()
         if dup:
@@ -124,12 +126,13 @@ def register(app):
         field = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Field.id == record_id, Field.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not field:
             abort(404)
         new_field = Field(
             id=next_id(Field),
+            id_company=session['company_id'],
             id_ds=field.id_ds,
             position=field.position,
             name=field.name,
@@ -147,7 +150,7 @@ def register(app):
         field = db.session.execute(
             db.select(Field).join(Ds, Field.id_ds == Ds.id)
                 .join(Recon, Ds.id_recon == Recon.id)
-                .filter(Field.id == record_id, Recon.id_user == session['user_id'])
+                .filter(Field.id == record_id, Field.id_company == session['company_id'], Recon.id_user == session['user_id'])
         ).scalar_one_or_none()
         if not field:
             abort(404)

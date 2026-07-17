@@ -13,7 +13,9 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         rows = db.session.execute(
-            db.select(Recon.id, Recon.name).filter_by(id_user=session['user_id']).order_by(Recon.id)
+            db.select(Recon.id, Recon.name)
+            .filter_by(id_company=session['company_id'], id_user=session['user_id'])
+            .order_by(Recon.id)
         ).all()
         return jsonify([{'id': r.id, 'name': r.name} for r in rows])
 
@@ -23,8 +25,12 @@ def register(app):
             return jsonify({'error': 'Não autenticado'}), 401
         rows = db.session.execute(
             db.select(Ds.id, Ds.name, Ds.id_type, Ds.filename, Ds.id_side, Side.name.label('side_name'))
+            .join(Recon, Ds.id_recon == Recon.id)
             .outerjoin(Side, Ds.id_side == Side.id)
-            .filter(Ds.id_recon == recon_id, Ds.id_type.in_([1, 2]))
+            .filter(
+                Ds.id_recon == recon_id, Ds.id_type.in_([1, 2]),
+                Recon.id_company == session['company_id'], Recon.id_user == session['user_id']
+            )
             .order_by(Ds.id_side, Ds.id)
         ).all()
         return jsonify([
@@ -40,7 +46,7 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=recon_id, id_user=session['user_id'])
+            db.select(Recon).filter_by(id=recon_id, id_company=session['company_id'], id_user=session['user_id'])
         ).scalar_one_or_none()
         if not recon:
             abort(404)

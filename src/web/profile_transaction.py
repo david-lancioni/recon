@@ -1,8 +1,8 @@
-from flask import render_template, jsonify, request, abort
+from flask import render_template, jsonify, request, abort, session
 from src.web.models import db, Profile, Transaction, ProfileTransaction, next_id
 
 
-def _ensure_ancestors_associated(id_transaction, id_profile):
+def _ensure_ancestors_associated(id_transaction, id_profile, id_company):
     tx = db.session.get(Transaction, id_transaction)
     if not tx or not tx.id_parent:
         return
@@ -11,10 +11,11 @@ def _ensure_ancestors_associated(id_transaction, id_profile):
     ).scalar_one_or_none()
     if not exists:
         db.session.add(ProfileTransaction(
-            id=next_id(ProfileTransaction), id_profile=id_profile, id_transaction=tx.id_parent
+            id=next_id(ProfileTransaction), id_company=id_company,
+            id_profile=id_profile, id_transaction=tx.id_parent
         ))
         db.session.flush()
-    _ensure_ancestors_associated(tx.id_parent, id_profile)
+    _ensure_ancestors_associated(tx.id_parent, id_profile, id_company)
 
 
 def register(app):
@@ -24,7 +25,11 @@ def register(app):
 
     @app.route('/api/profile_transaction/options')
     def api_profile_transaction_options():
-        profiles = db.session.execute(db.select(Profile).order_by(Profile.id)).scalars().all()
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        profiles = db.session.execute(
+            db.select(Profile).filter_by(id_company=session['company_id']).order_by(Profile.id)
+        ).scalars().all()
         txs = db.session.execute(db.select(Transaction).order_by(Transaction.id)).scalars().all()
         return jsonify({
             'profiles':     [p.to_dict() for p in profiles],
@@ -33,6 +38,8 @@ def register(app):
 
     @app.route('/api/profile_transaction', methods=['GET'])
     def api_profile_transaction_list():
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
         stmt = (
             db.select(
                 ProfileTransaction,
@@ -41,6 +48,7 @@ def register(app):
             )
             .join(Profile, ProfileTransaction.id_profile == Profile.id)
             .join(Transaction, ProfileTransaction.id_transaction == Transaction.id)
+            .filter(ProfileTransaction.id_company == session['company_id'])
             .order_by(ProfileTransaction.id)
         )
         result = []
@@ -53,6 +61,9 @@ def register(app):
 
     @app.route('/api/profile_transaction', methods=['POST'])
     def api_profile_transaction_create():
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        id_company     = session['company_id']
         data           = request.get_json()
         id_profile     = data.get('id_profile')     or None
         id_transaction = data.get('id_transaction') or None
@@ -62,26 +73,40 @@ def register(app):
             return jsonify({'error': 'Transação é obrigatória'}), 400
         id_profile     = int(id_profile)
         id_transaction = int(id_transaction)
+        if not db.session.execute(
+            db.select(Profile).filter_by(id=id_profile, id_company=id_company)
+        ).scalar_one_or_none():
+            return jsonify({'error': 'Perfil é obrigatório'}), 400
         existing = db.session.execute(
             db.select(ProfileTransaction).filter_by(id_profile=id_profile, id_transaction=id_transaction)
         ).scalar_one_or_none()
         if existing:
             return jsonify({'error': 'Essa transação já está associada a este perfil'}), 400
-        record = ProfileTransaction(id=next_id(ProfileTransaction), id_profile=id_profile, id_transaction=id_transaction)
+        record = ProfileTransaction(
+            id=next_id(ProfileTransaction), id_company=id_company,
+            id_profile=id_profile, id_transaction=id_transaction
+        )
         db.session.add(record)
         db.session.flush()
-        _ensure_ancestors_associated(id_transaction, id_profile)
+        _ensure_ancestors_associated(id_transaction, id_profile, id_company)
         db.session.commit()
         return jsonify(record.to_dict()), 201
 
     @app.route('/api/profile_transaction/sync', methods=['PUT'])
     def api_profile_transaction_sync():
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        id_company = session['company_id']
         data       = request.get_json()
         id_profile = data.get('id_profile') or None
         ids        = data.get('transaction_ids') or []
         if not id_profile:
             return jsonify({'error': 'Perfil é obrigatório'}), 400
         id_profile = int(id_profile)
+        if not db.session.execute(
+            db.select(Profile).filter_by(id=id_profile, id_company=id_company)
+        ).scalar_one_or_none():
+            return jsonify({'error': 'Perfil é obrigatório'}), 400
         wanted_ids = {int(i) for i in ids}
 
         current = db.session.execute(
@@ -100,17 +125,23 @@ def register(app):
             if already:
                 continue
             db.session.add(ProfileTransaction(
-                id=next_id(ProfileTransaction), id_profile=id_profile, id_transaction=id_transaction
+                id=next_id(ProfileTransaction), id_company=id_company,
+                id_profile=id_profile, id_transaction=id_transaction
             ))
             db.session.flush()
-            _ensure_ancestors_associated(id_transaction, id_profile)
+            _ensure_ancestors_associated(id_transaction, id_profile, id_company)
 
         db.session.commit()
         return jsonify({'ok': True})
 
     @app.route('/api/profile_transaction/<int:record_id>', methods=['PUT'])
     def api_profile_transaction_update(record_id):
-        record = db.session.get(ProfileTransaction, record_id)
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        id_company = session['company_id']
+        record = db.session.execute(
+            db.select(ProfileTransaction).filter_by(id=record_id, id_company=id_company)
+        ).scalar_one_or_none()
         if not record:
             abort(404)
         data           = request.get_json()
@@ -122,6 +153,10 @@ def register(app):
             return jsonify({'error': 'Transação é obrigatória'}), 400
         id_profile     = int(id_profile)
         id_transaction = int(id_transaction)
+        if not db.session.execute(
+            db.select(Profile).filter_by(id=id_profile, id_company=id_company)
+        ).scalar_one_or_none():
+            return jsonify({'error': 'Perfil é obrigatório'}), 400
         existing = db.session.execute(
             db.select(ProfileTransaction).filter(
                 ProfileTransaction.id_profile == id_profile,
@@ -133,13 +168,17 @@ def register(app):
             return jsonify({'error': 'Essa transação já está associada a este perfil'}), 400
         record.id_profile     = id_profile
         record.id_transaction = id_transaction
-        _ensure_ancestors_associated(id_transaction, id_profile)
+        _ensure_ancestors_associated(id_transaction, id_profile, id_company)
         db.session.commit()
         return jsonify(record.to_dict())
 
     @app.route('/api/profile_transaction/<int:record_id>', methods=['DELETE'])
     def api_profile_transaction_delete(record_id):
-        record = db.session.get(ProfileTransaction, record_id)
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        record = db.session.execute(
+            db.select(ProfileTransaction).filter_by(id=record_id, id_company=session['company_id'])
+        ).scalar_one_or_none()
         if not record:
             abort(404)
         db.session.delete(record)
