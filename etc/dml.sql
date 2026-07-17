@@ -40,6 +40,7 @@ INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `username`, `password`) VALUE
 -- Data for table `tb_recon`
 -- -----------------------------------------------------
 INSERT INTO `tb_recon` (`id`, `id_user`, `name`, `description`) VALUES (1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
+INSERT INTO `tb_recon` (`id`, `id_user`, `name`, `description`) VALUES (2, 2, 'Saldos x Extrato', 'Conciliação para demonstração');
 
 
 -- -----------------------------------------------------
@@ -66,6 +67,8 @@ INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (7, 'SQLite');
 -- -----------------------------------------------------
 INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (1, 1, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
 INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (2, 1, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (3, 2, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (4, 2, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
 
 
 -- -----------------------------------------------------
@@ -86,6 +89,12 @@ INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `val
 INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 2, 1, 'Agencia', 1, NULL);
 INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 2, 2, 'Conta', 1, NULL);
 INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 2, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (7, 3, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (8, 3, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (9, 3, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (10, 4, 1, 'Agencia', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (11, 4, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (12, 4, 3, 'Valor', 3, NULL);
 
 
 -- -----------------------------------------------------
@@ -104,6 +113,7 @@ INSERT INTO `tb_operator` (`id`, `name`) VALUES (7, '<>');
 -- Data for table `tb_rule`
 -- -----------------------------------------------------
 INSERT INTO `tb_rule` (`id`, `id_recon`, `name`) VALUES (1, 1, 'Batimento de arquivos');
+INSERT INTO `tb_rule` (`id`, `id_recon`, `name`) VALUES (2, 2, 'Batimento de arquivos');
 
 
 -- -----------------------------------------------------
@@ -128,6 +138,9 @@ INSERT INTO `tb_aggregation` (`id`, `name`) VALUES (4, 'Média');
 INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (1, 1, 1, 1, 1, NULL, 1, NULL);
 INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (2, 1, 1, 2, 2, NULL, 1, NULL);
 INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (3, 1, 2, 3, 3, NULL, 1, 1);
+INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (4, 2, 1, 7, 10, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (5, 2, 1, 8, 11, NULL, 1, NULL);
+INSERT INTO `tb_rule_field` (`id`, `id_rule`, `id_rule_type`, `id_field_1`, `id_field_2`, `tolerance`, `id_operator`, `id_aggregation`) VALUES (6, 2, 2, 9, 12, NULL, 1, 1);
 
 
 -- -----------------------------------------------------
