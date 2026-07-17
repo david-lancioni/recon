@@ -73,7 +73,7 @@ def register(app):
         # --- executar conciliação ---
         try:
             from src.core.corelib import CoreLib
-            msg = CoreLib().process(session['user_id'], recon_id)
+            msg = CoreLib().process(session['user_id'], recon_id, session['company_id'])
             return jsonify({'ok': True, 'message': msg})
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500

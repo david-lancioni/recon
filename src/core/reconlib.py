@@ -9,19 +9,20 @@ dblib = DbLib()
 
 class ReconLib(BaseLib):
 
-    def __init__(self, cn, id, name, fields, types, id_user=0):
+    def __init__(self, cn, id, name, fields, types, id_user=0, id_company=0):
         self.logger = logging.getLogger(__name__)
         self.cn = cn
         self.id = id
         self.name = name
         self.id_user = id_user
+        self.id_company = id_company
         self.fields = fields
         self.types = types
-        self.tb1 = self.get_table_name(self.id_user, self.id, 1)
-        self.tb2 = self.get_table_name(self.id_user, self.id, 2)
-        self.tmp1 = self.get_table_name(self.id_user, self.id, 1, prefix="tmp")
-        self.tmp2 = self.get_table_name(self.id_user, self.id, 2, prefix="tmp")
-        self.tmp3 = self.get_table_name(self.id_user, self.id, 3, prefix="tmp")
+        self.tb1 = self.get_table_name(self.id_company, self.id, 1)
+        self.tb2 = self.get_table_name(self.id_company, self.id, 2)
+        self.tmp1 = self.get_table_name(self.id_company, self.id, 1, prefix="tmp")
+        self.tmp2 = self.get_table_name(self.id_company, self.id, 2, prefix="tmp")
+        self.tmp3 = self.get_table_name(self.id_company, self.id, 3, prefix="tmp")
         self.field_key = []
         self.field_compare = []
         self.field_with_diff_1 = []
@@ -380,7 +381,7 @@ class ReconLib(BaseLib):
         try:
             for side in range(1, 3):
                 tb = self.tb1 if side == 1 else self.tb2
-                dblib.execute(self.cn, f"update {tb} set _id_user = {id_user}")
+                dblib.execute(self.cn, f"update {tb} set {const.FIELD_ID_USER} = {id_user}, {const.FIELD_ID_COMPANY} = {self.id_company}")
         except Exception as err:
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)

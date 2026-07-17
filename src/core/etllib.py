@@ -14,11 +14,12 @@ fslib = FsLib()
 
 class EtlLib(BaseLib):
 
-    def __init__(self, cn, id, name, id_user=0):
+    def __init__(self, cn, id, name, id_user=0, id_company=0):
         self.cn = cn
         self.id = id
         self.name = name
         self.id_user = id_user
+        self.id_company = id_company
         self.logger = logging.getLogger(__name__)
 
     def get_field_list(self, fields):
@@ -188,7 +189,7 @@ class EtlLib(BaseLib):
                 id_ds = row[0]
                 type = row[const.DS_ID_TYPE]
                 side = row[const.DS_ID_SIDE]
-                self.table_name = self.get_table_name(self.id_user, self.id, side)
+                self.table_name = self.get_table_name(self.id_company, self.id, side)
                 ds = row
                 sql = f"select * from tb_field where id_ds = {id_ds}"
                 rows = dblib.query(sql, self.cn)

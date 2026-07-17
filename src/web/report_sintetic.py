@@ -16,11 +16,12 @@ def register(app):
     def api_report_sintetic():
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
-        user_id = session['user_id']
+        user_id    = session['user_id']
+        id_company = session['company_id']
 
         recons = db.session.execute(
             db.select(Recon.id, Recon.name)
-            .filter_by(id_company=session['company_id'], id_user=user_id)
+            .filter_by(id_company=id_company, id_user=user_id)
             .order_by(Recon.id)
         ).all()
 
@@ -28,8 +29,8 @@ def register(app):
         cn = dblib.get_connection()
         try:
             for id_recon, recon_name in recons:
-                tb1 = BaseLib.get_table_name(user_id, id_recon, 1)
-                tb2 = BaseLib.get_table_name(user_id, id_recon, 2)
+                tb1 = BaseLib.get_table_name(id_company, id_recon, 1)
+                tb2 = BaseLib.get_table_name(id_company, id_recon, 2)
 
                 log_sql = f"select max(created_at) from tb_log where id_user = {user_id} and id_recon = {id_recon}"
                 log_rs = dblib.query(log_sql, cn)
@@ -39,9 +40,9 @@ def register(app):
                 sql = f"""
                 select * from
                 (
-                    select  {const.FIELD_RECON} 'Recon', 'Lado 1' Lado, {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb1} where {const.FIELD_ID_USER} = {user_id} group by {const.FIELD_RECON}, {const.FIELD_STATUS}
+                    select  {const.FIELD_RECON} 'Recon', 'Lado 1' Lado, {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb1} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_RECON}, {const.FIELD_STATUS}
                     union all
-                    select  {const.FIELD_RECON} 'Recon', 'Lado 2' Lado, {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb2} where {const.FIELD_ID_USER} = {user_id} group by {const.FIELD_RECON}, {const.FIELD_STATUS}
+                    select  {const.FIELD_RECON} 'Recon', 'Lado 2' Lado, {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb2} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_RECON}, {const.FIELD_STATUS}
                 ) tb
                 """
                 try:

@@ -10,19 +10,20 @@ dblib = DbLib()
 
 class AreaLib(BaseLib):
 
-    def __init__(self, cn, id, name, id_user=0):
+    def __init__(self, cn, id, name, id_user=0, id_company=0):
         self.cn = cn
         self.id = id
         self.name = name
         self.id_user = id_user
+        self.id_company = id_company
         self.logger = logging.getLogger(__name__)
 
     def drop_recon_area(self, id_recon):
         loglib = LogLib(self.cn, "arealib", "drop_recon_area", self.id_user, self.id)
         try:
-            sql = f"drop table if exists {self.get_table_name(self.id_user, id_recon, 1)}"
+            sql = f"drop table if exists {self.get_table_name(self.id_company, id_recon, 1)}"
             dblib.execute(self.cn, sql)
-            sql = f"drop table if exists {self.get_table_name(self.id_user, id_recon, 2)}"
+            sql = f"drop table if exists {self.get_table_name(self.id_company, id_recon, 2)}"
             dblib.execute(self.cn, sql)
         except Exception as err:
             msg = f"{str(err)}"
@@ -69,6 +70,7 @@ class AreaLib(BaseLib):
             fieldlist = ""        
             fieldlist += f"{const.FIELD_ID} integer primary key auto_increment, "
             fieldlist += f"{const.FIELD_SIDE} integer default {side} default 0, "
+            fieldlist += f"{const.FIELD_ID_COMPANY} integer default 0, "
             fieldlist += f"{const.FIELD_ID_USER} integer default 0, "
             fieldlist += f"{const.FIELD_DATE} datetime default CURRENT_TIMESTAMP, "
             fieldlist += f"{const.FIELD_ID_PARENT} integer default 0, "
@@ -135,8 +137,8 @@ class AreaLib(BaseLib):
             side_fields = {1: (fields1, types1), 2: (fields2, types2)}
             for side in range(1, 3):
                 fields, types = side_fields[side]
-                tb = self.get_table_name(self.id_user, id, side)
-                tmp = self.get_table_name(self.id_user, id, side, prefix="tmp")
+                tb = self.get_table_name(self.id_company, id, side)
+                tmp = self.get_table_name(self.id_company, id, side, prefix="tmp")
                 dblib.execute(self.cn, f"drop table if exists {tb}")
                 dblib.execute(self.cn, f"drop table if exists {tmp}")
                 dblib.execute(self.cn, self.get_sql_create_table_recon_area(tb, fields, types, status, side, ""))

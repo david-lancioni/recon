@@ -19,7 +19,7 @@ class CoreLib(BaseLib):
         self.id = id
         self.name = name
 
-    def process(self, id_user, id_recon):
+    def process(self, id_user, id_recon, id_company):
         message = ""
         arealib = None
         try:
@@ -37,7 +37,7 @@ class CoreLib(BaseLib):
             loglib.log(loglib.INFO, loglib.message(3))
 
             """ get info """
-            sql = f"select id, name from tb_recon where id = {id_recon} and id_user = {id_user}"
+            sql = f"select id, name from tb_recon where id = {id_recon} and id_user = {id_user} and id_company = {id_company}"
             recon = dblib.query(sql, cn)
             self.id = recon[0][0]
             self.name = recon[0][1]
@@ -47,17 +47,17 @@ class CoreLib(BaseLib):
             loglib.log(loglib.INFO, loglib.message(2, [self.id, self.name]))
 
             """ create recon area """
-            arealib = AreaLib(cn, self.id, self.name, id_user)
+            arealib = AreaLib(cn, self.id, self.name, id_user, id_company)
             fields, types = arealib.process(id_recon)
             loglib.log(loglib.INFO, loglib.message(4))
 
             """ import files """
-            etllib = EtlLib(cn, self.id, self.name, id_user)
+            etllib = EtlLib(cn, self.id, self.name, id_user, id_company)
             etllib.process(id_recon)
             loglib.log(loglib.INFO, loglib.message(5))
 
             """ reconcile data """
-            reconlib = ReconLib(cn, self.id, self.name, fields, types, id_user)
+            reconlib = ReconLib(cn, self.id, self.name, fields, types, id_user, id_company)
             reconlib.process(id_user, id_recon)
 
             """ success """

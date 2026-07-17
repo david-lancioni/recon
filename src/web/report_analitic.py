@@ -8,7 +8,7 @@ from src.core.baselib import BaseLib
 
 dblib = DbLib()
 
-_HIDDEN_COLUMNS = {const.FIELD_SIDE, const.FIELD_ID_USER, const.FIELD_ID_STATUS, const.FIELD_DATE}
+_HIDDEN_COLUMNS = {const.FIELD_SIDE, const.FIELD_ID_USER, const.FIELD_ID_COMPANY, const.FIELD_ID_STATUS, const.FIELD_DATE}
 
 _COLUMN_LABELS = {
     const.FIELD_ID: 'ID',
@@ -55,17 +55,18 @@ def register(app):
     def api_report_analitic(id_recon):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
-        user_id = session['user_id']
+        user_id    = session['user_id']
+        id_company = session['company_id']
         recon = db.session.execute(
-            db.select(Recon).filter_by(id=id_recon, id_company=session['company_id'], id_user=user_id)
+            db.select(Recon).filter_by(id=id_recon, id_company=id_company, id_user=user_id)
         ).scalar_one_or_none()
         if not recon:
             abort(404)
 
         cn = dblib.get_connection()
         try:
-            lado1 = _fetch_table(cn, BaseLib.get_table_name(user_id, id_recon, 1))
-            lado2 = _fetch_table(cn, BaseLib.get_table_name(user_id, id_recon, 2))
+            lado1 = _fetch_table(cn, BaseLib.get_table_name(id_company, id_recon, 1))
+            lado2 = _fetch_table(cn, BaseLib.get_table_name(id_company, id_recon, 2))
 
             log_sql = f"select max(created_at) from tb_log where id_user = {user_id} and id_recon = {id_recon}"
             log_rs = dblib.query(log_sql, cn)

@@ -255,6 +255,7 @@ function openDelete(section, id) {
   }
 
   document.getElementById('deleteItemName').textContent = displayName;
+  document.getElementById('deleteCompanyWarning').style.display = section === 'companies' ? 'block' : 'none';
   openModal('deleteModal');
 }
 

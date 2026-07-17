@@ -4,6 +4,6 @@ class BaseLib:
         tb2 = ""
 
     @staticmethod
-    def get_table_name(id_user, id_recon, side, prefix="tb"):
-        return f"{prefix}_{id_user}_{id_recon}_{side}"
+    def get_table_name(id_company, id_recon, side, prefix="tb"):
+        return f"{prefix}_{id_company}_{id_recon}_{side}"
 

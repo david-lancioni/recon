@@ -1,6 +1,13 @@
 from datetime import datetime
 from flask import render_template, jsonify, request, abort
-from src.web.models import db, Company, User, Profile, Transaction, ProfileTransaction, next_id
+from src.web.models import (
+    db, Company, User, Profile, Transaction, ProfileTransaction,
+    Recon, Ds, Field, Rule, RuleField, Log, next_id
+)
+from src.core.dblib import DbLib
+from src.core.baselib import BaseLib
+
+dblib = DbLib()
 
 _USER_PROFILE_LINKS = {'run', 'report_sintetic', 'report_analitic', 'report_log'}
 
@@ -10,6 +17,25 @@ def _parse_expire_date(value):
     if not value:
         return None
     return datetime.strptime(value, '%Y-%m-%d')
+
+
+def _drop_recon_area_tables(id_company, recon_ids):
+    if not recon_ids:
+        return
+    try:
+        cn = dblib.get_connection()
+    except Exception:
+        return
+    try:
+        for id_recon in recon_ids:
+            for side in (1, 2):
+                dblib.execute(cn, f"drop table if exists {BaseLib.get_table_name(id_company, id_recon, side)}")
+                dblib.execute(cn, f"drop table if exists {BaseLib.get_table_name(id_company, id_recon, side, prefix='tmp')}")
+            dblib.execute(cn, f"drop table if exists {BaseLib.get_table_name(id_company, id_recon, 3, prefix='tmp')}")
+    except Exception:
+        pass
+    finally:
+        cn.close()
 
 
 def _seed_company(id_company):
@@ -111,8 +137,25 @@ def register(app):
         record = db.session.get(Company, record_id)
         if not record:
             abort(404)
-        if db.session.execute(db.select(User).filter_by(id_company=record_id)).scalar_one_or_none():
-            return jsonify({'error': 'Não é possível excluir uma empresa com usuários associados'}), 400
+        if record_id == 1:
+            return jsonify({'error': 'A empresa padrão (código 1) não pode ser excluída'}), 400
+
+        recon_ids = db.session.execute(
+            db.select(Recon.id).filter_by(id_company=record_id)
+        ).scalars().all()
+
+        db.session.execute(db.delete(RuleField).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Rule).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Field).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Ds).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Log).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Recon).filter_by(id_company=record_id))
+        db.session.execute(db.delete(ProfileTransaction).filter_by(id_company=record_id))
+        db.session.execute(db.delete(User).filter_by(id_company=record_id))
+        db.session.execute(db.delete(Profile).filter_by(id_company=record_id))
         db.session.delete(record)
         db.session.commit()
+
+        _drop_recon_area_tables(record_id, recon_ids)
+
         return jsonify({'ok': True})

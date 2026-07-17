@@ -14,6 +14,7 @@ const.FIELD_RULE = "_rule"
 const.FIELD_ID_STATUS = "_id_status"
 const.FIELD_STATUS = "_status"
 const.FIELD_ID_USER = "_id_user"
+const.FIELD_ID_COMPANY = "_id_company"
 const.FIELD_DATE = "_date"
 
 const.MATCH_TYPE_KEY = 1
