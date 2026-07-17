@@ -14,7 +14,10 @@ def _get_model(section):
 def register(app):
     @app.route('/')
     def index():
-        return render_template('index.html', current_page='home', logged_in='user_id' in session)
+        # login agora fica em token por aba (sessionStorage), não em cookie,
+        # então o carregamento inicial da página nunca sabe se o usuário já
+        # está logado — quem decide isso é o JS, via checkSession()/applyLogin()
+        return render_template('index.html', current_page='home')
 
     @app.route('/api/stats')
     def api_stats():

@@ -30,10 +30,31 @@ const labels = {
 };
 
 // ── API ──
+// Sessão fica em token por aba (sessionStorage), não em cookie — cada aba do
+// navegador consegue logar numa empresa diferente sem derrubar as outras.
+const AUTH_TOKEN_KEY = 'recon_auth_token';
+
+function getAuthToken() {
+  return sessionStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function setAuthToken(token) {
+  if (token) sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+function clearAuthToken() {
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
 async function apiFetch(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' }, cache: 'no-store' };
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getAuthToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const opts = { method, headers, cache: 'no-store' };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(path, opts);
+  const newToken = res.headers.get('X-Auth-Token');
+  if (newToken) setAuthToken(newToken);
   const data = await res.json();
   if (!res.ok) throw data;
   return data;
@@ -1936,6 +1957,7 @@ function openLogoutConfirm() {
 
 async function doLogout() {
   try { await apiFetch('POST', '/api/auth/logout'); } catch { /* ignora */ }
+  clearAuthToken();
   window.location.href = '/';
 }
 
@@ -1946,6 +1968,8 @@ function applyLogin(user) {
   document.getElementById('userBadge').style.display = 'flex';
   document.getElementById('userAvatarNav').textContent = getInitials(user.name);
   document.getElementById('userNameNav').textContent = user.company_name ? `${user.company_name} - ${user.name}` : user.name;
+  const landing = document.getElementById('landingSection');
+  if (landing) landing.style.display = 'none';
   loadMenu();
 }
 

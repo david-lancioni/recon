@@ -12,6 +12,7 @@ if os.path.exists(_env_file):
                 os.environ.setdefault(m.group(1), m.group(2))
 
 from src.web import pages, auth, user, recon, ds, field, rule, rule_field, profile, transaction, profile_transaction, run, report_sintetic, report_analitic, report_log, company
+from src.web.tokensession import TokenSessionInterface
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (
@@ -20,6 +21,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'recon-secret-key-change-in-production'
+app.session_interface = TokenSessionInterface()
 
 db.init_app(app)
 
