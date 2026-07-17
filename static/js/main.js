@@ -1945,7 +1945,7 @@ function applyLogin(user) {
   document.getElementById('btnLogin').style.display = 'none';
   document.getElementById('userBadge').style.display = 'flex';
   document.getElementById('userAvatarNav').textContent = getInitials(user.name);
-  document.getElementById('userNameNav').textContent = user.company_name ? `${user.company_name}::${user.name}` : user.name;
+  document.getElementById('userNameNav').textContent = user.company_name ? `${user.company_name} - ${user.name}` : user.name;
   loadMenu();
 }
 
@@ -2737,7 +2737,9 @@ function openCompanyForm(id) {
     idGroup.style.display = 'none';
     createAtGroup.style.display = 'none';
     document.getElementById('companyFormName').value = '';
-    document.getElementById('companyFormExpireDate').value = '';
+    const defaultExpire = new Date();
+    defaultExpire.setFullYear(defaultExpire.getFullYear() + 1);
+    document.getElementById('companyFormExpireDate').value = _fmtDateInput(defaultExpire.toISOString());
   }
   openModal('companyFormModal');
 }
@@ -2746,7 +2748,10 @@ async function saveCompany() {
   const name = document.getElementById('companyFormName').value.trim();
   const expire_date = document.getElementById('companyFormExpireDate').value;
   clearCompanyErrors();
-  if (!name) { document.getElementById('errCompanyName').style.display = 'block'; return; }
+  let valid = true;
+  if (!name) { document.getElementById('errCompanyName').style.display = 'block'; valid = false; }
+  if (!expire_date) { document.getElementById('errCompanyExpireDate').style.display = 'block'; valid = false; }
+  if (!valid) return;
   const body = { name, expire_date };
   try {
     if (state.editingId) {

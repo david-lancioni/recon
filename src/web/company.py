@@ -88,6 +88,8 @@ def register(app):
         name = (data.get('name') or '').strip()
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
+        if not (data.get('expire_date') or '').strip():
+            return jsonify({'error': 'Data de expiração é obrigatória'}), 400
         try:
             expire_date = _parse_expire_date(data.get('expire_date'))
         except ValueError:
@@ -108,6 +110,8 @@ def register(app):
         name = (data.get('name') or '').strip()
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
+        if not (data.get('expire_date') or '').strip():
+            return jsonify({'error': 'Data de expiração é obrigatória'}), 400
         try:
             expire_date = _parse_expire_date(data.get('expire_date'))
         except ValueError:
