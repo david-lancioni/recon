@@ -183,7 +183,10 @@ class EtlLib(BaseLib):
     def process(self, id_recon):
         loglib = LogLib(self.cn, "etllib", "process", self.id_user, self.id)
         try:
-            sql = f"select * from tb_ds where id_recon = {id_recon}"
+            sql = f"""
+            select id, id_recon, id_side, id_type, name, credentials, query, filename, delimiter, url
+            from tb_ds where id_recon = {id_recon}
+            """
             rows = dblib.query(sql, self.cn)
             for row in rows:
                 id_ds = row[0]
@@ -191,7 +194,10 @@ class EtlLib(BaseLib):
                 side = row[const.DS_ID_SIDE]
                 self.table_name = self.get_table_name(self.id_company, self.id, side)
                 ds = row
-                sql = f"select * from tb_field where id_ds = {id_ds}"
+                sql = f"""
+                select id, id_ds, position, name, id_field_type, value
+                from tb_field where id_ds = {id_ds}
+                """
                 rows = dblib.query(sql, self.cn)
                 fields = rows
                 if type == const.DATASOURCE_FILE:

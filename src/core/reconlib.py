@@ -435,7 +435,7 @@ class ReconLib(BaseLib):
         try:
             self.has_data()
             results = 1
-            sql = f"select * from tb_rule where id_recon = {id_recon}"
+            sql = f"select id, id_recon, name from tb_rule where id_recon = {id_recon}"
             rows = dblib.query(sql, self.cn)
             for row in rows:
                 rule_id = row[const.RULE_ID]
