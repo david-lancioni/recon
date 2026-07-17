@@ -32,8 +32,8 @@ INSERT INTO `tb_profile` (`id`, `name`) VALUES (2, 'Usuário');
 -- -----------------------------------------------------
 -- Data for table `tb_user`
 -- -----------------------------------------------------
-INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `email`, `password`) VALUES (1, 1, 'Administrador', 'admin', 'admin');
-INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `email`, `password`) VALUES (2, 2, 'David Lancioni', 'david@lancioni', '12345');
+INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `username`, `password`) VALUES (1, 1, 'Administrador', 'admin', 'admin');
+INSERT INTO `tb_user` (`id`, `id_profile`, `name`, `username`, `password`) VALUES (2, 2, 'Demo', 'demo', 'demo');
 
 
 -- -----------------------------------------------------
@@ -170,6 +170,11 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALU
 INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (14, 1, 14);
 INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (15, 1, 15);
 INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (16, 1, 16);
+INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (17, 2, 12);
+INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (18, 2, 11);
+INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (19, 2, 13);
+INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (20, 2, 14);
+INSERT INTO `tb_profile_transaction` (`id`, `id_profile`, `id_transaction`) VALUES (21, 2, 15);
 
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;

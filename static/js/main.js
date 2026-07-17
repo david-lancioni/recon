@@ -221,7 +221,7 @@ function openDelete(section, id) {
   let displayName;
   if (section === 'users') {
     const u = usersCache.find(u => u.id === id);
-    displayName = `"${u.name} (${u.email})"`;
+    displayName = `"${u.name} (${u.username})"`;
   } else if (section === 'recon') {
     const r = reconCache.find(r => r.id === id);
     displayName = `"${r.name}"`;
@@ -318,7 +318,7 @@ function openDuplicate(section, id) {
   let displayName;
   if (section === 'users') {
     const u = usersCache.find(u => u.id === id);
-    displayName = `"${u.name} (${u.email})"`;
+    displayName = `"${u.name} (${u.username})"`;
   } else if (section === 'recon') {
     const r = reconCache.find(r => r.id === id);
     displayName = `"${r.name}"`;
@@ -602,7 +602,7 @@ function clearRuleErrors() {
 // ── USERS ──
 let usersCache = [];
 let usersOptions = { profiles: [] };
-const usersState = { pageNum: 1, colName: '', colEmail: '', colProfile: '', selectedId: null };
+const usersState = { pageNum: 1, colName: '', colUsername: '', colProfile: '', selectedId: null };
 
 function selectUserRow(id) {
   usersState.selectedId = id;
@@ -655,26 +655,26 @@ async function duplicateUser(id) {
 
 function populateUserFilters() {
   const selName = document.getElementById('filter-col-name');
-  const selEmail = document.getElementById('filter-col-email');
+  const selUsername = document.getElementById('filter-col-username');
   const selProfile = document.getElementById('filter-col-profile');
-  if (!selName || !selEmail || !selProfile) return;
+  if (!selName || !selUsername || !selProfile) return;
 
   const names = [...new Set(usersCache.map(u => u.name))].sort((a, b) => a.localeCompare(b));
-  const emails = [...new Set(usersCache.map(u => u.email))].sort((a, b) => a.localeCompare(b));
+  const usernames = [...new Set(usersCache.map(u => u.username))].sort((a, b) => a.localeCompare(b));
   const profiles = [...new Set(usersCache.map(u => u.profile_name || ''))].filter(Boolean).sort((a, b) => a.localeCompare(b));
 
   selName.innerHTML = '<option value="">Todos</option>' +
     names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  selEmail.innerHTML = '<option value="">Todos</option>' +
-    emails.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+  selUsername.innerHTML = '<option value="">Todos</option>' +
+    usernames.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
   selProfile.innerHTML = '<option value="">Todos</option>' +
     profiles.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
 
   selName.value = usersState.colName;
-  selEmail.value = usersState.colEmail;
+  selUsername.value = usersState.colUsername;
   selProfile.value = usersState.colProfile;
   usersState.colName = selName.value;
-  usersState.colEmail = selEmail.value;
+  usersState.colUsername = selUsername.value;
   usersState.colProfile = selProfile.value;
 }
 
@@ -690,7 +690,7 @@ function toggleUserFilters() {
 
 function filterUsersByColumn() {
   usersState.colName = document.getElementById('filter-col-name').value;
-  usersState.colEmail = document.getElementById('filter-col-email').value;
+  usersState.colUsername = document.getElementById('filter-col-username').value;
   usersState.colProfile = document.getElementById('filter-col-profile').value;
   usersState.pageNum = 1;
   renderUsers();
@@ -699,7 +699,7 @@ function filterUsersByColumn() {
 function getUsersFiltered() {
   return usersCache.filter(u =>
     (!usersState.colName || u.name === usersState.colName) &&
-    (!usersState.colEmail || u.email === usersState.colEmail) &&
+    (!usersState.colUsername || u.username === usersState.colUsername) &&
     (!usersState.colProfile || u.profile_name === usersState.colProfile)
   );
 }
@@ -737,7 +737,7 @@ function renderUsers() {
       <td style="color:var(--gray-400);font-size:12.5px">${u.id}</td>
       <td style="color:var(--gray-400);font-size:12.5px">${esc(u.profile_name || '-')}</td>
       <td>${esc(u.name)}</td>
-      <td style="color:var(--gray-400);font-size:12.5px">${esc(u.email)}</td>
+      <td style="color:var(--gray-400);font-size:12.5px">${esc(u.username)}</td>
     </tr>
   `).join('');
 
@@ -798,14 +798,14 @@ function openUserForm(id) {
     idGroup.style.display = '';
     document.getElementById('userFormId').value = u.id;
     document.getElementById('userFormName').value = u.name;
-    document.getElementById('userFormEmail').value = u.email;
+    document.getElementById('userFormUsername').value = u.username;
     document.getElementById('userFormPassword').value = '';
     document.getElementById('userFormProfile').value = u.id_profile || '';
     document.getElementById('userPasswordLabel').textContent = 'Nova senha (deixe em branco para manter)';
   } else {
     idGroup.style.display = 'none';
     document.getElementById('userFormName').value = '';
-    document.getElementById('userFormEmail').value = '';
+    document.getElementById('userFormUsername').value = '';
     document.getElementById('userFormPassword').value = '';
     document.getElementById('userFormProfile').value = '';
     document.getElementById('userPasswordLabel').textContent = 'Senha';
@@ -816,19 +816,19 @@ function openUserForm(id) {
 
 async function saveUser() {
   const name = document.getElementById('userFormName').value.trim();
-  const email = document.getElementById('userFormEmail').value.trim();
+  const username = document.getElementById('userFormUsername').value.trim();
   const password = document.getElementById('userFormPassword').value;
   const id_profile = document.getElementById('userFormProfile').value || null;
 
   clearUserErrors();
   let valid = true;
   if (!name) { document.getElementById('errUserName').style.display = 'block'; valid = false; }
-  if (!email) { document.getElementById('errUserEmail').style.display = 'block'; valid = false; }
+  if (!username) { document.getElementById('errUserUsername').style.display = 'block'; valid = false; }
   if (!id_profile) { document.getElementById('errUserProfile').style.display = 'block'; valid = false; }
   if (!state.editingId && !password) { document.getElementById('errUserPassword').style.display = 'block'; valid = false; }
   if (!valid) return;
 
-  const body = { name, email, id_profile };
+  const body = { name, username, id_profile };
   if (password) body.password = password;
 
   try {
@@ -843,7 +843,7 @@ async function saveUser() {
     await loadUsers();
   } catch (err) {
     if (err.error) {
-      const el = document.getElementById(err.error.includes('Perfil') ? 'errUserProfile' : 'errUserEmail');
+      const el = document.getElementById(err.error.includes('Perfil') ? 'errUserProfile' : 'errUserUsername');
       el.textContent = err.error;
       el.style.display = 'block';
     } else {
@@ -854,9 +854,9 @@ async function saveUser() {
 
 function clearUserErrors() {
   document.getElementById('errUserName').style.display = 'none';
-  const elEmail = document.getElementById('errUserEmail');
-  elEmail.style.display = 'none';
-  elEmail.textContent = 'E-mail é obrigatório';
+  const elUsername = document.getElementById('errUserUsername');
+  elUsername.style.display = 'none';
+  elUsername.textContent = 'Usuário é obrigatório';
   document.getElementById('errUserPassword').style.display = 'none';
   document.getElementById('errUserProfile').style.display = 'none';
 }
@@ -1899,19 +1899,19 @@ async function copyExport() {
 
 // ── AUTH ──
 async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const username = document.getElementById('loginUsername').value.trim();
   const senha = document.getElementById('loginSenha').value;
   const err = document.getElementById('loginError');
   err.style.display = 'none';
 
-  if (!email || !senha) {
-    err.textContent = 'E-mail e senha são obrigatórios';
+  if (!username || !senha) {
+    err.textContent = 'Usuário e senha são obrigatórios';
     err.style.display = 'flex';
     return;
   }
 
   try {
-    const user = await apiFetch('POST', '/api/auth/login', { email, password: senha });
+    const user = await apiFetch('POST', '/api/auth/login', { username, password: senha });
     applyLogin(user);
     window.location.href = '/';
   } catch (e) {

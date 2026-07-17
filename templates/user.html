@@ -23,7 +23,7 @@
           <th style="width:70px">ID</th>
           <th style="width:160px">Perfil</th>
           <th>Nome</th>
-          <th>E-mail</th>
+          <th>Usuário</th>
         </tr>
         <tr class="filter-row" id="filter-row-users" style="display:none">
           <th></th>
@@ -39,7 +39,7 @@
             </select>
           </th>
           <th>
-            <select id="filter-col-email" class="filter-select" onchange="filterUsersByColumn()">
+            <select id="filter-col-username" class="filter-select" onchange="filterUsersByColumn()">
               <option value="">Todos</option>
             </select>
           </th>
@@ -104,9 +104,9 @@
         <div class="form-error" id="errUserName">Nome é obrigatório</div>
       </div>
       <div class="form-group">
-        <label>E-mail</label>
-        <input type="email" id="userFormEmail" placeholder="email@exemplo.com">
-        <div class="form-error" id="errUserEmail">E-mail é obrigatório</div>
+        <label>Usuário</label>
+        <input type="text" id="userFormUsername" placeholder="Nome de usuário">
+        <div class="form-error" id="errUserUsername">Usuário é obrigatório</div>
       </div>
       <div class="form-group">
         <label id="userPasswordLabel">Senha</label>

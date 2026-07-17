@@ -6,19 +6,19 @@ def register(app):
     @app.route('/api/auth/login', methods=['POST'])
     def api_auth_login():
         data     = request.get_json()
-        email    = (data.get('email')    or '').strip().lower()
+        username = (data.get('username') or '').strip().lower()
         password = (data.get('password') or '').strip()
-        if not email or not password:
-            return jsonify({'error': 'E-mail e senha são obrigatórios'}), 400
-        user = db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none()
+        if not username or not password:
+            return jsonify({'error': 'Usuário e senha são obrigatórios'}), 400
+        user = db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none()
         if not user:
             return jsonify({'error': 'Usuário não encontrado'}), 401
         if user.password != password:
             return jsonify({'error': 'Senha incorreta'}), 401
-        session['user_id']    = user.id
-        session['user_name']  = user.name
-        session['user_email'] = user.email
-        return jsonify({'id': user.id, 'name': user.name, 'email': user.email})
+        session['user_id']       = user.id
+        session['user_name']     = user.name
+        session['user_username'] = user.username
+        return jsonify({'id': user.id, 'name': user.name, 'username': user.username})
 
     @app.route('/api/auth/logout', methods=['POST'])
     def api_auth_logout():
@@ -30,9 +30,9 @@ def register(app):
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
         return jsonify({
-            'id':    session['user_id'],
-            'name':  session['user_name'],
-            'email': session['user_email']
+            'id':       session['user_id'],
+            'name':     session['user_name'],
+            'username': session['user_username']
         })
 
     @app.route('/api/auth/menu')

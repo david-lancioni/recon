@@ -30,16 +30,16 @@ def register(app):
     def api_users_create():
         data       = request.get_json()
         name       = (data.get('name')     or '').strip()
-        email      = (data.get('email')    or '').strip().lower()
+        username   = (data.get('username') or '').strip().lower()
         password   = (data.get('password') or '').strip()
         id_profile = data.get('id_profile') or None
-        if not name or not email or not password:
-            return jsonify({'error': 'Nome, e-mail e senha são obrigatórios'}), 400
+        if not name or not username or not password:
+            return jsonify({'error': 'Nome, usuário e senha são obrigatórios'}), 400
         if not id_profile:
             return jsonify({'error': 'Perfil é obrigatório'}), 400
-        if db.session.execute(db.select(User).filter_by(email=email)).scalar_one_or_none():
-            return jsonify({'error': 'E-mail já cadastrado'}), 409
-        user = User(id=next_id(User), name=name, email=email, password=password, id_profile=id_profile)
+        if db.session.execute(db.select(User).filter_by(username=username)).scalar_one_or_none():
+            return jsonify({'error': 'Usuário já cadastrado'}), 409
+        user = User(id=next_id(User), name=name, username=username, password=password, id_profile=id_profile)
         db.session.add(user)
         db.session.commit()
         return jsonify(user.to_dict()), 201
@@ -51,20 +51,20 @@ def register(app):
             abort(404)
         data       = request.get_json()
         name       = (data.get('name')     or '').strip()
-        email      = (data.get('email')    or '').strip().lower()
+        username   = (data.get('username') or '').strip().lower()
         password   = (data.get('password') or '').strip()
         id_profile = data.get('id_profile') or None
-        if not name or not email:
-            return jsonify({'error': 'Nome e e-mail são obrigatórios'}), 400
+        if not name or not username:
+            return jsonify({'error': 'Nome e usuário são obrigatórios'}), 400
         if not id_profile:
             return jsonify({'error': 'Perfil é obrigatório'}), 400
         dup = db.session.execute(
-            db.select(User).filter(User.email == email, User.id != user_id)
+            db.select(User).filter(User.username == username, User.id != user_id)
         ).scalar_one_or_none()
         if dup:
-            return jsonify({'error': 'E-mail já cadastrado'}), 409
+            return jsonify({'error': 'Usuário já cadastrado'}), 409
         user.name       = name
-        user.email      = email
+        user.username   = username
         user.id_profile = id_profile
         if password:
             user.password = password
@@ -76,13 +76,20 @@ def register(app):
         user = db.session.get(User, user_id)
         if not user:
             abort(404)
-        base_email = user.email.split('@')
-        new_email = f"{base_email[0]}_copia@{base_email[1]}"
+        if '@' in user.username:
+            base_username, domain = user.username.split('@', 1)
+            new_username = f"{base_username}_copia@{domain}"
+        else:
+            base_username = user.username
+            new_username = f"{base_username}_copia"
         counter = 1
-        while db.session.execute(db.select(User).filter_by(email=new_email)).scalar_one_or_none():
-            new_email = f"{base_email[0]}_copia{counter}@{base_email[1]}"
+        while db.session.execute(db.select(User).filter_by(username=new_username)).scalar_one_or_none():
+            if '@' in user.username:
+                new_username = f"{base_username}_copia{counter}@{domain}"
+            else:
+                new_username = f"{base_username}_copia{counter}"
             counter += 1
-        new_user = User(id=next_id(User), name=user.name, email=new_email, password=user.password, id_profile=user.id_profile)
+        new_user = User(id=next_id(User), name=user.name, username=new_username, password=user.password, id_profile=user.id_profile)
         db.session.add(new_user)
         db.session.commit()
         return jsonify(new_user.to_dict()), 201

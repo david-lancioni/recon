@@ -39,10 +39,10 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `id` INT NOT NULL,
   `id_profile` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
-  `email` VARCHAR(50) NOT NULL,
+  `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `uk_user_email` (`email` ASC) VISIBLE,
+  UNIQUE INDEX `uk_user_username` (`username` ASC) VISIBLE,
   INDEX `fk_user_profile_idx` (`id_profile` ASC) VISIBLE,
   CONSTRAINT `fk_user_profile`
     FOREIGN KEY (`id_profile`)

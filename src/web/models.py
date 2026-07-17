@@ -91,11 +91,11 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_profile = db.Column(db.Integer, db.ForeignKey('tb_profile.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
 
     def to_dict(self):
-        return {'id': self.id, 'id_profile': self.id_profile, 'name': self.name, 'email': self.email}
+        return {'id': self.id, 'id_profile': self.id_profile, 'name': self.name, 'username': self.username}
 
 
 class Side(db.Model):
