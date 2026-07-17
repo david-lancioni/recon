@@ -3241,7 +3241,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-const _noClickOutside = new Set(['loginModal', 'logoutModal', 'reconFormModal', 'userFormModal', 'dsFormModal', 'fieldFormModal', 'ruleFormModal', 'ruleFieldFormModal', 'profileFormModal', 'transactionFormModal', 'profileTransactionBulkModal', 'exportModal']);
+const _noClickOutside = new Set(['loginModal', 'logoutModal', 'reconFormModal', 'userFormModal', 'dsFormModal', 'fieldFormModal', 'ruleFormModal', 'ruleFieldFormModal', 'profileFormModal', 'transactionFormModal', 'profileTransactionBulkModal', 'exportModal', 'companyFormModal']);
 document.querySelectorAll('.modal-overlay').forEach(o => {
   if (_noClickOutside.has(o.id)) return;
   o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
