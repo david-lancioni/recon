@@ -1,0 +1,66 @@
+from flask import render_template, jsonify, session
+from src.web.models import db, Recon
+from src.core.dblib import DbLib
+from src.core.constlib import const
+from src.core.baselib import BaseLib
+
+dblib = DbLib()
+
+
+def register(app):
+    @app.route('/report_overview')
+    def report_overview():
+        return render_template('report_overview.html', current_page='report_overview')
+
+    @app.route('/api/report_overview')
+    def api_report_overview():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        user_id    = session['user_id']
+        id_company = session['company_id']
+
+        recons = db.session.execute(
+            db.select(Recon.id, Recon.name)
+            .filter_by(id_company=id_company, id_user=user_id)
+        ).all()
+
+        totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
+        per_recon = []
+        cn = dblib.get_connection()
+        try:
+            for id_recon, recon_name in recons:
+                tb1 = BaseLib.get_table_name(id_company, id_recon, 1)
+                tb2 = BaseLib.get_table_name(id_company, id_recon, 2)
+
+                sql = f"""
+                select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb1} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
+                union all
+                select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb2} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
+                """
+                try:
+                    rs = dblib.query(sql, cn)
+                except Exception:
+                    continue
+                recon_totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
+                for status, total in rs:
+                    if status in totals:
+                        totals[status] += total
+                        recon_totals[status] += total
+                per_recon.append((recon_name, recon_totals))
+        finally:
+            cn.close()
+
+        def top_recon(status_key):
+            candidates = [(name, t[status_key]) for name, t in per_recon if t[status_key] > 0]
+            if not candidates:
+                return None
+            return max(candidates, key=lambda c: c[1])[0]
+
+        return jsonify({
+            'batido': totals['Batido'],
+            'divergente': totals['Divergente'],
+            'orfao': totals['Órfão'],
+            'top_batido': top_recon('Batido'),
+            'top_divergente': top_recon('Divergente'),
+            'top_orfao': top_recon('Órfão')
+        })

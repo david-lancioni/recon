@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados - Visão Geral — Recon{% endblock %}
+
+{% block content %}
+<style>
+.ov-row { display:flex; align-items:stretch; gap:32px; flex-wrap:wrap; }
+.ov-stack { display:flex; flex-direction:column; gap:16px; max-width:420px; flex:1 1 380px; }
+.ov-card {
+  display:flex; align-items:center; gap:18px;
+  background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:24px 28px; height:108px; box-sizing:border-box;
+}
+.ov-icon {
+  width:48px; height:48px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.ov-card.ov-ok .ov-icon   { background:#e8f0ff; color:#1a6aff; }
+.ov-card.ov-dif .ov-icon  { background:#fef9c3; color:#ca8a04; }
+.ov-card.ov-orf .ov-icon  { background:#fff0f0; color:#d63545; }
+.ov-card-body { min-width:0; }
+.ov-label { font-size:13px; line-height:1.3; color:var(--gray-500); margin-bottom:4px; }
+.ov-value { font-size:34px; font-weight:600; line-height:1.15; letter-spacing:-0.5px; }
+.ov-card.ov-ok .ov-value  { color:#1a6aff; }
+.ov-card.ov-dif .ov-value { color:#ca8a04; }
+.ov-card.ov-orf .ov-value { color:#d63545; }
+.ov-value-name {
+  font-size:19px; line-height:1.3; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+.ov-pie-card {
+  flex:1 1 420px;
+  display:flex; flex-direction:column;
+  background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg);
+  box-shadow:0 2px 12px rgba(0,0,0,0.05);
+  padding:24px 28px; box-sizing:border-box;
+}
+.ov-pie-card-title {
+  font-size:12px; font-weight:600; color:var(--gray-500);
+  text-transform:uppercase; letter-spacing:.6px;
+  margin-bottom:16px;
+}
+.ov-pie-body { flex:1; min-height:160px; display:flex; align-items:center; justify-content:center; }
+.ov-pie-body svg { width:100%; height:100%; max-width:280px; max-height:280px; }
+.ov-pie-body svg path { cursor:pointer; transition:opacity .15s ease; }
+.ov-pie-body svg path:hover { opacity:.82; }
+.ov-pie-slice-label {
+  font-size:13px; font-weight:600; fill:#ffffff;
+  text-anchor:middle; dominant-baseline:middle;
+  font-family: var(--font);
+  pointer-events:none;
+}
+.ov-pie-empty { fill:none; stroke:var(--gray-200); stroke-width:1.5; }
+.ov-pie-empty-label { font-size:12px; fill:var(--gray-400); text-anchor:middle; dominant-baseline:middle; }
+
+.ov-legend { display:flex; flex-wrap:wrap; gap:10px 24px; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+.ov-legend-item { display:flex; align-items:center; gap:9px; font-size:13px; color:var(--gray-700); }
+.ov-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.ov-legend-label { color:var(--gray-500); }
+.ov-legend-value { font-weight:600; font-variant-numeric:tabular-nums; }
+
+@media (max-width: 760px) {
+  .ov-pie-card { flex:1 1 auto; }
+}
+</style>
+
+<div class="section active" id="page-report-overview">
+  <div class="page-header">
+    <h1>Resultados - Visão Geral</h1>
+    <p>Totais consolidados de todas as suas conciliações</p>
+  </div>
+
+  <div class="spinner-loader" id="overview-loading">
+    <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="spinner-text">Carregando...</div>
+  </div>
+
+  <div id="overview-content" style="display:none">
+    <div class="ov-row">
+      <div class="ov-stack">
+        <div class="ov-card ov-ok">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Total de registros batidos</div>
+            <div class="ov-value" id="ovBatido">0</div>
+          </div>
+        </div>
+        <div class="ov-card ov-dif">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4.5l9 15.5H3l9-15.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17" r="0.75" fill="currentColor"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Total de registros divergentes</div>
+            <div class="ov-value" id="ovDivergente">0</div>
+          </div>
+        </div>
+        <div class="ov-card ov-orf">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Total de registros órfãos</div>
+            <div class="ov-value" id="ovOrfao">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ov-pie-card">
+        <div class="ov-pie-card-title">Distribuição percentual</div>
+        <div class="ov-pie-body">
+          <svg id="ovPieSvg" viewBox="0 0 200 200" role="img" aria-label="Distribuição percentual dos resultados"></svg>
+        </div>
+        <div class="ov-legend" id="ovLegend"></div>
+      </div>
+
+      <div class="ov-stack">
+        <div class="ov-card ov-orf">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Conciliação com mais órfãos</div>
+            <div class="ov-value ov-value-name" id="ovTopOrfao" title="">—</div>
+          </div>
+        </div>
+        <div class="ov-card ov-dif">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4.5l9 15.5H3l9-15.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17" r="0.75" fill="currentColor"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Conciliação com mais divergentes</div>
+            <div class="ov-value ov-value-name" id="ovTopDivergente" title="">—</div>
+          </div>
+        </div>
+        <div class="ov-card ov-ok">
+          <div class="ov-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ov-card-body">
+            <div class="ov-label">Conciliação com mais batidos</div>
+            <div class="ov-value ov-value-name" id="ovTopBatido" title="">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function renderOverviewPie(slices) {
+  const svg = document.getElementById('ovPieSvg');
+  const legend = document.getElementById('ovLegend');
+  const cx = 100, cy = 100, r = 90;
+  const total = slices.reduce((s, sl) => s + sl.value, 0);
+
+  legend.innerHTML = slices.map(sl => {
+    const pct = total ? Math.round((sl.value / total) * 100) : 0;
+    return `<div class="ov-legend-item">
+      <span class="ov-legend-dot" style="background:${sl.color}"></span>
+      <span class="ov-legend-label">${sl.name}</span>
+      <span class="ov-legend-value">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  if (!total) {
+    svg.innerHTML = `
+      <circle class="ov-pie-empty" cx="${cx}" cy="${cy}" r="${r}"></circle>
+      <text class="ov-pie-empty-label" x="${cx}" y="${cy}">Sem dados</text>
+    `;
+    return;
+  }
+
+  const polarToCartesian = (angleDeg) => {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  const nonZero = slices.filter(sl => sl.value > 0);
+  if (nonZero.length === 1) {
+    svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${nonZero[0].color}"></circle>
+      <text class="ov-pie-slice-label" x="${cx}" y="${cy}">${nonZero[0].name} · 100%</text>`;
+    return;
+  }
+
+  let angle = 0;
+  let html = '';
+  slices.forEach(sl => {
+    if (!sl.value) return;
+    const pct = (sl.value / total) * 100;
+    const sliceAngle = (sl.value / total) * 360;
+    const startAngle = angle;
+    const endAngle = angle + sliceAngle;
+    angle = endAngle;
+
+    const start = polarToCartesian(startAngle);
+    const end = polarToCartesian(endAngle);
+    const largeArc = sliceAngle > 180 ? 1 : 0;
+    const path = `M ${cx} ${cy} L ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)} Z`;
+    html += `<path d="${path}" fill="${sl.color}" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"><title>${sl.name}: ${Math.round(pct)}%</title></path>`;
+
+    if (pct >= 8) {
+      const midAngle = startAngle + sliceAngle / 2;
+      const labelR = pct >= 14 ? r * 0.66 : r * 0.8;
+      const labelPos = { x: cx + labelR * Math.cos((midAngle - 90) * Math.PI / 180), y: cy + labelR * Math.sin((midAngle - 90) * Math.PI / 180) };
+      html += `<text class="ov-pie-slice-label" x="${labelPos.x.toFixed(2)}" y="${labelPos.y.toFixed(2)}">${Math.round(pct)}%</text>`;
+    }
+  });
+  svg.innerHTML = html;
+}
+
+(async function loadReportOverview() {
+  const loading = document.getElementById('overview-loading');
+  const content = document.getElementById('overview-content');
+  try {
+    const data = await apiFetch('GET', '/api/report_overview');
+    const batido = data.batido || 0;
+    const divergente = data.divergente || 0;
+    const orfao = data.orfao || 0;
+
+    document.getElementById('ovBatido').textContent = batido.toLocaleString('pt-BR');
+    document.getElementById('ovDivergente').textContent = divergente.toLocaleString('pt-BR');
+    document.getElementById('ovOrfao').textContent = orfao.toLocaleString('pt-BR');
+
+    renderOverviewPie([
+      { value: batido,     color: '#1a6aff', name: 'Batidos' },
+      { value: divergente, color: '#ca8a04', name: 'Divergentes' },
+      { value: orfao,      color: '#d63545', name: 'Órfãos' }
+    ]);
+
+    const setTopCard = (id, name) => {
+      const el = document.getElementById(id);
+      el.textContent = name || '—';
+      el.title = name || '';
+    };
+    setTopCard('ovTopOrfao', data.top_orfao);
+    setTopCard('ovTopDivergente', data.top_divergente);
+    setTopCard('ovTopBatido', data.top_batido);
+  } catch {
+    toast('Erro ao carregar visão geral');
+  } finally {
+    loading.style.display = 'none';
+    content.style.display = '';
+  }
+})();
+</script>
+{% endblock %}

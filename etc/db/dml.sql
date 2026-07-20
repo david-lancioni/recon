@@ -165,11 +165,12 @@ INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 5, '
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 5, 'Definição de Regras', 'rule_field');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Conciliação', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (11, 12, 'Executar', 'run');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Resultados - Sintético', 'report_sintetic');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Resultados - Analítico', 'report_analitic');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Logs', 'report_log');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (16, 1, 'Usuário', 'user');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 1, 'Empresa', 'company');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Visão Geral', 'report_overview');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Sintético', 'report_sintetic');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Analítico', 'report_analitic');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (16, 12, 'Logs', 'report_log');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 1, 'Usuário', 'user');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (18, 1, 'Empresa', 'company');
 
 
 -- -----------------------------------------------------
@@ -187,16 +188,18 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_tran
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (10, 1, 1, 10);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (11, 1, 1, 11);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (12, 1, 1, 12);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (13, 1, 1, 13);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (14, 1, 1, 14);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (15, 1, 1, 15);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (16, 1, 1, 16);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (13, 1, 1, 14);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (14, 1, 1, 15);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (15, 1, 1, 16);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (16, 1, 1, 17);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (17, 1, 2, 12);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (18, 1, 2, 11);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (19, 1, 2, 13);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (20, 1, 2, 14);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (21, 1, 2, 15);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (22, 1, 1, 17);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (19, 1, 2, 14);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (20, 1, 2, 15);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (21, 1, 2, 16);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (22, 1, 1, 18);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (23, 1, 1, 13);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (24, 1, 2, 13);
 
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;

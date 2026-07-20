@@ -184,7 +184,8 @@ async function doRun() {
     result.style.background = '#f8fafc';
     result.style.color = '#334155';
     result.style.border = '1px solid #e2e8f0';
-    result.textContent = res.message || 'Conciliação executada com sucesso.';
+    const baseMsg = (res.message || 'Conciliação executada com sucesso').replace(/\.+$/, '');
+    result.innerHTML = `${esc(baseMsg)}, clique <a href="/report_sintetic?id_recon=${encodeURIComponent(id)}" style="color:var(--black);font-weight:600;text-decoration:underline">aqui</a> para ver os resultados.`;
     clearFileInputs();
   } catch (e) {
     result.style.display = 'block';
