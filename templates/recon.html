@@ -9,6 +9,12 @@
     <p>Gerencie as regras de conciliação entre arquivos</p>
   </div>
 
+  <div class="spinner-loader" id="recon-loading">
+    <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="spinner-text">Carregando...</div>
+  </div>
+
+  <div id="recon-content" style="display:none">
   <div class="toolbar">
     <div style="margin-left:auto;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="triggerImport()">Importar</button>
@@ -72,6 +78,7 @@
     <button type="button" class="btn-voltar" id="btnReconExport" disabled onclick="footerReconExport()">Exportar</button>
     <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
   </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -124,5 +131,16 @@
 {% endblock %}
 
 {% block scripts %}
-<script>loadRecon();</script>
+<script>
+(async function() {
+  const loading = document.getElementById('recon-loading');
+  const content = document.getElementById('recon-content');
+  try {
+    await loadRecon();
+  } finally {
+    loading.style.display = 'none';
+    content.style.display = '';
+  }
+})();
+</script>
 {% endblock %}

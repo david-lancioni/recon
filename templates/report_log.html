@@ -8,6 +8,12 @@
     <h1>Log</h1>
   </div>
 
+  <div class="spinner-loader" id="log-loading">
+    <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="spinner-text">Carregando...</div>
+  </div>
+
+  <div id="log-content" style="display:none">
   <div class="table-wrap">
     <table>
       <thead id="thead-log"></thead>
@@ -24,6 +30,7 @@
   <div class="btn-voltar-wrap">
     <button type="button" id="btnExportar" class="btn-voltar">Exportar</button>
     <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
   </div>
 </div>
 {% endblock %}
@@ -151,6 +158,9 @@
     setData(data);
   } catch (e) {
     empty.style.display = 'block';
+  } finally {
+    document.getElementById('log-loading').style.display = 'none';
+    document.getElementById('log-content').style.display = '';
   }
 })();
 </script>

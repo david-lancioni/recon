@@ -9,6 +9,12 @@
     <p>Associe itens de menu aos perfis</p>
   </div>
 
+  <div class="spinner-loader" id="profile-transaction-loading">
+    <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="spinner-text">Carregando...</div>
+  </div>
+
+  <div id="profile-transaction-content" style="display:none">
   <div class="toolbar">
     <button class="btn btn-primary" onclick="openProfileTransactionBulkForm()" style="margin-left:auto">
       + Perfil x Transação
@@ -67,6 +73,7 @@
     <button type="button" class="btn-voltar" id="btnProfileTransactionDelete" disabled onclick="footerProfileTransactionDelete()">Excluir</button>
     <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
   </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -100,5 +107,16 @@
 {% endblock %}
 
 {% block scripts %}
-<script>loadProfileTransactions();</script>
+<script>
+(async function() {
+  const loading = document.getElementById('profile-transaction-loading');
+  const content = document.getElementById('profile-transaction-content');
+  try {
+    await loadProfileTransactions();
+  } finally {
+    loading.style.display = 'none';
+    content.style.display = '';
+  }
+})();
+</script>
 {% endblock %}
