@@ -35,6 +35,16 @@ def register(app):
             'company_id': company.id, 'company_name': company.name
         })
 
+    @app.route('/api/company/search')
+    def api_company_search():
+        q = (request.args.get('q') or '').strip()
+        if len(q) < 2:
+            return jsonify([])
+        rows = db.session.execute(
+            db.select(Company).filter(Company.name.ilike(f'%{q}%')).order_by(Company.name).limit(10)
+        ).scalars().all()
+        return jsonify([{'id': r.id, 'name': r.name} for r in rows])
+
     @app.route('/api/auth/logout', methods=['POST'])
     def api_auth_logout():
         session.clear()

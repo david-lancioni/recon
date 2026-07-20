@@ -696,3 +696,44 @@ input:focus, textarea:focus, select:focus {
 .btn-voltar:hover { background: #222; }
 .btn-voltar:disabled { background: var(--gray-300, #d1d5db); color: var(--gray-500, #6b7280); cursor: not-allowed; }
 .btn-voltar:disabled:hover { background: var(--gray-300, #d1d5db); }
+
+/* ── COMPANY SEARCH DROPDOWN ── */
+.company-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0; right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 400;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.company-dropdown.open { display: block; }
+.company-dropdown-item {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--black);
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.company-dropdown-item:last-child { border-bottom: none; }
+.company-dropdown-item:hover,
+.company-dropdown-item.active { background: var(--accent-light); }
+.company-dropdown-item .co-id {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.company-dropdown-empty {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--gray-400);
+  text-align: center;
+}

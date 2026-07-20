@@ -1928,21 +1928,110 @@ async function copyExport() {
 }
 
 // ── AUTH ──
+// ── COMPANY SEARCH ──
+let _companySearchTimer = null;
+let _companyDropdownIndex = -1;
+
+function onCompanySearch(value) {
+  document.getElementById('loginCompanyId').value = '';
+  const input = document.getElementById('loginCompany');
+  input.style.color = '';
+  clearTimeout(_companySearchTimer);
+  const q = value.trim();
+  if (q.length < 2) { closeCompanyDropdown(); return; }
+  _companySearchTimer = setTimeout(() => fetchCompanies(q), 300);
+}
+
+async function fetchCompanies(q) {
+  try {
+    const res = await fetch(`/api/company/search?q=${encodeURIComponent(q)}`);
+    const list = await res.json();
+    renderCompanyDropdown(list);
+  } catch { closeCompanyDropdown(); }
+}
+
+function renderCompanyDropdown(list) {
+  const dd = document.getElementById('companyDropdown');
+  _companyDropdownIndex = -1;
+  if (!list.length) {
+    dd.innerHTML = '<div class="company-dropdown-empty">Nenhuma empresa encontrada</div>';
+    dd.classList.add('open');
+    return;
+  }
+  dd.innerHTML = list.map((c, i) =>
+    `<div class="company-dropdown-item" data-id="${c.id}" data-name="${c.name}" onclick="selectCompany(${c.id}, '${c.name.replace(/'/g, "\\'")}')">
+       <span class="co-id">${c.id}</span><span>${c.name}</span>
+     </div>`
+  ).join('');
+  dd.classList.add('open');
+}
+
+function selectCompany(id, name) {
+  document.getElementById('loginCompanyId').value = id;
+  const input = document.getElementById('loginCompany');
+  input.value = `${id} — ${name}`;
+  input.style.color = 'var(--accent)';
+  closeCompanyDropdown();
+  document.getElementById('loginUsername').focus();
+}
+
+function closeCompanyDropdown() {
+  const dd = document.getElementById('companyDropdown');
+  dd.classList.remove('open');
+  _companyDropdownIndex = -1;
+}
+
+async function onCompanyKeydown(event) {
+  const dd = document.getElementById('companyDropdown');
+  const isOpen = dd.classList.contains('open');
+  let items = dd.querySelectorAll('.company-dropdown-item');
+
+  if (event.key === 'ArrowDown' && isOpen && items.length) {
+    event.preventDefault();
+    _companyDropdownIndex = Math.min(_companyDropdownIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === _companyDropdownIndex));
+  } else if (event.key === 'ArrowUp' && isOpen && items.length) {
+    event.preventDefault();
+    _companyDropdownIndex = Math.max(_companyDropdownIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('active', i === _companyDropdownIndex));
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    if (!isOpen || !items.length) {
+      const q = document.getElementById('loginCompany').value.trim();
+      if (q.length < 2) return;
+      clearTimeout(_companySearchTimer);
+      await fetchCompanies(q);
+      items = dd.querySelectorAll('.company-dropdown-item');
+      if (!dd.classList.contains('open') || !items.length) return;
+    }
+    items[_companyDropdownIndex >= 0 ? _companyDropdownIndex : 0].click();
+  } else if (event.key === 'Escape') {
+    closeCompanyDropdown();
+  }
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#loginCompany') && !e.target.closest('#companyDropdown')) {
+    closeCompanyDropdown();
+  }
+});
+
 async function doLogin() {
-  const companyCode = document.getElementById('loginCompany').value.trim();
+  const companyId = document.getElementById('loginCompanyId').value.trim();
   const username = document.getElementById('loginUsername').value.trim();
   const senha = document.getElementById('loginSenha').value;
   const err = document.getElementById('loginError');
   err.style.display = 'none';
 
-  if (!companyCode || !username || !senha) {
+  if (!companyId || !username || !senha) {
     err.textContent = 'Empresa, usuário e senha são obrigatórios';
     err.style.display = 'flex';
+    if (!companyId) document.getElementById('loginCompany').focus();
     return;
   }
 
   try {
-    const user = await apiFetch('POST', '/api/auth/login', { company_code: companyCode, username, password: senha });
+    const user = await apiFetch('POST', '/api/auth/login', { company_code: companyId, username, password: senha });
     applyLogin(user);
     window.location.href = '/';
   } catch (e) {
