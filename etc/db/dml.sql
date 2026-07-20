@@ -165,8 +165,8 @@ INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 5, '
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 5, 'Definição de Regras', 'rule_field');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Conciliação', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (11, 12, 'Executar', 'run');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Sintético', 'report_sintetic');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Analitico', 'report_analitic');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Resultados - Sintético', 'report_sintetic');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Resultados - Analítico', 'report_analitic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Logs', 'report_log');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (16, 1, 'Usuário', 'user');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 1, 'Empresa', 'company');

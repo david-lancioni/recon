@@ -2136,7 +2136,7 @@ function applyLogin(user) {
   state.user = user;
   document.getElementById('btnLogin').style.display = 'none';
   document.getElementById('userBadge').style.display = 'flex';
-  document.getElementById('userAvatarNav').textContent = getInitials(user.name);
+  document.getElementById('userAvatarNav').textContent = getInitials(user.company_name || user.name);
   document.getElementById('userNameNav').textContent = user.company_name ? `${user.company_name} - ${user.name}` : user.name;
   const landing = document.getElementById('landingSection');
   if (landing) landing.style.display = 'none';
