@@ -16,6 +16,17 @@ def register(app):
         ).scalars().all()
         return jsonify([r.to_dict() for r in rows])
 
+    @app.route('/api/profile/<int:record_id>', methods=['GET'])
+    def api_profiles_get(record_id):
+        if 'company_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        record = db.session.execute(
+            db.select(Profile).filter_by(id=record_id, id_company=session['company_id'])
+        ).scalar_one_or_none()
+        if not record:
+            abort(404)
+        return jsonify(record.to_dict())
+
     @app.route('/api/profile', methods=['POST'])
     def api_profiles_create():
         if 'company_id' not in session:

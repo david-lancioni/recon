@@ -20,7 +20,12 @@
     <div id="runFiles" style="display:none"></div>
 
     <div style="margin-top:20px">
-      <button class="btn btn-primary" style="width:100%;padding:13px" onclick="doRun()">Executar</button>
+      <button type="button" id="btnExecutar" class="btn btn-primary" style="width:100%;padding:13px" onclick="doRun()">Executar</button>
+    </div>
+
+    <div class="spinner-loader" id="run-processing" style="display:none">
+      <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="spinner-text">Processando...</div>
     </div>
 
     <div id="runResult" style="display:none; margin-top:24px; padding:16px 20px; border-radius:10px; font-size:14px; text-align:center"></div>
@@ -151,11 +156,11 @@ async function doRun() {
     }
   }
 
-  result.style.display = 'block';
-  result.style.background = '#f8fafc';
-  result.style.color = '#64748b';
-  result.style.border = '1px solid #e2e8f0';
-  result.textContent = 'Processando...';
+  const btn = document.getElementById('btnExecutar');
+  const processing = document.getElementById('run-processing');
+  result.style.display = 'none';
+  btn.disabled = true;
+  processing.style.display = 'flex';
 
   try {
     let res;
@@ -165,23 +170,32 @@ async function doRun() {
         const input = document.getElementById(`file_${ds.id}`);
         if (input && input.files[0]) form.append(`file_${ds.id}`, input.files[0]);
       });
-      const resp = await fetch(`/api/run/${id}`, { method: 'POST', body: form });
+      const token = getAuthToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const resp = await fetch(`/api/run/${id}`, { method: 'POST', headers, body: form });
+      const newToken = resp.headers.get('X-Auth-Token');
+      if (newToken) setAuthToken(newToken);
       res = await resp.json();
       if (!resp.ok) throw res;
     } else {
       res = await apiFetch('POST', `/api/run/${id}`);
     }
+    result.style.display = 'block';
     result.style.background = '#f8fafc';
     result.style.color = '#334155';
     result.style.border = '1px solid #e2e8f0';
     result.textContent = res.message || 'Conciliação executada com sucesso.';
     clearFileInputs();
   } catch (e) {
+    result.style.display = 'block';
     result.style.background = '#f8fafc';
     result.style.color = '#334155';
     result.style.border = '1px solid #e2e8f0';
     result.textContent = e.error || 'Erro ao executar conciliação.';
     clearFileInputs();
+  } finally {
+    btn.disabled = false;
+    processing.style.display = 'none';
   }
 }
 </script>

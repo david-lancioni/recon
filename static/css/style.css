@@ -417,6 +417,10 @@ tbody tr.row-group-hover { background: var(--gray-50); }
 .spinner-dots span:nth-child(8) { transform: rotate(315deg); opacity: 0.1;  }
 @keyframes spinner-rotate { to { transform: rotate(360deg); } }
 .spinner-text { font-size: 13px; color: var(--gray-400); letter-spacing: 0.2px; }
+.spinner-dots-sm { width: 14px; height: 14px; }
+.spinner-dots-sm span { width: 3px; height: 3px; margin-left: -1.5px; transform-origin: 1.5px 7px; }
+.btn .spinner-dots-sm span { background: currentColor; }
+.btn-spinner-inline { display: inline-flex; align-items: center; gap: 8px; }
 
 /* pagination */
 .pagination {

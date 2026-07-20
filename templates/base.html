@@ -69,7 +69,7 @@
     </div>
     <div class="modal-footer" style="padding:20px 28px 24px">
       <button class="btn btn-secondary" onclick="closeModal('loginModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="doLogin()" style="flex:1">Entrar</button>
+      <button class="btn btn-primary" id="btnDoLogin" onclick="doLogin()" style="flex:1">Entrar</button>
     </div>
   </div>
 </div>
@@ -82,15 +82,21 @@
       <button class="modal-close" onclick="closeModal('formModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Código</label>
-        <input type="text" id="formCodigo" placeholder="Ex: CONC001" oninput="this.value=this.value.toUpperCase()">
-        <div class="form-error" id="errCodigo">Código é obrigatório</div>
+      <div class="spinner-loader" id="formLoading" style="display:none;padding:30px 0">
+        <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="spinner-text">Carregando...</div>
       </div>
-      <div class="form-group">
-        <label>Descrição</label>
-        <input type="text" id="formDescricao" placeholder="Descreva este registro">
-        <div class="form-error" id="errDescricao">Descrição é obrigatória</div>
+      <div id="formFields">
+        <div class="form-group">
+          <label>Código</label>
+          <input type="text" id="formCodigo" placeholder="Ex: CONC001" oninput="this.value=this.value.toUpperCase()">
+          <div class="form-error" id="errCodigo">Código é obrigatório</div>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="formDescricao" placeholder="Descreva este registro">
+          <div class="form-error" id="errDescricao">Descrição é obrigatória</div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -115,7 +121,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancelar</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+      <button class="btn btn-danger" id="btnConfirmDelete" onclick="confirmDelete()">Excluir</button>
     </div>
   </div>
 </div>
@@ -132,7 +138,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('duplicateModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmDuplicate()">Duplicar</button>
+      <button class="btn btn-primary" id="btnConfirmDuplicate" onclick="confirmDuplicate()">Duplicar</button>
     </div>
   </div>
 </div>

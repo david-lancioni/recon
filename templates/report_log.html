@@ -152,9 +152,7 @@
   });
 
   try {
-    const res = await fetch('/api/report_log', { cache: 'no-store' });
-    const data = await res.json();
-    if (!res.ok) throw data;
+    const data = await apiFetch('GET', '/api/report_log');
     setData(data);
   } catch (e) {
     empty.style.display = 'block';

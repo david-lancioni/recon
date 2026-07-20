@@ -180,16 +180,43 @@ function openForm(section, id) {
 
   clearErrors();
 
-  if (id) {
-    const rec = cache[section].find(r => r.id === id);
-    document.getElementById('formCodigo').value = rec.codigo;
-    document.getElementById('formDescricao').value = rec.descricao;
-  } else {
-    document.getElementById('formCodigo').value = '';
-    document.getElementById('formDescricao').value = '';
-  }
+  openFormWithLoading('formModal', 'formLoading', 'formFields', () => {
+    if (id) {
+      const rec = cache[section].find(r => r.id === id);
+      document.getElementById('formCodigo').value = rec.codigo;
+      document.getElementById('formDescricao').value = rec.descricao;
+    } else {
+      document.getElementById('formCodigo').value = '';
+      document.getElementById('formDescricao').value = '';
+    }
+  });
+}
 
-  openModal('formModal');
+// ── SAVE BUTTON SPINNER ──
+function setBtnBusy(btn, busy, busyLabel = 'Salvando...') {
+  if (!btn) return;
+  if (busy) {
+    btn.dataset.originalLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="btn-spinner-inline"><span class="spinner-dots spinner-dots-sm"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>${busyLabel}</span>`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn.dataset.originalLabel;
+  }
+}
+
+// ── FORM MODAL LOADING ──
+// Opens the modal showing a spinner immediately, then runs populateFn (which may be
+// slow: dropdown population, cache lookups) before revealing the actual fields.
+function openFormWithLoading(modalId, loadingId, fieldsId, populateFn) {
+  document.getElementById(loadingId).style.display = 'flex';
+  document.getElementById(fieldsId).style.display = 'none';
+  openModal(modalId);
+  setTimeout(() => {
+    populateFn();
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(fieldsId).style.display = '';
+  }, 30);
 }
 
 async function saveRecord() {
@@ -205,6 +232,8 @@ async function saveRecord() {
   const section = state.editingSection;
   const id = state.editingId;
 
+  const btn = document.getElementById('formSaveBtn');
+  setBtnBusy(btn, true);
   try {
     if (id) {
       await apiFetch('PUT', `/api/${section}/${id}`, { codigo, descricao });
@@ -223,6 +252,8 @@ async function saveRecord() {
     } else {
       toast('Erro ao salvar registro');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -296,6 +327,8 @@ async function confirmDelete() {
                 : section === 'profile_transaction' ? `/api/profile_transaction/${id}`
                 : `/api/${section}/${id}`;
 
+  const btn = document.getElementById('btnConfirmDelete');
+  setBtnBusy(btn, true, 'Excluindo...');
   try {
     await apiFetch('DELETE', apiPath);
     closeModal('deleteModal');
@@ -335,6 +368,8 @@ async function confirmDelete() {
     }
   } catch (err) {
     toast(err.error || 'Erro ao excluir registro');
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -379,16 +414,22 @@ async function confirmDuplicate() {
   const section = state.duplicatingSection;
   const id = state.duplicatingId;
 
-  closeModal('duplicateModal');
-  if (section === 'users') await duplicateUser(id);
-  else if (section === 'recon') await duplicateRecon(id);
-  else if (section === 'ds') await duplicateDs(id);
-  else if (section === 'fields') await duplicateField(id);
-  else if (section === 'rules') await duplicateRule(id);
-  else if (section === 'rf') await duplicateRuleField(id);
-  else if (section === 'profiles') await duplicateProfile(id);
-  else if (section === 'companies') await duplicateCompany(id);
-  else if (section === 'transactions') await duplicateTransaction(id);
+  const btn = document.getElementById('btnConfirmDuplicate');
+  setBtnBusy(btn, true, 'Duplicando...');
+  try {
+    if (section === 'users') await duplicateUser(id);
+    else if (section === 'recon') await duplicateRecon(id);
+    else if (section === 'ds') await duplicateDs(id);
+    else if (section === 'fields') await duplicateField(id);
+    else if (section === 'rules') await duplicateRule(id);
+    else if (section === 'rf') await duplicateRuleField(id);
+    else if (section === 'profiles') await duplicateProfile(id);
+    else if (section === 'companies') await duplicateCompany(id);
+    else if (section === 'transactions') await duplicateTransaction(id);
+  } finally {
+    setBtnBusy(btn, false);
+    closeModal('duplicateModal');
+  }
 }
 
 // ── RULES ──
@@ -559,24 +600,24 @@ function openRuleForm(id) {
   document.getElementById('ruleFormTitle').textContent = id ? 'Editar regra' : 'Nova regra';
   clearRuleErrors();
 
-  const selRecon = document.getElementById('ruleFormRecon');
-  selRecon.innerHTML = '<option value="">Selecione...</option>' +
-    rulesOptions.recons.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  openFormWithLoading('ruleFormModal', 'ruleFormLoading', 'ruleFormFields', () => {
+    const selRecon = document.getElementById('ruleFormRecon');
+    selRecon.innerHTML = '<option value="">Selecione...</option>' +
+      rulesOptions.recons.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
 
-  const idGroup = document.getElementById('ruleFormIdGroup');
-  if (id) {
-    const r = rulesCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    document.getElementById('ruleFormId').value = r.id;
-    selRecon.value = r.id_recon || '';
-    document.getElementById('ruleFormName').value = r.name;
-  } else {
-    idGroup.style.display = 'none';
-    selRecon.value = '';
-    document.getElementById('ruleFormName').value = '';
-  }
-
-  openModal('ruleFormModal');
+    const idGroup = document.getElementById('ruleFormIdGroup');
+    if (id) {
+      const r = rulesCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      document.getElementById('ruleFormId').value = r.id;
+      selRecon.value = r.id_recon || '';
+      document.getElementById('ruleFormName').value = r.name;
+    } else {
+      idGroup.style.display = 'none';
+      selRecon.value = '';
+      document.getElementById('ruleFormName').value = '';
+    }
+  });
 }
 
 async function saveRule() {
@@ -591,6 +632,8 @@ async function saveRule() {
 
   const body = { id_recon: parseInt(id_recon), name };
 
+  const btn = document.getElementById('btnSaveRule');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/rule/${state.editingId}`, body);
@@ -609,6 +652,8 @@ async function saveRule() {
     } else {
       toast('Erro ao salvar regra');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -820,28 +865,29 @@ function openUserForm(id) {
 
   document.getElementById('userFormTitle').textContent = id ? 'Editar usuário' : 'Novo usuário';
   clearUserErrors();
-  _populateUserDropdowns();
 
-  const idGroup = document.getElementById('userFormIdGroup');
-  if (id) {
-    const u = usersCache.find(u => u.id === id);
-    idGroup.style.display = '';
-    document.getElementById('userFormId').value = u.id;
-    document.getElementById('userFormName').value = u.name;
-    document.getElementById('userFormUsername').value = u.username;
-    document.getElementById('userFormPassword').value = '';
-    document.getElementById('userFormProfile').value = u.id_profile || '';
-    document.getElementById('userPasswordLabel').textContent = 'Nova senha (deixe em branco para manter)';
-  } else {
-    idGroup.style.display = 'none';
-    document.getElementById('userFormName').value = '';
-    document.getElementById('userFormUsername').value = '';
-    document.getElementById('userFormPassword').value = '';
-    document.getElementById('userFormProfile').value = '';
-    document.getElementById('userPasswordLabel').textContent = 'Senha';
-  }
+  openFormWithLoading('userFormModal', 'userFormLoading', 'userFormFields', () => {
+    _populateUserDropdowns();
 
-  openModal('userFormModal');
+    const idGroup = document.getElementById('userFormIdGroup');
+    if (id) {
+      const u = usersCache.find(u => u.id === id);
+      idGroup.style.display = '';
+      document.getElementById('userFormId').value = u.id;
+      document.getElementById('userFormName').value = u.name;
+      document.getElementById('userFormUsername').value = u.username;
+      document.getElementById('userFormPassword').value = '';
+      document.getElementById('userFormProfile').value = u.id_profile || '';
+      document.getElementById('userPasswordLabel').textContent = 'Nova senha (deixe em branco para manter)';
+    } else {
+      idGroup.style.display = 'none';
+      document.getElementById('userFormName').value = '';
+      document.getElementById('userFormUsername').value = '';
+      document.getElementById('userFormPassword').value = '';
+      document.getElementById('userFormProfile').value = '';
+      document.getElementById('userPasswordLabel').textContent = 'Senha';
+    }
+  });
 }
 
 async function saveUser() {
@@ -861,6 +907,8 @@ async function saveUser() {
   const body = { name, username, id_profile };
   if (password) body.password = password;
 
+  const btn = document.getElementById('btnSaveUser');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/user/${state.editingId}`, body);
@@ -879,6 +927,8 @@ async function saveUser() {
     } else {
       toast('Erro ao salvar usuário');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1091,32 +1141,33 @@ function openFieldForm(id) {
 
   document.getElementById('fieldFormTitle').textContent = id ? 'Editar campo' : 'Novo campo';
   clearFieldErrors();
-  _populateFieldsDropdowns();
 
-  const posInput = document.getElementById('fieldFormPosition');
-  const idGroup = document.getElementById('fieldFormIdGroup');
+  openFormWithLoading('fieldFormModal', 'fieldFormLoading', 'fieldFormFields', () => {
+    _populateFieldsDropdowns();
 
-  if (id) {
-    const r = fieldsCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    document.getElementById('fieldFormId').value = r.id;
-    posInput.disabled = false;
-    document.getElementById('fieldFormDs').value = r.id_ds || '';
-    posInput.value = r.position;
-    document.getElementById('fieldFormName').value = r.name;
-    document.getElementById('fieldFormType').value = r.id_field_type || '';
-    document.getElementById('fieldFormValue').value = r.value || '';
-  } else {
-    idGroup.style.display = 'none';
-    document.getElementById('fieldFormDs').value = '';
-    posInput.value = '';
-    posInput.disabled = true;
-    document.getElementById('fieldFormName').value = '';
-    document.getElementById('fieldFormType').value = '';
-    document.getElementById('fieldFormValue').value = '';
-  }
+    const posInput = document.getElementById('fieldFormPosition');
+    const idGroup = document.getElementById('fieldFormIdGroup');
 
-  openModal('fieldFormModal');
+    if (id) {
+      const r = fieldsCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      document.getElementById('fieldFormId').value = r.id;
+      posInput.disabled = false;
+      document.getElementById('fieldFormDs').value = r.id_ds || '';
+      posInput.value = r.position;
+      document.getElementById('fieldFormName').value = r.name;
+      document.getElementById('fieldFormType').value = r.id_field_type || '';
+      document.getElementById('fieldFormValue').value = r.value || '';
+    } else {
+      idGroup.style.display = 'none';
+      document.getElementById('fieldFormDs').value = '';
+      posInput.value = '';
+      posInput.disabled = true;
+      document.getElementById('fieldFormName').value = '';
+      document.getElementById('fieldFormType').value = '';
+      document.getElementById('fieldFormValue').value = '';
+    }
+  });
 }
 
 function onFieldFormDsChange() {
@@ -1162,6 +1213,8 @@ async function saveField() {
     value
   };
 
+  const btn = document.getElementById('btnSaveField');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/field/${state.editingId}`, body);
@@ -1180,6 +1233,8 @@ async function saveField() {
     } else {
       toast('Erro ao salvar campo');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1489,37 +1544,39 @@ function openDsForm(id) {
 
   document.getElementById('dsFormTitle').textContent = id ? 'Editar fonte de dados' : 'Nova fonte de dados';
   clearDsErrors();
-  _populateDsDropdowns();
 
-  const idGroup = document.getElementById('dsFormIdGroup');
-  if (id) {
-    const r = dsCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    document.getElementById('dsFormId').value = r.id;
-    document.getElementById('dsFormName').value = r.name;
-    document.getElementById('dsFormRecon').value = r.id_recon || '';
-    document.getElementById('dsFormSide').value = r.id_side || '';
-    document.getElementById('dsFormType').value = r.id_type || '';
-    document.getElementById('dsFormCredentials').value = r.credentials || '';
-    document.getElementById('dsFormQuery').value = r.query || '';
-    document.getElementById('dsFormFilename').value = r.filename || '';
-    document.getElementById('dsFormDelimiter').value = r.delimiter || '';
-    document.getElementById('dsFormUrl').value = r.url || '';
-  } else {
-    idGroup.style.display = 'none';
-    document.getElementById('dsFormName').value = '';
-    document.getElementById('dsFormRecon').value = '';
-    document.getElementById('dsFormSide').value = '';
-    document.getElementById('dsFormType').value = '';
-    document.getElementById('dsFormCredentials').value = '';
-    document.getElementById('dsFormQuery').value = '';
-    document.getElementById('dsFormFilename').value = '';
-    document.getElementById('dsFormDelimiter').value = '';
-    document.getElementById('dsFormUrl').value = '';
-  }
+  openFormWithLoading('dsFormModal', 'dsFormLoading', 'dsFormFields', () => {
+    _populateDsDropdowns();
 
-  updateDsFieldVisibility();
-  openModal('dsFormModal');
+    const idGroup = document.getElementById('dsFormIdGroup');
+    if (id) {
+      const r = dsCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      document.getElementById('dsFormId').value = r.id;
+      document.getElementById('dsFormName').value = r.name;
+      document.getElementById('dsFormRecon').value = r.id_recon || '';
+      document.getElementById('dsFormSide').value = r.id_side || '';
+      document.getElementById('dsFormType').value = r.id_type || '';
+      document.getElementById('dsFormCredentials').value = r.credentials || '';
+      document.getElementById('dsFormQuery').value = r.query || '';
+      document.getElementById('dsFormFilename').value = r.filename || '';
+      document.getElementById('dsFormDelimiter').value = r.delimiter || '';
+      document.getElementById('dsFormUrl').value = r.url || '';
+    } else {
+      idGroup.style.display = 'none';
+      document.getElementById('dsFormName').value = '';
+      document.getElementById('dsFormRecon').value = '';
+      document.getElementById('dsFormSide').value = '';
+      document.getElementById('dsFormType').value = '';
+      document.getElementById('dsFormCredentials').value = '';
+      document.getElementById('dsFormQuery').value = '';
+      document.getElementById('dsFormFilename').value = '';
+      document.getElementById('dsFormDelimiter').value = '';
+      document.getElementById('dsFormUrl').value = '';
+    }
+
+    updateDsFieldVisibility();
+  });
 }
 
 async function saveDs() {
@@ -1563,6 +1620,8 @@ async function saveDs() {
     url
   };
 
+  const btn = document.getElementById('btnSaveDs');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/ds/${state.editingId}`, body);
@@ -1581,6 +1640,8 @@ async function saveDs() {
     } else {
       toast('Erro ao salvar fonte de dados');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1600,6 +1661,8 @@ async function testDsConnection() {
     return;
   }
 
+  const btn = document.getElementById('btnTestConnection');
+  setBtnBusy(btn, true, 'Testando...');
   try {
     const payload = {
       id_type,
@@ -1611,6 +1674,8 @@ async function testDsConnection() {
     toast(res.message || 'Conexão testada com sucesso');
   } catch (err) {
     toast(err.error || 'Erro ao testar conexão');
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1806,20 +1871,20 @@ function openReconForm(id) {
   document.getElementById('reconFormTitle').textContent = id ? 'Editar conciliação' : 'Nova conciliação';
   clearReconErrors();
 
-  const idGroup = document.getElementById('reconFormIdGroup');
-  if (id) {
-    const r = reconCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    document.getElementById('reconFormId').value = r.id;
-    document.getElementById('reconFormName').value = r.name;
-    document.getElementById('reconFormDescription').value = r.description || '';
-  } else {
-    idGroup.style.display = 'none';
-    document.getElementById('reconFormName').value = '';
-    document.getElementById('reconFormDescription').value = '';
-  }
-
-  openModal('reconFormModal');
+  openFormWithLoading('reconFormModal', 'reconFormLoading', 'reconFormFields', () => {
+    const idGroup = document.getElementById('reconFormIdGroup');
+    if (id) {
+      const r = reconCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      document.getElementById('reconFormId').value = r.id;
+      document.getElementById('reconFormName').value = r.name;
+      document.getElementById('reconFormDescription').value = r.description || '';
+    } else {
+      idGroup.style.display = 'none';
+      document.getElementById('reconFormName').value = '';
+      document.getElementById('reconFormDescription').value = '';
+    }
+  });
 }
 
 async function saveRecon() {
@@ -1829,6 +1894,8 @@ async function saveRecon() {
   clearReconErrors();
   if (!name) { document.getElementById('errReconName').style.display = 'block'; return; }
 
+  const btn = document.getElementById('btnSaveRecon');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/recon/${state.editingId}`, { name, description });
@@ -1847,6 +1914,8 @@ async function saveRecon() {
     } else {
       toast('Erro ao salvar conciliação');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1872,12 +1941,16 @@ async function handleImportFile(event) {
     toast('Arquivo JSON inválido');
     return;
   }
+  const btn = document.getElementById('btnImportRecon');
+  setBtnBusy(btn, true, 'Importando...');
   try {
     await apiFetch('POST', '/api/recon/import', data);
     toast('Conciliação importada com sucesso');
     await loadRecon();
   } catch (err) {
     toast(err.error || 'Erro ao importar conciliação');
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -1894,6 +1967,8 @@ async function duplicateRecon(id) {
 let _exportData = null;
 
 async function exportRecon(id) {
+  const btn = document.getElementById('btnReconExport');
+  setBtnBusy(btn, true, 'Exportando...');
   try {
     _exportData = await apiFetch('GET', `/api/recon/${id}/export`);
     document.getElementById('exportTitle').textContent = `Exportar — ${_exportData.name}`;
@@ -1901,6 +1976,8 @@ async function exportRecon(id) {
     openModal('exportModal');
   } catch {
     toast('Erro ao exportar conciliação');
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -2030,6 +2107,8 @@ async function doLogin() {
     return;
   }
 
+  const btn = document.getElementById('btnDoLogin');
+  setBtnBusy(btn, true, 'Entrando...');
   try {
     const user = await apiFetch('POST', '/api/auth/login', { company_code: companyId, username, password: senha });
     applyLogin(user);
@@ -2037,6 +2116,8 @@ async function doLogin() {
   } catch (e) {
     err.textContent = e.error || 'Erro ao autenticar';
     err.style.display = 'flex';
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -2327,6 +2408,7 @@ function openRfForm(id) {
   document.getElementById('rfFormTitle').textContent = id ? 'Editar regra x campo' : 'Nova regra x campo';
   clearRfErrors();
 
+  openFormWithLoading('ruleFieldFormModal', 'rfFormLoading', 'rfFormFields', () => {
   const selRule       = document.getElementById('rfFormRule');
   const selType       = document.getElementById('rfFormType');
   const selField1     = document.getElementById('rfFormField1');
@@ -2401,8 +2483,7 @@ function openRfForm(id) {
   }
 
   selRule.addEventListener('change', () => populateFields(selRule.value, '', ''));
-
-  openModal('ruleFieldFormModal');
+  });
 }
 
 async function saveRuleField() {
@@ -2464,6 +2545,8 @@ async function saveRuleField() {
     tolerance
   };
 
+  const btn = document.getElementById('btnSaveRuleField');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/rule_field/${state.editingId}`, body);
@@ -2483,6 +2566,8 @@ async function saveRuleField() {
     } else {
       toast('Erro ao salvar regra x campo');
     }
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -2631,23 +2716,40 @@ function changeProfilesPageSize(value) {
   renderProfiles();
 }
 
-function openProfileForm(id) {
+async function openProfileForm(id) {
   if (!state.loggedIn) { openModal('loginModal'); return; }
   state.editingSection = 'profiles';
   state.editingId = id || null;
   document.getElementById('profileFormTitle').textContent = id ? 'Editar perfil' : 'Novo perfil';
   clearProfileErrors();
   const idGroup = document.getElementById('profileFormIdGroup');
+  const loading = document.getElementById('profileFormLoading');
+  const fields = document.getElementById('profileFormFields');
   if (id) {
-    const r = profilesCache.find(r => r.id === id);
     idGroup.style.display = '';
+    document.getElementById('profileFormId').value = '';
+    document.getElementById('profileFormName').value = '';
+    loading.style.display = 'flex';
+    fields.style.display = 'none';
+    openModal('profileFormModal');
+    let r;
+    try {
+      r = await apiFetch('GET', `/api/profile/${id}`);
+    } catch {
+      toast('Erro ao carregar perfil');
+      closeModal('profileFormModal');
+      return;
+    } finally {
+      loading.style.display = 'none';
+      fields.style.display = '';
+    }
     document.getElementById('profileFormId').value = r.id;
     document.getElementById('profileFormName').value = r.name;
   } else {
     idGroup.style.display = 'none';
     document.getElementById('profileFormName').value = '';
+    openModal('profileFormModal');
   }
-  openModal('profileFormModal');
 }
 
 async function saveProfile() {
@@ -2655,6 +2757,8 @@ async function saveProfile() {
   clearProfileErrors();
   if (!name) { document.getElementById('errProfileName').style.display = 'block'; return; }
   const body = { name };
+  const btn = document.getElementById('btnSaveProfile');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/profile/${state.editingId}`, body);
@@ -2669,6 +2773,8 @@ async function saveProfile() {
     const el = document.getElementById('errProfileName');
     el.textContent = err.error || 'Erro ao salvar perfil';
     el.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -2836,25 +2942,26 @@ function openCompanyForm(id) {
   state.editingId = id || null;
   document.getElementById('companyFormTitle').textContent = id ? 'Editar empresa' : 'Nova empresa';
   clearCompanyErrors();
-  const idGroup = document.getElementById('companyFormIdGroup');
-  const createAtGroup = document.getElementById('companyFormCreateAtGroup');
-  if (id) {
-    const r = companiesCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    createAtGroup.style.display = '';
-    document.getElementById('companyFormId').value = r.id;
-    document.getElementById('companyFormName').value = r.name;
-    document.getElementById('companyFormCreateAt').value = _fmtDateDisplay(r.create_at);
-    document.getElementById('companyFormExpireDate').value = _fmtDateInput(r.expire_date);
-  } else {
-    idGroup.style.display = 'none';
-    createAtGroup.style.display = 'none';
-    document.getElementById('companyFormName').value = '';
-    const defaultExpire = new Date();
-    defaultExpire.setFullYear(defaultExpire.getFullYear() + 1);
-    document.getElementById('companyFormExpireDate').value = _fmtDateInput(defaultExpire.toISOString());
-  }
-  openModal('companyFormModal');
+  openFormWithLoading('companyFormModal', 'companyFormLoading', 'companyFormFields', () => {
+    const idGroup = document.getElementById('companyFormIdGroup');
+    const createAtGroup = document.getElementById('companyFormCreateAtGroup');
+    if (id) {
+      const r = companiesCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      createAtGroup.style.display = '';
+      document.getElementById('companyFormId').value = r.id;
+      document.getElementById('companyFormName').value = r.name;
+      document.getElementById('companyFormCreateAt').value = _fmtDateDisplay(r.create_at);
+      document.getElementById('companyFormExpireDate').value = _fmtDateInput(r.expire_date);
+    } else {
+      idGroup.style.display = 'none';
+      createAtGroup.style.display = 'none';
+      document.getElementById('companyFormName').value = '';
+      const defaultExpire = new Date();
+      defaultExpire.setFullYear(defaultExpire.getFullYear() + 1);
+      document.getElementById('companyFormExpireDate').value = _fmtDateInput(defaultExpire.toISOString());
+    }
+  });
 }
 
 async function saveCompany() {
@@ -2866,6 +2973,8 @@ async function saveCompany() {
   if (!expire_date) { document.getElementById('errCompanyExpireDate').style.display = 'block'; valid = false; }
   if (!valid) return;
   const body = { name, expire_date };
+  const btn = document.getElementById('btnSaveCompany');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/company/${state.editingId}`, body);
@@ -2880,6 +2989,8 @@ async function saveCompany() {
     const el = document.getElementById(err.error && err.error.includes('expiração') ? 'errCompanyExpireDate' : 'errCompanyName');
     el.textContent = err.error || 'Erro ao salvar empresa';
     el.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -3044,26 +3155,27 @@ function openTransactionForm(id) {
   document.getElementById('transactionFormTitle').textContent = id ? 'Editar transação' : 'Nova transação';
   clearTransactionErrors();
 
-  const selParent  = document.getElementById('transactionFormParent');
-  const others     = id ? transactionsOptions.transactions.filter(t => t.id !== id) : transactionsOptions.transactions;
-  selParent.innerHTML = '<option value="0">Raiz (sem pai)</option>' +
-    others.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  openFormWithLoading('transactionFormModal', 'transactionFormLoading', 'transactionFormFields', () => {
+    const selParent  = document.getElementById('transactionFormParent');
+    const others     = id ? transactionsOptions.transactions.filter(t => t.id !== id) : transactionsOptions.transactions;
+    selParent.innerHTML = '<option value="0">Raiz (sem pai)</option>' +
+      others.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
 
-  const idGroup = document.getElementById('transactionFormIdGroup');
-  if (id) {
-    const r = transactionsCache.find(r => r.id === id);
-    idGroup.style.display = '';
-    document.getElementById('transactionFormId').value = r.id;
-    selParent.value  = r.id_parent  || 0;
-    document.getElementById('transactionFormName').value = r.name;
-    document.getElementById('transactionFormLink').value = r.link;
-  } else {
-    idGroup.style.display = 'none';
-    selParent.value  = '0';
-    document.getElementById('transactionFormName').value = '';
-    document.getElementById('transactionFormLink').value = '';
-  }
-  openModal('transactionFormModal');
+    const idGroup = document.getElementById('transactionFormIdGroup');
+    if (id) {
+      const r = transactionsCache.find(r => r.id === id);
+      idGroup.style.display = '';
+      document.getElementById('transactionFormId').value = r.id;
+      selParent.value  = r.id_parent  || 0;
+      document.getElementById('transactionFormName').value = r.name;
+      document.getElementById('transactionFormLink').value = r.link;
+    } else {
+      idGroup.style.display = 'none';
+      selParent.value  = '0';
+      document.getElementById('transactionFormName').value = '';
+      document.getElementById('transactionFormLink').value = '';
+    }
+  });
 }
 
 async function saveTransaction() {
@@ -3075,6 +3187,8 @@ async function saveTransaction() {
   if (!name)       { document.getElementById('errTransactionName').style.display = 'block'; valid = false; }
   if (!valid) return;
   const body = { id_parent: parseInt(id_parent) || 0, name, link: link || null };
+  const btn = document.getElementById('btnSaveTransaction');
+  setBtnBusy(btn, true);
   try {
     if (state.editingId) {
       await apiFetch('PUT', `/api/transaction/${state.editingId}`, body);
@@ -3089,6 +3203,8 @@ async function saveTransaction() {
     const el = document.getElementById('errTransactionName');
     el.textContent = err.error || 'Erro ao salvar transação';
     el.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 
@@ -3322,13 +3438,14 @@ function onProfileTransactionBulkProfileChange() {
 
 function openProfileTransactionBulkForm() {
   if (!state.loggedIn) { openModal('loginModal'); return; }
-  const sel = document.getElementById('profileTransactionBulkProfile');
-  sel.innerHTML = '<option value="">Selecione...</option>' +
-    profileTransactionsOptions.profiles.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  sel.value = '';
-  document.getElementById('errProfileTransactionBulkProfile').style.display = 'none';
-  renderProfileTransactionBulkTree();
-  openModal('profileTransactionBulkModal');
+  openFormWithLoading('profileTransactionBulkModal', 'profileTransactionBulkLoading', 'profileTransactionBulkFields', () => {
+    const sel = document.getElementById('profileTransactionBulkProfile');
+    sel.innerHTML = '<option value="">Selecione...</option>' +
+      profileTransactionsOptions.profiles.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    sel.value = '';
+    document.getElementById('errProfileTransactionBulkProfile').style.display = 'none';
+    renderProfileTransactionBulkTree();
+  });
 }
 
 async function saveProfileTransactionBulk() {
@@ -3337,6 +3454,8 @@ async function saveProfileTransactionBulk() {
   const idProfile = document.getElementById('profileTransactionBulkProfile').value;
   if (!idProfile) { errEl.style.display = 'block'; return; }
   const transaction_ids = [...document.querySelectorAll('.pt-tree-checkbox:checked')].map(cb => parseInt(cb.value));
+  const btn = document.getElementById('btnSaveProfileTransactionBulk');
+  setBtnBusy(btn, true);
   try {
     await apiFetch('PUT', '/api/profile_transaction/sync', { id_profile: parseInt(idProfile), transaction_ids });
     toast('Associações salvas com sucesso');
@@ -3345,6 +3464,8 @@ async function saveProfileTransactionBulk() {
   } catch (err) {
     errEl.textContent = err.error || 'Erro ao salvar associações';
     errEl.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
   }
 }
 

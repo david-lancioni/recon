@@ -17,7 +17,7 @@
   <div id="recon-content" style="display:none">
   <div class="toolbar">
     <div style="margin-left:auto;display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="triggerImport()">Importar</button>
+      <button class="btn btn-primary" id="btnImportRecon" onclick="triggerImport()">Importar</button>
       <button class="btn btn-primary" onclick="openReconForm()">+ Nova conciliação</button>
     </div>
     <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
@@ -108,23 +108,29 @@
       <button class="modal-close" onclick="closeModal('reconFormModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group" id="reconFormIdGroup" style="display:none">
-        <label>ID</label>
-        <input type="text" id="reconFormId" disabled>
+      <div class="spinner-loader" id="reconFormLoading" style="display:none;padding:30px 0">
+        <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="spinner-text">Carregando...</div>
       </div>
-      <div class="form-group">
-        <label>Nome</label>
-        <input type="text" id="reconFormName" placeholder="Nome da conciliação">
-        <div class="form-error" id="errReconName">Nome é obrigatório</div>
-      </div>
-      <div class="form-group">
-        <label>Descrição</label>
-        <textarea id="reconFormDescription" placeholder="Descreva esta conciliação" rows="3" style="resize:vertical"></textarea>
+      <div id="reconFormFields">
+        <div class="form-group" id="reconFormIdGroup" style="display:none">
+          <label>ID</label>
+          <input type="text" id="reconFormId" disabled>
+        </div>
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="reconFormName" placeholder="Nome da conciliação">
+          <div class="form-error" id="errReconName">Nome é obrigatório</div>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="reconFormDescription" placeholder="Descreva esta conciliação" rows="3" style="resize:vertical"></textarea>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('reconFormModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveRecon()">Salvar</button>
+      <button class="btn btn-primary" id="btnSaveRecon" onclick="saveRecon()">Salvar</button>
     </div>
   </div>
 </div>

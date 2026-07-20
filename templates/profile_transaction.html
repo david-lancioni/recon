@@ -86,21 +86,27 @@
       <button class="modal-close" onclick="closeModal('profileTransactionBulkModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Perfil</label>
-        <select id="profileTransactionBulkProfile" onchange="onProfileTransactionBulkProfileChange()">
-          <option value="">Selecione...</option>
-        </select>
-        <div class="form-error" id="errProfileTransactionBulkProfile">Perfil é obrigatório</div>
+      <div class="spinner-loader" id="profileTransactionBulkLoading" style="display:none;padding:30px 0">
+        <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="spinner-text">Carregando...</div>
       </div>
-      <div class="form-group">
-        <label>Transações</label>
-        <div id="profileTransactionBulkTree" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+      <div id="profileTransactionBulkFields">
+        <div class="form-group">
+          <label>Perfil</label>
+          <select id="profileTransactionBulkProfile" onchange="onProfileTransactionBulkProfileChange()">
+            <option value="">Selecione...</option>
+          </select>
+          <div class="form-error" id="errProfileTransactionBulkProfile">Perfil é obrigatório</div>
+        </div>
+        <div class="form-group">
+          <label>Transações</label>
+          <div id="profileTransactionBulkTree" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('profileTransactionBulkModal')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProfileTransactionBulk()">Salvar</button>
+      <button class="btn btn-primary" id="btnSaveProfileTransactionBulk" onclick="saveProfileTransactionBulk()">Salvar</button>
     </div>
   </div>
 </div>

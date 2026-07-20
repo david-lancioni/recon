@@ -72,10 +72,10 @@ INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (7, 'SQLite');
 -- -----------------------------------------------------
 -- Data for table `tb_ds`
 -- -----------------------------------------------------
-INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (1, 1, 1, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (2, 1, 1, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (3, 1, 2, 1, 1, 'Saldos', NULL, NULL, 'saldos.csv', ';', NULL);
-INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (4, 1, 2, 2, 1, 'Extrato', NULL, NULL, 'extrato.csv', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (1, 1, 1, 1, 1, 'Saldos', NULL, NULL, 'saldo.txt', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (2, 1, 1, 2, 1, 'Extrato', NULL, NULL, 'extrato.txt', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (3, 1, 2, 1, 1, 'Saldos', NULL, NULL, 'saldo.txt', ';', NULL);
+INSERT INTO `tb_ds` (`id`, `id_company`, `id_recon`, `id_side`, `id_type`, `name`, `credentials`, `query`, `filename`, `delimiter`, `url`) VALUES (4, 1, 2, 2, 1, 'Extrato', NULL, NULL, 'extrato.txt', ';', NULL);
 
 
 -- -----------------------------------------------------
