@@ -20,4 +20,10 @@ cp -r "$BACKUP_SOURCE" "$BACKUP_TARGET"
 echo "🔄 Executing git pull in the repository..."
 git -C "$BACKUP_SOURCE" pull
 
+echo "🗑️ Removing 'etc' folder from the repository..."
+rm -rf "${BACKUP_SOURCE}/etc"
+
+echo "🗑️ Removing '__pycache__' folders from the repository..."
+find "$BACKUP_SOURCE" -type d -name "__pycache__" -exec rm -rf {} +
+
 echo "✅ Process completed successfully!"
