@@ -162,27 +162,30 @@ INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_
 -- -----------------------------------------------------
 -- Data for table `tb_transaction`
 -- -----------------------------------------------------
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (1, 0, 'Administrador', NULL);
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (2, 1, 'Perfil', 'profile');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (3, 1, 'Transação', 'transaction');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (4, 1, 'Perfil x Transação', 'profile_transaction');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (5, 0, 'Configuração', NULL);
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (6, 5, 'Conciliação', 'recon');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (7, 5, 'Fonte de Dados', 'ds');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (8, 5, 'Campos', 'field');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 5, 'Regras', 'rule');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 5, 'Definição de Regras', 'rule_field');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (11, 5, 'Executar', 'run');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (1, 0, 'Administração', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (2, 22, 'Perfil', 'profile');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (3, 22, 'Transação', 'transaction');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (4, 22, 'Perfil x Transação', 'profile_transaction');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (5, 0, 'Conciliações', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (6, 24, 'Conciliação', 'recon');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (7, 24, 'Fonte de Dados', 'ds');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (8, 24, 'Campos', 'field');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 24, 'Regras', 'rule');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 24, 'Definição de Regras', 'rule_field');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Resultados', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Visão Geral', 'report_overview');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Sintético', 'report_sintetic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Analítico', 'report_analitic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (16, 12, 'Logs', 'report_log');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 1, 'Usuário', 'user');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (18, 1, 'Empresa', 'company');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (19, 1, 'Área', 'area');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (20, 1, 'Área x Usuário', 'area_user');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (21, 1, 'Área x Conciliação', 'area_recon');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (17, 22, 'Usuário', 'user');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (18, 23, 'Empresa', 'company');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (19, 23, 'Área', 'area');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (20, 23, 'Área x Usuário', 'area_user');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (21, 23, 'Área x Conciliação', 'area_recon');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (22, 1, 'Controle de Acesso', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (23, 1, 'Organização', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (24, 5, 'Configurar', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (25, 5, 'Executar', 'run');
 
 
 -- -----------------------------------------------------
@@ -198,14 +201,14 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_tran
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (8, 1, 1, 8);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (9, 1, 1, 9);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (10, 1, 1, 10);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (11, 1, 1, 11);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (11, 1, 1, 25);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (12, 1, 1, 12);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (13, 1, 1, 14);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (14, 1, 1, 15);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (15, 1, 1, 16);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (16, 1, 1, 17);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (17, 1, 2, 12);
-INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (18, 1, 2, 11);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (18, 1, 2, 25);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (19, 1, 2, 14);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (20, 1, 2, 15);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (21, 1, 2, 16);
@@ -216,6 +219,9 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_tran
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (26, 1, 1, 19);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (27, 1, 1, 20);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (28, 1, 1, 21);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (29, 1, 1, 22);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (30, 1, 1, 23);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (31, 1, 1, 24);
 
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;
