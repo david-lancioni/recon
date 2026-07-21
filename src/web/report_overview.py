@@ -19,36 +19,40 @@ def register(app):
         user_id    = session['user_id']
         id_company = session['company_id']
 
-        recons = db.session.execute(
-            db.select(Recon.id, Recon.name)
-            .filter_by(id_company=id_company, id_user=user_id)
-        ).all()
-
-        totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
-        per_recon = []
-        cn = dblib.get_connection()
         try:
-            for id_recon, recon_name in recons:
-                tb1 = BaseLib.get_table_name(id_company, id_recon, 1)
-                tb2 = BaseLib.get_table_name(id_company, id_recon, 2)
+            recons = db.session.execute(
+                db.select(Recon.id, Recon.name)
+                .filter_by(id_company=id_company, id_user=user_id)
+            ).all()
 
-                sql = f"""
-                select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb1} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
-                union all
-                select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb2} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
-                """
-                try:
-                    rs = dblib.query(sql, cn)
-                except Exception:
-                    continue
-                recon_totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
-                for status, total in rs:
-                    if status in totals:
-                        totals[status] += total
-                        recon_totals[status] += total
-                per_recon.append((recon_name, recon_totals))
-        finally:
-            cn.close()
+            totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
+            per_recon = []
+            cn = dblib.get_connection()
+            try:
+                for id_recon, recon_name in recons:
+                    tb1 = BaseLib.get_table_name(id_company, id_recon, 1)
+                    tb2 = BaseLib.get_table_name(id_company, id_recon, 2)
+
+                    sql = f"""
+                    select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb1} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
+                    union all
+                    select {const.FIELD_STATUS} 'Status', count({const.FIELD_STATUS}) 'Total' from {tb2} where {const.FIELD_ID_COMPANY} = {id_company} group by {const.FIELD_STATUS}
+                    """
+                    try:
+                        rs = dblib.query(sql, cn)
+                    except Exception:
+                        continue
+                    recon_totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
+                    for status, total in rs:
+                        status_key = status.decode() if isinstance(status, (bytes, bytearray)) else status
+                        if status_key in totals:
+                            totals[status_key] += total
+                            recon_totals[status_key] += total
+                    per_recon.append((recon_name, recon_totals))
+            finally:
+                cn.close()
+        except Exception as ex:
+            return jsonify({'error': f'Erro ao carregar visão geral: {ex}'}), 500
 
         def top_recon(status_key):
             candidates = [(name, t[status_key]) for name, t in per_recon if t[status_key] > 0]
