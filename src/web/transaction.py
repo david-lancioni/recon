@@ -1,6 +1,21 @@
 from flask import render_template, jsonify, request, abort
 from sqlalchemy.orm import aliased
-from src.web.models import db, Transaction, next_id
+from src.web.models import db, Transaction, ProfileTransaction, next_id
+
+_ADMIN_PROFILE_ID = 1
+_ADMIN_COMPANY_ID = 1
+
+
+def _grant_to_admin(id_transaction):
+    exists = db.session.execute(
+        db.select(ProfileTransaction).filter_by(id_profile=_ADMIN_PROFILE_ID, id_transaction=id_transaction)
+    ).scalar_one_or_none()
+    if exists:
+        return
+    db.session.add(ProfileTransaction(
+        id=next_id(ProfileTransaction), id_company=_ADMIN_COMPANY_ID,
+        id_profile=_ADMIN_PROFILE_ID, id_transaction=id_transaction
+    ))
 
 
 def register(app):
@@ -45,6 +60,8 @@ def register(app):
             id=next_id(Transaction), id_parent=int(id_parent), name=name, link=link
         )
         db.session.add(record)
+        db.session.flush()
+        _grant_to_admin(record.id)
         db.session.commit()
         return jsonify(record.to_dict()), 201
 
@@ -74,6 +91,8 @@ def register(app):
             id=next_id(Transaction), id_parent=record.id_parent, name=record.name, link=record.link
         )
         db.session.add(new_record)
+        db.session.flush()
+        _grant_to_admin(new_record.id)
         db.session.commit()
         return jsonify(new_record.to_dict()), 201
 
