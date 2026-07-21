@@ -116,8 +116,8 @@ nav {
   pointer-events: none;
 }
 
-.nav-dropdown:hover .nav-dropdown-menu,
-.nav-dropdown.open .nav-dropdown-menu { display: block; }
+.nav-dropdown:hover > .nav-dropdown-menu,
+.nav-dropdown.open > .nav-dropdown-menu { display: block; }
 
 .nav-dropdown-item {
   display: flex; align-items: center; gap: 10px;
@@ -143,6 +143,18 @@ nav {
 }
 
 .nav-dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; position: relative; z-index: 1; }
+
+/* nested submenu (3º nível+, flyout à direita) */
+.nav-dropdown-parent { justify-content: space-between; }
+.nav-chevron-sub { flex-shrink: 0; color: var(--gray-400); }
+.nav-dropdown-submenu {
+  top: -6px;
+  left: 100%;
+  padding-top: 6px;
+}
+.nav-dropdown-submenu::before { top: 0; }
+.nav-dropdown-parent:hover > .nav-dropdown-submenu,
+.nav-dropdown-parent.open > .nav-dropdown-submenu { display: block; }
 
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 

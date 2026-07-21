@@ -2188,17 +2188,50 @@ function renderMenu(items) {
   const navItems = document.getElementById('navItems');
   if (!navItems) return;
   const path = location.pathname;
-  const topLevel = items.filter(i => !i.id_parent || i.id_parent === 0);
-  const byParent = {};
-  items.filter(i => i.id_parent && i.id_parent !== 0).forEach(i => {
-    (byParent[i.id_parent] = byParent[i.id_parent] || []).push(i);
+
+  // Monta a árvore completa (profundidade arbitrária), não só 2 níveis.
+  const byId = {};
+  items.forEach(i => { byId[i.id] = { ...i, children: [] }; });
+  const topLevel = [];
+  items.forEach(i => {
+    const node = byId[i.id];
+    if (i.id_parent && i.id_parent !== 0 && byId[i.id_parent]) {
+      byId[i.id_parent].children.push(node);
+    } else {
+      topLevel.push(node);
+    }
   });
+
+  function subtreeActive(node) {
+    return path === node.link || node.children.some(subtreeActive);
+  }
+
+  function renderItems(nodes) {
+    return nodes.map((node, idx) => {
+      const sep = idx > 0 ? '<div class="nav-dropdown-sep"></div>' : '';
+      if (node.children.length === 0) {
+        return `${sep}<a class="nav-dropdown-item${path === node.link ? ' active' : ''}" href="${node.link || '#'}">
+            <div><div style="font-weight:500">${esc(node.name)}</div></div>
+          </a>`;
+      }
+      const active = subtreeActive(node);
+      return `${sep}<div class="nav-dropdown-item nav-dropdown-parent${active ? ' active' : ''}">
+          <div style="font-weight:500;flex:1">${esc(node.name)}</div>
+          <svg class="nav-chevron-sub" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M4.5 2L8.5 6L4.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="nav-dropdown-menu nav-dropdown-submenu">
+            ${renderItems(node.children)}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
   navItems.innerHTML = topLevel.map(item => {
-    const subs = byParent[item.id] || [];
-    if (subs.length === 0) {
+    if (item.children.length === 0) {
       return `<a class="nav-link${path === item.link ? ' active' : ''}" href="${item.link || '#'}">${esc(item.name)}</a>`;
     }
-    const isActive = subs.some(s => path === s.link);
+    const isActive = subtreeActive(item);
     return `<div class="nav-dropdown">
       <button class="nav-link${isActive ? ' active' : ''}">
         ${esc(item.name)}
@@ -2207,11 +2240,7 @@ function renderMenu(items) {
         </svg>
       </button>
       <div class="nav-dropdown-menu">
-        ${subs.map((s, idx) => `
-          ${idx > 0 ? '<div class="nav-dropdown-sep"></div>' : ''}
-          <a class="nav-dropdown-item${path === s.link ? ' active' : ''}" href="${s.link || '#'}">
-            <div><div style="font-weight:500">${esc(s.name)}</div></div>
-          </a>`).join('')}
+        ${renderItems(item.children)}
       </div>
     </div>`;
   }).join('');
