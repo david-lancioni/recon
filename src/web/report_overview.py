@@ -48,17 +48,18 @@ def register(app):
                         if status_key in totals:
                             totals[status_key] += total
                             recon_totals[status_key] += total
-                    per_recon.append((recon_name, recon_totals))
+                    per_recon.append((id_recon, recon_name, recon_totals))
             finally:
                 cn.close()
         except Exception as ex:
             return jsonify({'error': f'Erro ao carregar visão geral: {ex}'}), 500
 
         def top_recon(status_key):
-            candidates = [(name, t[status_key]) for name, t in per_recon if t[status_key] > 0]
+            candidates = [(rid, name, t[status_key]) for rid, name, t in per_recon if t[status_key] > 0]
             if not candidates:
                 return None
-            return max(candidates, key=lambda c: c[1])[0]
+            rid, name, _ = max(candidates, key=lambda c: c[2])
+            return {'id': rid, 'name': name}
 
         return jsonify({
             'batido': totals['Batido'],

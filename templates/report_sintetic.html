@@ -17,7 +17,7 @@
   <div class="form-group" style="max-width:420px; margin-bottom:24px">
     <label>Conciliação</label>
     <select id="reconFilter">
-      <option value="">Selecione uma conciliação...</option>
+      <option value="">Todas as conciliações</option>
     </select>
   </div>
 
@@ -300,14 +300,9 @@
     const idRecon = filter.value;
     const results = document.getElementById('sintetico-results');
     const btnExportar = document.getElementById('btnExportarSintetico');
-    if (!idRecon) {
-      results.style.display = 'none';
-      btnExportar.style.display = 'none';
-      return;
-    }
     results.style.display = '';
     btnExportar.style.display = '';
-    render(allRows.filter(r => String(r.id_recon) === idRecon));
+    render(idRecon ? allRows.filter(r => String(r.id_recon) === idRecon) : allRows);
   }
 
   function exportSintetico() {
