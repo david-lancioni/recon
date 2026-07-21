@@ -163,8 +163,8 @@ INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (7, 5, '
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (8, 5, 'Campos', 'field');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 5, 'Regras', 'rule');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 5, 'Definição de Regras', 'rule_field');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Conciliação', NULL);
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (11, 12, 'Executar', 'run');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (11, 5, 'Executar', 'run');
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Resultados', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Visão Geral', 'report_overview');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Sintético', 'report_sintetic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Analítico', 'report_analitic');
