@@ -49,7 +49,7 @@ def _seed_company(id_company):
 
     next_pt_id = next_id(ProfileTransaction)
     for tx in all_transactions:
-        if tx.link == 'company':
+        if tx.link in ('company', 'transaction'):
             continue
         db.session.add(ProfileTransaction(
             id=next_pt_id, id_company=id_company, id_profile=admin_profile.id, id_transaction=tx.id

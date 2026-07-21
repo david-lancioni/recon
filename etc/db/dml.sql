@@ -33,7 +33,7 @@ INSERT INTO `tb_company` (`id`, `name`, `create_at`, `expire_date`) VALUES (1, '
 -- Data for table `tb_profile`
 -- -----------------------------------------------------
 INSERT INTO `tb_profile` (`id`, `id_company`, `name`) VALUES (1, 1, 'Administrador');
-INSERT INTO `tb_profile` (`id`, `id_company`, `name`) VALUES (2, 1, 'Usuário');
+INSERT INTO `tb_profile` (`id`, `id_company`, `name`) VALUES (2, 1, 'Analista');
 
 
 -- -----------------------------------------------------
@@ -200,6 +200,7 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_tran
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (22, 1, 1, 18);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (23, 1, 1, 13);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (24, 1, 2, 13);
+INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (25, 1, 2, 5);
 
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;
