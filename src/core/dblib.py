@@ -17,7 +17,7 @@ class DbLib:
         username = os.getenv("DB_USERNAME")
         password = os.getenv("DB_PASSWORD")
         database = os.getenv("DB_NAME")
-        cn = mysql.connector.connect(host=hostname, user=username, password=password, database=database, autocommit=True)
+        cn = mysql.connector.connect(host=hostname, user=username, password=password, database=database, autocommit=True, time_zone='-03:00')
         return cn
 
     def execute(self, cn, sql):

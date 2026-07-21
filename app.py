@@ -20,6 +20,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     f"@{os.environ['DB_HOSTNAME']}/{os.environ['DB_NAME']}"
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'connect_args': {'init_command': "SET time_zone = '-03:00'"}
+}
 app.secret_key = 'recon-secret-key-change-in-production'
 app.session_interface = TokenSessionInterface()
 
