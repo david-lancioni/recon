@@ -3177,6 +3177,10 @@ function changeAreaUsersPageSize(value) {
 function renderAreaUserBulkList() {
   const container = document.getElementById('areaUserBulkList');
   const idArea = document.getElementById('areaUserBulkArea').value;
+  if (!idArea) {
+    container.innerHTML = '';
+    return;
+  }
   container.innerHTML = areaUsersOptions.users.map(u => `
     <div style="padding:3px 0">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -3185,15 +3189,13 @@ function renderAreaUserBulkList() {
         <span style="color:var(--gray-400);font-size:12px">${esc(u.username)}</span>
       </label>
     </div>`).join('');
-  if (idArea) {
-    const checkedIds = new Set(
-      areaUsersCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_user)
-    );
-    checkedIds.forEach(id => {
-      const cb = document.querySelector(`.au-user-checkbox[value="${id}"]`);
-      if (cb) cb.checked = true;
-    });
-  }
+  const checkedIds = new Set(
+    areaUsersCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_user)
+  );
+  checkedIds.forEach(id => {
+    const cb = document.querySelector(`.au-user-checkbox[value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
 }
 
 function onAreaUserBulkAreaChange() {
@@ -3366,6 +3368,10 @@ function changeAreaReconsPageSize(value) {
 function renderAreaReconBulkList() {
   const container = document.getElementById('areaReconBulkList');
   const idArea = document.getElementById('areaReconBulkArea').value;
+  if (!idArea) {
+    container.innerHTML = '';
+    return;
+  }
   container.innerHTML = areaReconsOptions.recons.map(r => `
     <div style="padding:3px 0">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -3374,15 +3380,13 @@ function renderAreaReconBulkList() {
         ${r.owner_name ? `<span style="color:var(--gray-400);font-size:12px">${esc(r.owner_name)}</span>` : ''}
       </label>
     </div>`).join('');
-  if (idArea) {
-    const checkedIds = new Set(
-      areaReconsCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_recon)
-    );
-    checkedIds.forEach(id => {
-      const cb = document.querySelector(`.ar-recon-checkbox[value="${id}"]`);
-      if (cb) cb.checked = true;
-    });
-  }
+  const checkedIds = new Set(
+    areaReconsCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_recon)
+  );
+  checkedIds.forEach(id => {
+    const cb = document.querySelector(`.ar-recon-checkbox[value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
 }
 
 function onAreaReconBulkAreaChange() {
@@ -4046,16 +4050,18 @@ function renderProfileTransactionBulkTree() {
   const container = document.getElementById('profileTransactionBulkTree');
   const idProfile = document.getElementById('profileTransactionBulkProfile').value;
   profileTransactionBulkTree = buildTransactionTree(profileTransactionsOptions.transactions);
-  container.innerHTML = profileTransactionBulkTree.roots.map(r => renderBulkTreeNode(r, 0)).join('');
-  if (idProfile) {
-    const checkedIds = new Set(
-      profileTransactionsCache.filter(r => r.id_profile === parseInt(idProfile)).map(r => r.id_transaction)
-    );
-    checkedIds.forEach(id => {
-      const cb = document.querySelector(`.pt-tree-checkbox[value="${id}"]`);
-      if (cb) cb.checked = true;
-    });
+  if (!idProfile) {
+    container.innerHTML = '';
+    return;
   }
+  container.innerHTML = profileTransactionBulkTree.roots.map(r => renderBulkTreeNode(r, 0)).join('');
+  const checkedIds = new Set(
+    profileTransactionsCache.filter(r => r.id_profile === parseInt(idProfile)).map(r => r.id_transaction)
+  );
+  checkedIds.forEach(id => {
+    const cb = document.querySelector(`.pt-tree-checkbox[value="${id}"]`);
+    if (cb) cb.checked = true;
+  });
 }
 
 function onProfileTransactionBulkProfileChange() {
