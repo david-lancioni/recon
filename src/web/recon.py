@@ -1,6 +1,7 @@
 from flask import render_template, jsonify, request, abort, session
 from sqlalchemy.orm import aliased
 from src.web.models import db, Recon, Ds, Side, DsType, Field, FieldType, Rule, RuleField, RuleType, Operator, Aggregation, Log, next_id
+from src.web.access import link_recon_to_areas
 
 
 def register(app):
@@ -33,6 +34,8 @@ def register(app):
             name=name, description=description
         )
         db.session.add(record)
+        db.session.flush()
+        link_recon_to_areas(session['company_id'], record.id, session['user_id'])
         db.session.commit()
         return jsonify(record.to_dict()), 201
 
@@ -113,6 +116,7 @@ def register(app):
             )
             db.session.add(recon)
             db.session.flush()
+            link_recon_to_areas(id_company, recon.id, session['user_id'])
 
             next_ds_id = next_id(Ds)
             next_field_id = next_id(Field)
@@ -204,6 +208,7 @@ def register(app):
         )
         db.session.add(new_recon)
         db.session.flush()
+        link_recon_to_areas(id_company, new_recon.id, session['user_id'])
 
         next_ds_id = next_id(Ds)
         next_field_id = next_id(Field)

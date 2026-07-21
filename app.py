@@ -11,7 +11,7 @@ if os.path.exists(_env_file):
             if m:
                 os.environ.setdefault(m.group(1), m.group(2))
 
-from src.web import pages, auth, user, recon, ds, field, rule, rule_field, profile, transaction, profile_transaction, run, report_sintetic, report_analitic, report_log, report_overview, company
+from src.web import pages, auth, user, recon, ds, field, rule, rule_field, profile, transaction, profile_transaction, run, report_sintetic, report_analitic, report_log, report_overview, company, area, area_user, area_recon
 from src.web.tokensession import TokenSessionInterface
 
 app = Flask(__name__)
@@ -48,6 +48,9 @@ report_analitic.register(app)
 report_log.register(app)
 report_overview.register(app)
 company.register(app)
+area.register(app)
+area_user.register(app)
+area_recon.register(app)
 
 if __name__ == '__main__':
     app.run(debug=True)

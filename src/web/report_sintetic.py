@@ -3,6 +3,7 @@ from src.web.models import db, Recon
 from src.core.dblib import DbLib
 from src.core.constlib import const
 from src.core.baselib import BaseLib
+from src.web.access import get_visible_recon_ids
 
 dblib = DbLib()
 
@@ -19,20 +20,26 @@ def register(app):
         user_id    = session['user_id']
         id_company = session['company_id']
 
-        recons = db.session.execute(
-            db.select(Recon.id, Recon.name)
-            .filter_by(id_company=id_company, id_user=user_id)
+        visible_recon_ids = get_visible_recon_ids(id_company, user_id)
+        if not visible_recon_ids:
+            return jsonify([])
+
+        recon_query = (
+            db.select(Recon.id, Recon.name, Recon.id_user)
+            .filter_by(id_company=id_company)
+            .filter(Recon.id.in_(visible_recon_ids))
             .order_by(Recon.id)
-        ).all()
+        )
+        recons = db.session.execute(recon_query).all()
 
         rows = []
         cn = dblib.get_connection()
         try:
-            for id_recon, recon_name in recons:
+            for id_recon, recon_name, owner_id_user in recons:
                 tb1 = BaseLib.get_table_name(id_company, id_recon, 1)
                 tb2 = BaseLib.get_table_name(id_company, id_recon, 2)
 
-                log_sql = f"select max(created_at) from tb_log where id_user = {user_id} and id_recon = {id_recon}"
+                log_sql = f"select max(created_at) from tb_log where id_user = {owner_id_user} and id_recon = {id_recon}"
                 log_rs = dblib.query(log_sql, cn)
                 max_created_at = log_rs[0][0] if log_rs else None
                 execution_date = max_created_at.strftime('%d/%m/%Y %H:%M') if max_created_at else ''

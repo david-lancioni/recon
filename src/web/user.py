@@ -1,5 +1,13 @@
 from flask import render_template, jsonify, request, abort, session
 from src.web.models import db, User, Profile, Company, next_id
+from src.web.access import sync_areas_for_admin_user
+
+
+def _is_admin_profile(id_company, id_profile):
+    profile = db.session.execute(
+        db.select(Profile).filter_by(id=id_profile, id_company=id_company)
+    ).scalar_one_or_none()
+    return bool(profile and profile.name == 'Administrador')
 
 
 def register(app):
@@ -62,6 +70,9 @@ def register(app):
             id_profile=id_profile, id_company=id_company
         )
         db.session.add(user)
+        db.session.flush()
+        if _is_admin_profile(id_company, id_profile):
+            sync_areas_for_admin_user(id_company, user.id)
         db.session.commit()
         return jsonify(user.to_dict()), 201
 
@@ -100,6 +111,8 @@ def register(app):
         user.id_profile = id_profile
         if password:
             user.password = password
+        if _is_admin_profile(id_company, id_profile):
+            sync_areas_for_admin_user(id_company, user.id)
         db.session.commit()
         return jsonify(user.to_dict())
 
@@ -132,6 +145,9 @@ def register(app):
             id_profile=user.id_profile, id_company=user.id_company
         )
         db.session.add(new_user)
+        db.session.flush()
+        if _is_admin_profile(user.id_company, user.id_profile):
+            sync_areas_for_admin_user(user.id_company, new_user.id)
         db.session.commit()
         return jsonify(new_user.to_dict()), 201
 

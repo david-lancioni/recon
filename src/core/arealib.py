@@ -75,6 +75,7 @@ class AreaLib(BaseLib):
             fieldlist += f"{const.FIELD_DATE} datetime default CURRENT_TIMESTAMP, "
             fieldlist += f"{const.FIELD_ID_PARENT} integer default 0, "
             fieldlist += f"{const.FIELD_RECON} varchar(50) default '', "
+            fieldlist += f"{const.FIELD_ID_RECON} integer default {self.id}, "
             fieldlist += f"{const.FIELD_RULE} varchar(50) default '', "
             fieldlist += f"{const.FIELD_ID_STATUS} integer default {const.STATUS_ORPHAN}, "
             fieldlist += f"{const.FIELD_STATUS} varchar(50) default '{status}', "

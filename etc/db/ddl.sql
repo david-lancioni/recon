@@ -414,6 +414,92 @@ CREATE TABLE IF NOT EXISTS `tb_profile_transaction` (
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
+-- -----------------------------------------------------
+-- Table `tb_area`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_area` ;
+
+CREATE TABLE IF NOT EXISTS `tb_area` (
+  `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_area_company_idx` (`id_company` ASC) VISIBLE,
+  CONSTRAINT `fk_area_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+
+-- -----------------------------------------------------
+-- Table `tb_area_user`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_area_user` ;
+
+CREATE TABLE IF NOT EXISTS `tb_area_user` (
+  `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
+  `id_area` INT NOT NULL,
+  `id_user` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uk_area_user` (`id_area` ASC, `id_user` ASC) VISIBLE,
+  INDEX `fk_area_user_area_idx` (`id_area` ASC) VISIBLE,
+  INDEX `fk_area_user_user_idx` (`id_user` ASC) VISIBLE,
+  INDEX `fk_area_user_company_idx` (`id_company` ASC) VISIBLE,
+  CONSTRAINT `fk_area_user_area`
+    FOREIGN KEY (`id_area`)
+    REFERENCES `tb_area` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_area_user_user`
+    FOREIGN KEY (`id_user`)
+    REFERENCES `tb_user` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_area_user_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `tb_area_recon`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_area_recon` ;
+
+CREATE TABLE IF NOT EXISTS `tb_area_recon` (
+  `id` INT NOT NULL,
+  `id_company` INT NOT NULL,
+  `id_area` INT NOT NULL,
+  `id_recon` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uk_area_recon` (`id_area` ASC, `id_recon` ASC) VISIBLE,
+  INDEX `fk_area_recon_area_idx` (`id_area` ASC) VISIBLE,
+  INDEX `fk_area_recon_recon_idx` (`id_recon` ASC) VISIBLE,
+  INDEX `fk_area_recon_company_idx` (`id_company` ASC) VISIBLE,
+  CONSTRAINT `fk_area_recon_area`
+    FOREIGN KEY (`id_area`)
+    REFERENCES `tb_area` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_area_recon_recon`
+    FOREIGN KEY (`id_recon`)
+    REFERENCES `tb_recon` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_area_recon_company`
+    FOREIGN KEY (`id_company`)
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

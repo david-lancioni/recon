@@ -79,6 +79,48 @@ class Profile(db.Model):
         return {'id': self.id, 'id_company': self.id_company, 'name': self.name}
 
 
+class Area(db.Model):
+    __tablename__ = 'tb_area'
+    id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
+    name = db.Column(db.String(50), nullable=True)
+
+    def to_dict(self):
+        return {'id': self.id, 'id_company': self.id_company, 'name': self.name}
+
+
+class AreaUser(db.Model):
+    __tablename__ = 'tb_area_user'
+    id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
+    id_area = db.Column(db.Integer, db.ForeignKey('tb_area.id'), nullable=False)
+    id_user = db.Column(db.Integer, db.ForeignKey('tb_user.id'), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'id_company': self.id_company,
+            'id_area': self.id_area,
+            'id_user': self.id_user
+        }
+
+
+class AreaRecon(db.Model):
+    __tablename__ = 'tb_area_recon'
+    id = db.Column(db.Integer, primary_key=True)
+    id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
+    id_area = db.Column(db.Integer, db.ForeignKey('tb_area.id'), nullable=False)
+    id_recon = db.Column(db.Integer, db.ForeignKey('tb_recon.id'), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'id_company': self.id_company,
+            'id_area': self.id_area,
+            'id_recon': self.id_recon
+        }
+
+
 class Transaction(db.Model):
     __tablename__ = 'tb_transaction'
     id = db.Column(db.Integer, primary_key=True)

@@ -37,7 +37,7 @@ class CoreLib(BaseLib):
             loglib.log(loglib.INFO, loglib.message(3))
 
             """ get info """
-            sql = f"select id, name from tb_recon where id = {id_recon} and id_user = {id_user} and id_company = {id_company}"
+            sql = f"select id, name from tb_recon where id = {id_recon} and id_company = {id_company}"
             recon = dblib.query(sql, cn)
             self.id = recon[0][0]
             self.name = recon[0][1]

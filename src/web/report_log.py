@@ -2,6 +2,7 @@ import datetime
 import decimal
 from flask import render_template, jsonify, session
 from src.core.dblib import DbLib
+from src.web.access import get_visible_recon_ids
 
 dblib = DbLib()
 
@@ -35,11 +36,23 @@ def register(app):
     def api_report_log():
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
+        user_id    = session['user_id']
+        id_company = session['company_id']
+        visible_recon_ids = get_visible_recon_ids(id_company, user_id)
+
+        where_extra = ''
+        params = [id_company]
+        if not visible_recon_ids:
+            where_extra = ' and 1 = 0'
+        else:
+            placeholders = ','.join(['%s'] * len(visible_recon_ids))
+            where_extra = f' and l.id_recon in ({placeholders})'
+            params.extend(visible_recon_ids)
 
         cn = dblib.get_connection()
         try:
             cursor = cn.cursor()
-            cursor.execute("""
+            cursor.execute(f"""
                 select
                     r.name recon,
                     u.name usuario,
@@ -51,9 +64,9 @@ def register(app):
                 from tb_log l
                 left join tb_user u on l.id_user = u.id
                 left join tb_recon r on l.id_recon = r.id
-                where l.id_company = %s
+                where l.id_company = %s{where_extra}
                 order by l.created_at
-            """, (session['company_id'],))
+            """, tuple(params))
             all_columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             cursor.close()

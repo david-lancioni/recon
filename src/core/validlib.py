@@ -35,7 +35,7 @@ class ValidLib(BaseLib):
     def validate_recon_exists(self, id_user, id_recon):
         loglib = LogLib(self.cn, "ValidationLib", "validate_recon_exists", id_user, id_recon)
         try:
-            sql = f"select id from tb_recon where id = {id_recon} and id_user = {id_user}"
+            sql = f"select id from tb_recon where id = {id_recon}"
             rows = dblib.query(sql, self.cn)
             if not rows:
                 raise Exception(loglib.log(loglib.INFO, loglib.message(5)))

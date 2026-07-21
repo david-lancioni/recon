@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Área x Usuário — Recon{% endblock %}
+
+{% block content %}
+<div class="section active" id="page-area-user">
+  <div class="page-header">
+    <h1>Área x Usuário</h1>
+    <p>Associe usuários às áreas</p>
+  </div>
+
+  <div class="spinner-loader" id="area-user-loading">
+    <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="spinner-text">Carregando...</div>
+  </div>
+
+  <div id="area-user-content" style="display:none">
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openAreaUserBulkForm()" style="margin-left:auto">
+      + Área x Usuário
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr ondblclick="toggleAreaUserFilters()" style="cursor:pointer" title="Duplo clique para filtrar">
+          <th style="width:36px"></th>
+          <th style="width:70px">ID</th>
+          <th>Área</th>
+          <th>Usuário</th>
+        </tr>
+        <tr class="filter-row" id="filter-row-area-user" style="display:none">
+          <th></th>
+          <th></th>
+          <th>
+            <select id="filter-au-area" class="filter-select" onchange="filterAreaUsersByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-au-user" class="filter-select" onchange="filterAreaUsersByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tbody-area-user"></tbody>
+    </table>
+    <div id="empty-area-user" class="empty-state" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M15 20h10M15 15h10M15 25h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <strong>Nenhuma associação cadastrada</strong>
+      <p>Clique em "+ Área x Usuário" para começar</p>
+    </div>
+    <div class="pagination" id="pag-area-user">
+      <span id="pag-info-area-user"></span>
+      <div class="pag-right">
+        <label class="page-size-label">Linhas por página
+          <select class="page-size-select" onchange="changeAreaUsersPageSize(this.value)">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+        <div class="pag-btns" id="pag-btns-area-user"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-voltar-wrap">
+    <button type="button" class="btn-voltar" id="btnAreaUserDelete" disabled onclick="footerAreaUserDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
+  </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- AREA USER BULK MODAL -->
+<div class="modal-overlay" id="areaUserBulkModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Associar em massa</h2>
+      <button class="modal-close" onclick="closeModal('areaUserBulkModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="spinner-loader" id="areaUserBulkLoading" style="display:none;padding:30px 0">
+        <div class="spinner-dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="spinner-text">Carregando...</div>
+      </div>
+      <div id="areaUserBulkFields">
+        <div class="form-group">
+          <label>Área</label>
+          <select id="areaUserBulkArea" onchange="onAreaUserBulkAreaChange()">
+            <option value="">Selecione...</option>
+          </select>
+          <div class="form-error" id="errAreaUserBulkArea">Área é obrigatória</div>
+        </div>
+        <div class="form-group">
+          <label>Usuários</label>
+          <div id="areaUserBulkList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('areaUserBulkModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveAreaUserBulk" onclick="saveAreaUserBulk()">Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function() {
+  const loading = document.getElementById('area-user-loading');
+  const content = document.getElementById('area-user-content');
+  try {
+    await loadAreaUsers();
+  } finally {
+    loading.style.display = 'none';
+    content.style.display = '';
+  }
+})();
+</script>
+{% endblock %}

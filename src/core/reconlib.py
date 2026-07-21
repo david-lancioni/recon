@@ -233,6 +233,7 @@ class ReconLib(BaseLib):
                 sql += matching_key
                 sql += " set "
                 sql += f"{tmp1}.{const.FIELD_RECON}='{self.name}', "
+                sql += f"{tmp1}.{const.FIELD_ID_RECON}={self.id}, "
                 sql += f"{tmp1}.{const.FIELD_RULE}='{rule_name}', "
                 sql += f"{tmp1}.{const.FIELD_ID_STATUS}='{const.STATUS_MATCHED}',"
                 sql += f"{tmp1}.{const.FIELD_STATUS} = '{self.matched}', "
@@ -334,7 +335,7 @@ class ReconLib(BaseLib):
             field_list = ""
             rows_affected = 0
             """ stamp the differences from tmps in tbs """
-            match_result = [const.FIELD_ID_PARENT, const.FIELD_RECON, const.FIELD_RULE, const.FIELD_ID_STATUS, const.FIELD_STATUS]
+            match_result = [const.FIELD_ID_PARENT, const.FIELD_RECON, const.FIELD_ID_RECON, const.FIELD_RULE, const.FIELD_ID_STATUS, const.FIELD_STATUS]
             matching_key1 = self.get_sql_key(self.tb1, self.tmp1, rule_field, False, 1)
             matching_key2 = self.get_sql_key(self.tb2, self.tmp2, rule_field, False, 2)
             """ stamp key information in final table """

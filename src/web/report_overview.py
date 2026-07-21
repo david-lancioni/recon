@@ -3,6 +3,7 @@ from src.web.models import db, Recon
 from src.core.dblib import DbLib
 from src.core.constlib import const
 from src.core.baselib import BaseLib
+from src.web.access import get_visible_recon_ids
 
 dblib = DbLib()
 
@@ -20,10 +21,19 @@ def register(app):
         id_company = session['company_id']
 
         try:
-            recons = db.session.execute(
+            visible_recon_ids = get_visible_recon_ids(id_company, user_id)
+            if not visible_recon_ids:
+                return jsonify({
+                    'batido': 0, 'divergente': 0, 'orfao': 0,
+                    'top_batido': None, 'top_divergente': None, 'top_orfao': None
+                })
+
+            recon_query = (
                 db.select(Recon.id, Recon.name)
-                .filter_by(id_company=id_company, id_user=user_id)
-            ).all()
+                .filter_by(id_company=id_company)
+                .filter(Recon.id.in_(visible_recon_ids))
+            )
+            recons = db.session.execute(recon_query).all()
 
             totals = {'Batido': 0, 'Divergente': 0, 'Órfão': 0}
             per_recon = []

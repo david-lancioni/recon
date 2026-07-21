@@ -301,6 +301,15 @@ function openDelete(section, id) {
   } else if (section === 'profile_transaction') {
     const r = profileTransactionsCache.find(r => r.id === id);
     displayName = `"${r.profile_name} / ${r.transaction_name}"`;
+  } else if (section === 'areas') {
+    const r = areasCache.find(r => r.id === id);
+    displayName = `"${r.name}"`;
+  } else if (section === 'area_user') {
+    const r = areaUsersCache.find(r => r.id === id);
+    displayName = `"${r.area_name} / ${r.user_name}"`;
+  } else if (section === 'area_recon') {
+    const r = areaReconsCache.find(r => r.id === id);
+    displayName = `"${r.area_name} / ${r.recon_name}"`;
   } else {
     const rec = cache[section].find(r => r.id === id);
     displayName = `"${rec.codigo} – ${rec.descricao}"`;
@@ -325,6 +334,9 @@ async function confirmDelete() {
                 : section === 'companies'    ? `/api/company/${id}`
                 : section === 'transactions' ? `/api/transaction/${id}`
                 : section === 'profile_transaction' ? `/api/profile_transaction/${id}`
+                : section === 'areas'        ? `/api/area/${id}`
+                : section === 'area_user'    ? `/api/area_user/${id}`
+                : section === 'area_recon'   ? `/api/area_recon/${id}`
                 : `/api/${section}/${id}`;
 
   const btn = document.getElementById('btnConfirmDelete');
@@ -361,6 +373,15 @@ async function confirmDelete() {
       toast('Transação excluída');
     } else if (section === 'profile_transaction') {
       await loadProfileTransactions();
+      toast('Associação excluída');
+    } else if (section === 'areas') {
+      await loadAreas();
+      toast('Área excluída');
+    } else if (section === 'area_user') {
+      await loadAreaUsers();
+      toast('Associação excluída');
+    } else if (section === 'area_recon') {
+      await loadAreaRecons();
       toast('Associação excluída');
     } else {
       await loadSection(section);
@@ -404,6 +425,9 @@ function openDuplicate(section, id) {
   } else if (section === 'transactions') {
     const r = transactionsCache.find(r => r.id === id);
     displayName = `"${r.name}"`;
+  } else if (section === 'areas') {
+    const r = areasCache.find(r => r.id === id);
+    displayName = `"${r.name}"`;
   }
 
   document.getElementById('duplicateItemName').textContent = displayName;
@@ -426,6 +450,7 @@ async function confirmDuplicate() {
     else if (section === 'profiles') await duplicateProfile(id);
     else if (section === 'companies') await duplicateCompany(id);
     else if (section === 'transactions') await duplicateTransaction(id);
+    else if (section === 'areas') await duplicateArea(id);
   } finally {
     setBtnBusy(btn, false);
     closeModal('duplicateModal');
@@ -2796,6 +2821,578 @@ async function duplicateProfile(id) {
   } catch { toast('Erro ao duplicar perfil'); }
 }
 
+// ── AREAS ──
+let areasCache = [];
+const areasState = { pageNum: 1, colName: '', selectedId: null };
+
+function selectAreaRow(id) {
+  areasState.selectedId = id;
+  updateAreaFooterButtons();
+}
+
+function updateAreaFooterButtons() {
+  const hasSelection = areasState.selectedId != null;
+  ['btnAreaEdit', 'btnAreaDuplicate', 'btnAreaDelete'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = !hasSelection;
+  });
+}
+
+function footerAreaEdit() {
+  if (areasState.selectedId != null) openAreaForm(areasState.selectedId);
+}
+
+function footerAreaDuplicate() {
+  if (areasState.selectedId != null) openDuplicate('areas', areasState.selectedId);
+}
+
+function footerAreaDelete() {
+  if (areasState.selectedId != null) openDelete('areas', areasState.selectedId);
+}
+
+async function loadAreas() {
+  try {
+    areasCache = await apiFetch('GET', '/api/area');
+    areasState.selectedId = null;
+    populateAreaFilters();
+    renderAreas();
+  } catch { toast('Erro ao carregar áreas'); }
+}
+
+function populateAreaFilters() {
+  const selName = document.getElementById('filter-area-name');
+  if (!selName) return;
+  const optName = [...new Set(areasCache.map(r => r.name))].sort();
+  selName.innerHTML = '<option value="">Todos</option>' + optName.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  selName.value = areasState.colName;
+}
+
+function toggleAreaFilters() {
+  const row = document.getElementById('filter-row-areas');
+  const hiding = row.style.display !== 'none';
+  row.style.display = hiding ? 'none' : '';
+  if (hiding) {
+    row.querySelectorAll('select, input').forEach(el => { el.value = ''; });
+    filterAreasByColumn();
+  }
+}
+
+function filterAreasByColumn() {
+  areasState.colName = document.getElementById('filter-area-name').value;
+  areasState.pageNum = 1;
+  renderAreas();
+}
+
+function getAreasFiltered() {
+  return areasCache.filter(r =>
+    (!areasState.colName || r.name === areasState.colName)
+  );
+}
+
+function renderAreas() {
+  const filtered    = getAreasFiltered();
+  const total       = filtered.length;
+  const totalPages  = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pg          = Math.min(areasState.pageNum, totalPages);
+  areasState.pageNum = pg;
+  const slice       = filtered.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+  const tbody       = document.getElementById('tbody-areas');
+  const empty       = document.getElementById('empty-areas');
+  const pag         = document.getElementById('pag-areas');
+  syncRowSelection(areasState, slice);
+  updateAreaFooterButtons();
+  if (!tbody) return;
+  if (slice.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    pag.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  pag.style.display = 'flex';
+  tbody.innerHTML = slice.map(r => `
+    <tr>
+      <td style="text-align:center">
+        <input type="radio" name="areaRowSelect" value="${r.id}" ${areasState.selectedId === r.id ? 'checked' : ''} onclick="selectAreaRow(${r.id})">
+      </td>
+      <td style="color:var(--gray-400);font-size:12.5px">${r.id}</td>
+      <td>${esc(r.name)}</td>
+    </tr>`).join('');
+  document.getElementById('pag-info-areas').textContent = `${(pg-1)*PAGE_SIZE+1}–${Math.min(pg*PAGE_SIZE,total)} de ${total}`;
+  const maxButtons = 10;
+  let startPage = Math.max(1, pg - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  startPage = Math.max(1, endPage - maxButtons + 1);
+  let html = `<button class="pag-btn" onclick="changeAreasPage(-1)" ${pg===1?'disabled':''}>&#8249;</button>`;
+  for (let i = startPage; i <= endPage; i++) html += `<button class="pag-btn ${i===pg?'active':''}" onclick="gotoAreasPage(${i})">${i}</button>`;
+  html += `<button class="pag-btn" onclick="changeAreasPage(1)" ${pg===totalPages?'disabled':''}>&#8250;</button>`;
+  document.getElementById('pag-btns-areas').innerHTML = html;
+}
+
+function changeAreasPage(dir) {
+  const total = Math.max(1, Math.ceil(getAreasFiltered().length / PAGE_SIZE));
+  areasState.pageNum = Math.max(1, Math.min(total, areasState.pageNum + dir));
+  renderAreas();
+}
+
+function gotoAreasPage(n) { areasState.pageNum = n; renderAreas(); }
+
+function changeAreasPageSize(value) {
+  applyPageSize(value);
+  areasState.pageNum = 1;
+  renderAreas();
+}
+
+async function openAreaForm(id) {
+  if (!state.loggedIn) { openModal('loginModal'); return; }
+  state.editingSection = 'areas';
+  state.editingId = id || null;
+  document.getElementById('areaFormTitle').textContent = id ? 'Editar área' : 'Nova área';
+  clearAreaErrors();
+  const idGroup = document.getElementById('areaFormIdGroup');
+  const loading = document.getElementById('areaFormLoading');
+  const fields = document.getElementById('areaFormFields');
+  if (id) {
+    idGroup.style.display = '';
+    document.getElementById('areaFormId').value = '';
+    document.getElementById('areaFormName').value = '';
+    loading.style.display = 'flex';
+    fields.style.display = 'none';
+    openModal('areaFormModal');
+    let r;
+    try {
+      r = await apiFetch('GET', `/api/area/${id}`);
+    } catch {
+      toast('Erro ao carregar área');
+      closeModal('areaFormModal');
+      return;
+    } finally {
+      loading.style.display = 'none';
+      fields.style.display = '';
+    }
+    document.getElementById('areaFormId').value = r.id;
+    document.getElementById('areaFormName').value = r.name;
+  } else {
+    idGroup.style.display = 'none';
+    document.getElementById('areaFormName').value = '';
+    openModal('areaFormModal');
+  }
+}
+
+async function saveArea() {
+  const name = document.getElementById('areaFormName').value.trim();
+  clearAreaErrors();
+  if (!name) { document.getElementById('errAreaName').style.display = 'block'; return; }
+  const body = { name };
+  const btn = document.getElementById('btnSaveArea');
+  setBtnBusy(btn, true);
+  try {
+    if (state.editingId) {
+      await apiFetch('PUT', `/api/area/${state.editingId}`, body);
+      toast('Área atualizada com sucesso');
+    } else {
+      await apiFetch('POST', '/api/area', body);
+      toast('Área criada com sucesso');
+    }
+    closeModal('areaFormModal');
+    await loadAreas();
+  } catch (err) {
+    const el = document.getElementById('errAreaName');
+    el.textContent = err.error || 'Erro ao salvar área';
+    el.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
+  }
+}
+
+function clearAreaErrors() {
+  const el = document.getElementById('errAreaName');
+  el.style.display = 'none';
+  el.textContent = 'Nome é obrigatório';
+}
+
+async function duplicateArea(id) {
+  try {
+    await apiFetch('POST', `/api/area/${id}/duplicate`);
+    toast('Área duplicada com sucesso');
+    await loadAreas();
+  } catch { toast('Erro ao duplicar área'); }
+}
+
+// ── AREA USERS ──
+let areaUsersCache   = [];
+let areaUsersOptions = { areas: [], users: [] };
+const areaUsersState = { pageNum: 1, colArea: '', colUser: '', selectedId: null };
+
+function selectAreaUserRow(id) {
+  areaUsersState.selectedId = id;
+  updateAreaUserFooterButtons();
+}
+
+function updateAreaUserFooterButtons() {
+  const hasSelection = areaUsersState.selectedId != null;
+  ['btnAreaUserDelete'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = !hasSelection;
+  });
+}
+
+function footerAreaUserDelete() {
+  if (areaUsersState.selectedId != null) openDelete('area_user', areaUsersState.selectedId);
+}
+
+async function loadAreaUsers() {
+  try {
+    [areaUsersOptions, areaUsersCache] = await Promise.all([
+      apiFetch('GET', '/api/area_user/options'),
+      apiFetch('GET', '/api/area_user')
+    ]);
+    areaUsersState.selectedId = null;
+    populateAreaUserFilters();
+    renderAreaUsers();
+  } catch { toast('Erro ao carregar associações'); }
+}
+
+function populateAreaUserFilters() {
+  const map = {
+    'filter-au-area': { vals: [...new Set(areaUsersCache.map(r => r.area_name))].sort(), key: 'colArea' },
+    'filter-au-user': { vals: [...new Set(areaUsersCache.map(r => r.user_name))].sort(), key: 'colUser' }
+  };
+  for (const [selId, { vals, key }] of Object.entries(map)) {
+    const sel = document.getElementById(selId);
+    if (!sel) continue;
+    sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    sel.value = areaUsersState[key];
+  }
+}
+
+function toggleAreaUserFilters() {
+  const row = document.getElementById('filter-row-area-user');
+  const hiding = row.style.display !== 'none';
+  row.style.display = hiding ? 'none' : '';
+  if (hiding) {
+    row.querySelectorAll('select, input').forEach(el => { el.value = ''; });
+    filterAreaUsersByColumn();
+  }
+}
+
+function filterAreaUsersByColumn() {
+  areaUsersState.colArea = document.getElementById('filter-au-area').value;
+  areaUsersState.colUser = document.getElementById('filter-au-user').value;
+  areaUsersState.pageNum = 1;
+  renderAreaUsers();
+}
+
+function getAreaUsersFiltered() {
+  return areaUsersCache.filter(r =>
+    (!areaUsersState.colArea || r.area_name === areaUsersState.colArea) &&
+    (!areaUsersState.colUser || r.user_name === areaUsersState.colUser)
+  );
+}
+
+function renderAreaUsers() {
+  const filtered   = getAreaUsersFiltered();
+  const total      = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pg         = Math.min(areaUsersState.pageNum, totalPages);
+  areaUsersState.pageNum = pg;
+  const slice      = filtered.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+  const tbody      = document.getElementById('tbody-area-user');
+  const empty      = document.getElementById('empty-area-user');
+  const pag        = document.getElementById('pag-area-user');
+  syncRowSelection(areaUsersState, slice);
+  updateAreaUserFooterButtons();
+  if (!tbody) return;
+  if (slice.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    pag.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  pag.style.display = 'flex';
+  tbody.innerHTML = slice.map(r => `
+    <tr>
+      <td style="text-align:center">
+        <input type="radio" name="areaUserRowSelect" value="${r.id}" ${areaUsersState.selectedId === r.id ? 'checked' : ''} onclick="selectAreaUserRow(${r.id})">
+      </td>
+      <td style="color:var(--gray-400);font-size:12.5px">${r.id}</td>
+      <td>${esc(r.area_name)}</td>
+      <td>${esc(r.user_name)}</td>
+    </tr>`).join('');
+  document.getElementById('pag-info-area-user').textContent = `${(pg-1)*PAGE_SIZE+1}–${Math.min(pg*PAGE_SIZE,total)} de ${total}`;
+  const maxButtons = 10;
+  let startPage = Math.max(1, pg - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  startPage = Math.max(1, endPage - maxButtons + 1);
+  let html = `<button class="pag-btn" onclick="changeAreaUsersPage(-1)" ${pg===1?'disabled':''}>&#8249;</button>`;
+  for (let i = startPage; i <= endPage; i++) html += `<button class="pag-btn ${i===pg?'active':''}" onclick="gotoAreaUsersPage(${i})">${i}</button>`;
+  html += `<button class="pag-btn" onclick="changeAreaUsersPage(1)" ${pg===totalPages?'disabled':''}>&#8250;</button>`;
+  document.getElementById('pag-btns-area-user').innerHTML = html;
+}
+
+function changeAreaUsersPage(dir) {
+  const total = Math.max(1, Math.ceil(getAreaUsersFiltered().length / PAGE_SIZE));
+  areaUsersState.pageNum = Math.max(1, Math.min(total, areaUsersState.pageNum + dir));
+  renderAreaUsers();
+}
+
+function gotoAreaUsersPage(n) { areaUsersState.pageNum = n; renderAreaUsers(); }
+
+function changeAreaUsersPageSize(value) {
+  applyPageSize(value);
+  areaUsersState.pageNum = 1;
+  renderAreaUsers();
+}
+
+function renderAreaUserBulkList() {
+  const container = document.getElementById('areaUserBulkList');
+  const idArea = document.getElementById('areaUserBulkArea').value;
+  container.innerHTML = areaUsersOptions.users.map(u => `
+    <div style="padding:3px 0">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" class="au-user-checkbox" value="${u.id}">
+        <span>${esc(u.name)}</span>
+        <span style="color:var(--gray-400);font-size:12px">${esc(u.username)}</span>
+      </label>
+    </div>`).join('');
+  if (idArea) {
+    const checkedIds = new Set(
+      areaUsersCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_user)
+    );
+    checkedIds.forEach(id => {
+      const cb = document.querySelector(`.au-user-checkbox[value="${id}"]`);
+      if (cb) cb.checked = true;
+    });
+  }
+}
+
+function onAreaUserBulkAreaChange() {
+  renderAreaUserBulkList();
+}
+
+function openAreaUserBulkForm() {
+  if (!state.loggedIn) { openModal('loginModal'); return; }
+  openFormWithLoading('areaUserBulkModal', 'areaUserBulkLoading', 'areaUserBulkFields', () => {
+    const sel = document.getElementById('areaUserBulkArea');
+    sel.innerHTML = '<option value="">Selecione...</option>' +
+      areaUsersOptions.areas.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+    sel.value = '';
+    document.getElementById('errAreaUserBulkArea').style.display = 'none';
+    renderAreaUserBulkList();
+  });
+}
+
+async function saveAreaUserBulk() {
+  const errEl = document.getElementById('errAreaUserBulkArea');
+  errEl.style.display = 'none';
+  const idArea = document.getElementById('areaUserBulkArea').value;
+  if (!idArea) { errEl.style.display = 'block'; return; }
+  const user_ids = [...document.querySelectorAll('.au-user-checkbox:checked')].map(cb => parseInt(cb.value));
+  const btn = document.getElementById('btnSaveAreaUserBulk');
+  setBtnBusy(btn, true);
+  try {
+    await apiFetch('PUT', '/api/area_user/sync', { id_area: parseInt(idArea), user_ids });
+    toast('Associações salvas com sucesso');
+    closeModal('areaUserBulkModal');
+    await loadAreaUsers();
+  } catch (err) {
+    errEl.textContent = err.error || 'Erro ao salvar associações';
+    errEl.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
+  }
+}
+
+// ── AREA RECONS ──
+let areaReconsCache   = [];
+let areaReconsOptions = { areas: [], recons: [] };
+const areaReconsState = { pageNum: 1, colArea: '', colRecon: '', colOwner: '', selectedId: null };
+
+function selectAreaReconRow(id) {
+  areaReconsState.selectedId = id;
+  updateAreaReconFooterButtons();
+}
+
+function updateAreaReconFooterButtons() {
+  const hasSelection = areaReconsState.selectedId != null;
+  ['btnAreaReconDelete'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = !hasSelection;
+  });
+}
+
+function footerAreaReconDelete() {
+  if (areaReconsState.selectedId != null) openDelete('area_recon', areaReconsState.selectedId);
+}
+
+async function loadAreaRecons() {
+  try {
+    [areaReconsOptions, areaReconsCache] = await Promise.all([
+      apiFetch('GET', '/api/area_recon/options'),
+      apiFetch('GET', '/api/area_recon')
+    ]);
+    areaReconsState.selectedId = null;
+    populateAreaReconFilters();
+    renderAreaRecons();
+  } catch { toast('Erro ao carregar associações'); }
+}
+
+function populateAreaReconFilters() {
+  const map = {
+    'filter-ar-area':  { vals: [...new Set(areaReconsCache.map(r => r.area_name))].sort(),  key: 'colArea' },
+    'filter-ar-recon': { vals: [...new Set(areaReconsCache.map(r => r.recon_name))].sort(), key: 'colRecon' },
+    'filter-ar-owner': { vals: [...new Set(areaReconsCache.map(r => r.owner_name))].sort(), key: 'colOwner' }
+  };
+  for (const [selId, { vals, key }] of Object.entries(map)) {
+    const sel = document.getElementById(selId);
+    if (!sel) continue;
+    sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    sel.value = areaReconsState[key];
+  }
+}
+
+function toggleAreaReconFilters() {
+  const row = document.getElementById('filter-row-area-recon');
+  const hiding = row.style.display !== 'none';
+  row.style.display = hiding ? 'none' : '';
+  if (hiding) {
+    row.querySelectorAll('select, input').forEach(el => { el.value = ''; });
+    filterAreaRecordsByColumn();
+  }
+}
+
+function filterAreaRecordsByColumn() {
+  areaReconsState.colArea  = document.getElementById('filter-ar-area').value;
+  areaReconsState.colRecon = document.getElementById('filter-ar-recon').value;
+  areaReconsState.colOwner = document.getElementById('filter-ar-owner').value;
+  areaReconsState.pageNum = 1;
+  renderAreaRecons();
+}
+
+function getAreaReconsFiltered() {
+  return areaReconsCache.filter(r =>
+    (!areaReconsState.colArea  || r.area_name === areaReconsState.colArea) &&
+    (!areaReconsState.colRecon || r.recon_name === areaReconsState.colRecon) &&
+    (!areaReconsState.colOwner || r.owner_name === areaReconsState.colOwner)
+  );
+}
+
+function renderAreaRecons() {
+  const filtered   = getAreaReconsFiltered();
+  const total      = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pg         = Math.min(areaReconsState.pageNum, totalPages);
+  areaReconsState.pageNum = pg;
+  const slice      = filtered.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+  const tbody      = document.getElementById('tbody-area-recon');
+  const empty      = document.getElementById('empty-area-recon');
+  const pag        = document.getElementById('pag-area-recon');
+  syncRowSelection(areaReconsState, slice);
+  updateAreaReconFooterButtons();
+  if (!tbody) return;
+  if (slice.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    pag.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  pag.style.display = 'flex';
+  tbody.innerHTML = slice.map(r => `
+    <tr>
+      <td style="text-align:center">
+        <input type="radio" name="areaReconRowSelect" value="${r.id}" ${areaReconsState.selectedId === r.id ? 'checked' : ''} onclick="selectAreaReconRow(${r.id})">
+      </td>
+      <td style="color:var(--gray-400);font-size:12.5px">${r.id}</td>
+      <td>${esc(r.area_name)}</td>
+      <td>${esc(r.recon_name)}</td>
+      <td>${esc(r.owner_name)}</td>
+    </tr>`).join('');
+  document.getElementById('pag-info-area-recon').textContent = `${(pg-1)*PAGE_SIZE+1}–${Math.min(pg*PAGE_SIZE,total)} de ${total}`;
+  const maxButtons = 10;
+  let startPage = Math.max(1, pg - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  startPage = Math.max(1, endPage - maxButtons + 1);
+  let html = `<button class="pag-btn" onclick="changeAreaReconsPage(-1)" ${pg===1?'disabled':''}>&#8249;</button>`;
+  for (let i = startPage; i <= endPage; i++) html += `<button class="pag-btn ${i===pg?'active':''}" onclick="gotoAreaReconsPage(${i})">${i}</button>`;
+  html += `<button class="pag-btn" onclick="changeAreaReconsPage(1)" ${pg===totalPages?'disabled':''}>&#8250;</button>`;
+  document.getElementById('pag-btns-area-recon').innerHTML = html;
+}
+
+function changeAreaReconsPage(dir) {
+  const total = Math.max(1, Math.ceil(getAreaReconsFiltered().length / PAGE_SIZE));
+  areaReconsState.pageNum = Math.max(1, Math.min(total, areaReconsState.pageNum + dir));
+  renderAreaRecons();
+}
+
+function gotoAreaReconsPage(n) { areaReconsState.pageNum = n; renderAreaRecons(); }
+
+function changeAreaReconsPageSize(value) {
+  applyPageSize(value);
+  areaReconsState.pageNum = 1;
+  renderAreaRecons();
+}
+
+function renderAreaReconBulkList() {
+  const container = document.getElementById('areaReconBulkList');
+  const idArea = document.getElementById('areaReconBulkArea').value;
+  container.innerHTML = areaReconsOptions.recons.map(r => `
+    <div style="padding:3px 0">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" class="ar-recon-checkbox" value="${r.id}">
+        <span>${esc(r.name)}</span>
+        ${r.owner_name ? `<span style="color:var(--gray-400);font-size:12px">${esc(r.owner_name)}</span>` : ''}
+      </label>
+    </div>`).join('');
+  if (idArea) {
+    const checkedIds = new Set(
+      areaReconsCache.filter(r => r.id_area === parseInt(idArea)).map(r => r.id_recon)
+    );
+    checkedIds.forEach(id => {
+      const cb = document.querySelector(`.ar-recon-checkbox[value="${id}"]`);
+      if (cb) cb.checked = true;
+    });
+  }
+}
+
+function onAreaReconBulkAreaChange() {
+  renderAreaReconBulkList();
+}
+
+function openAreaReconBulkForm() {
+  if (!state.loggedIn) { openModal('loginModal'); return; }
+  openFormWithLoading('areaReconBulkModal', 'areaReconBulkLoading', 'areaReconBulkFields', () => {
+    const sel = document.getElementById('areaReconBulkArea');
+    sel.innerHTML = '<option value="">Selecione...</option>' +
+      areaReconsOptions.areas.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+    sel.value = '';
+    document.getElementById('errAreaReconBulkArea').style.display = 'none';
+    renderAreaReconBulkList();
+  });
+}
+
+async function saveAreaReconBulk() {
+  const errEl = document.getElementById('errAreaReconBulkArea');
+  errEl.style.display = 'none';
+  const idArea = document.getElementById('areaReconBulkArea').value;
+  if (!idArea) { errEl.style.display = 'block'; return; }
+  const recon_ids = [...document.querySelectorAll('.ar-recon-checkbox:checked')].map(cb => parseInt(cb.value));
+  const btn = document.getElementById('btnSaveAreaReconBulk');
+  setBtnBusy(btn, true);
+  try {
+    await apiFetch('PUT', '/api/area_recon/sync', { id_area: parseInt(idArea), recon_ids });
+    toast('Associações salvas com sucesso');
+    closeModal('areaReconBulkModal');
+    await loadAreaRecons();
+  } catch (err) {
+    errEl.textContent = err.error || 'Erro ao salvar associações';
+    errEl.style.display = 'block';
+  } finally {
+    setBtnBusy(btn, false);
+  }
+}
+
 // ── COMPANIES ──
 let companiesCache = [];
 const companiesState = { pageNum: 1, colName: '', selectedId: null };
@@ -3480,7 +4077,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-const _noClickOutside = new Set(['loginModal', 'logoutModal', 'reconFormModal', 'userFormModal', 'dsFormModal', 'fieldFormModal', 'ruleFormModal', 'ruleFieldFormModal', 'profileFormModal', 'transactionFormModal', 'profileTransactionBulkModal', 'exportModal', 'companyFormModal']);
+const _noClickOutside = new Set(['loginModal', 'logoutModal', 'reconFormModal', 'userFormModal', 'dsFormModal', 'fieldFormModal', 'ruleFormModal', 'ruleFieldFormModal', 'profileFormModal', 'transactionFormModal', 'profileTransactionBulkModal', 'exportModal', 'companyFormModal', 'areaFormModal', 'areaUserBulkModal', 'areaReconBulkModal']);
 document.querySelectorAll('.modal-overlay').forEach(o => {
   if (_noClickOutside.has(o.id)) return;
   o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
