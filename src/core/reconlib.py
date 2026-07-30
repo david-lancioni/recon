@@ -232,10 +232,9 @@ class ReconLib(BaseLib):
                 sql += f"{const.FIELD_RULE}='{rule_name}', "
                 sql += f"{const.FIELD_ID_STATUS}='{const.STATUS_MATCHED}',"
                 sql += f"{const.FIELD_STATUS} = '{self.matched}', "
-                sql += f"{const.FIELD_ID_PARENT} = {tmp2}.{const.FIELD_ID} "
-                sql += f"from {tmp2} "
+                sql += f"{const.FIELD_ID_PARENT} = (select {tmp2}.{const.FIELD_ID} from {tmp2} where {matching_key} limit 1) "
                 sql += f"where {tmp1}.{const.FIELD_ID_STATUS} = '{const.STATUS_ORPHAN}' and "
-                sql += matching_key
+                sql += f"exists (select 1 from {tmp2} where {matching_key})"
                 rows_affected = dblib.execute(self.cn2, sql)
         except Exception as err:
             msg = f"{str(err)}"
@@ -318,10 +317,8 @@ class ReconLib(BaseLib):
                             sql += f"update {temps} set "
                             sql += f"{const.FIELD_ID_STATUS}='{const.STATUS_DIVERGENT}',"
                             sql += f"{const.FIELD_STATUS} = '{self.divergent}', "
-                            sql += f"{field_name} = {tmp3}.difference "
-                            sql += f"from {tmp3} "
-                            sql += f"where {tmp3}.equality = 0 and "
-                            sql += matching_key
+                            sql += f"{field_name} = (select {tmp3}.difference from {tmp3} where {tmp3}.equality = 0 and {matching_key} limit 1) "
+                            sql += f"where exists (select 1 from {tmp3} where {tmp3}.equality = 0 and {matching_key})"
                             rows_affected = dblib.execute(self.cn2, sql)
                 sql = f"drop table if exists {tmp3}"
                 rows_affected = dblib.execute(self.cn2, sql)
@@ -343,20 +340,18 @@ class ReconLib(BaseLib):
             matching_key2 = self.get_sql_key(self.tb2, self.tmp2, rule_field, False, 2)
             """ stamp key information in final table """
             for side in range(1, 3):
-                field_list = ""
-                for field in match_result:
-                    tmp = self.tmp1 if side == 1 else self.tmp2
-                    field_list += f"{field} = {tmp}.{field}, "
-                field_list = field_list.strip()[:-1]
                 tb = self.tb1 if side == 1 else self.tb2
                 tmp = self.tmp1 if side == 1 else self.tmp2
                 matching_key = matching_key1 if side == 1 else matching_key2
+                field_list = ""
+                for field in match_result:
+                    field_list += f"{field} = (select {tmp}.{field} from {tmp} where {matching_key} limit 1), "
+                field_list = field_list.strip()[:-1]
                 sql = ""
                 sql += f"update {tb} set "
                 sql += field_list
-                sql += f" from {tmp}"
                 sql += f" where {tb}.{const.FIELD_ID_STATUS} <> {const.STATUS_MATCHED} and "
-                sql += matching_key
+                sql += f"exists (select 1 from {tmp} where {matching_key})"
                 rows_affected = dblib.execute(self.cn2, sql)
             """ stamp compare information in final table """
             for side in range(1, 3):
@@ -370,10 +365,8 @@ class ReconLib(BaseLib):
                         rows_affected = dblib.execute(self.cn2, sql)
                     sql = ""
                     sql += f"update {tb} set "
-                    sql += f"{field} = {tmp}.{field} "
-                    sql += f"from {tmp} "
-                    sql += f"where "
-                    sql += matching_key
+                    sql += f"{field} = (select {tmp}.{field} from {tmp} where {matching_key} limit 1) "
+                    sql += f"where exists (select 1 from {tmp} where {matching_key})"
                     rows_affected = dblib.execute(self.cn2, sql)
         except Exception as err:
             msg = f"{str(err)}"
