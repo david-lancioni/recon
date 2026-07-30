@@ -33,6 +33,8 @@ class ReconLib(BaseLib):
         self.divergent = ""
         self.orphan = ""
         self.rule_count = 0
+        self.excluded_columns_1 = set()
+        self.excluded_columns_2 = set()
 
     def field_diff(self, side, field_name, label):
         field_name = str(field_name).replace(const.OQT, "")
@@ -388,31 +390,31 @@ class ReconLib(BaseLib):
         loglib = LogLib("reconlib", "drop_tmp", self.id_user, self.id, self.id_company)
         try:
             for side in range(1, 3):
-                tb = self.tb1 if side == 1 else self.tb2
                 tmp = self.tmp1 if side == 1 else self.tmp2
                 dblib.execute(self.cn2, f"drop table if exists {tmp}")
-                dblib.execute(self.cn2, f"alter table {tb} drop column {const.FIELD_ID_PARENT}")
         except Exception as err:
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)
             raise Exception(msg)
 
-    def _dump_table(self, tablename):
+    def _dump_table(self, tablename, exclude_columns=None):
+        exclude_columns = exclude_columns or set()
         cursor = self.cn2.cursor()
         cursor.execute(f"select * from {tablename}")
         columns = [desc[0] for desc in cursor.description]
         rows = cursor.fetchall()
         cursor.close()
+        keep = [i for i, col in enumerate(columns) if col not in exclude_columns]
         return {
-            "columns": columns,
-            "rows": [[serialize_value(v) for v in row] for row in rows]
+            "columns": [columns[i] for i in keep],
+            "rows": [[serialize_value(row[i]) for i in keep] for row in rows]
         }
 
     def save_file(self):
         loglib = LogLib("reconlib", "save_file", self.id_user, self.id, self.id_company)
         try:
-            lado1 = self._dump_table(self.tb1)
-            lado2 = self._dump_table(self.tb2)
+            lado1 = self._dump_table(self.tb1, self.excluded_columns_1 | {const.FIELD_ID_PARENT})
+            lado2 = self._dump_table(self.tb2, self.excluded_columns_2 | {const.FIELD_ID_PARENT})
             write_result(self.id_company, self.id, lado1, lado2)
         except Exception as err:
             msg = f"{str(err)}"
@@ -424,10 +426,8 @@ class ReconLib(BaseLib):
         try:
             if result in (const.RESULTS_ALL, const.RESULTS_DIFFERENCE):
                 for field in rule_field:
-                    field_name = field[const.RULE_FIELD_FIELD_NAME_1]
-                    dblib.execute(self.cn2, f"alter table {self.tb1} drop column {const.OQT}{field_name}{const.CQT}")
-                    field_name = field[const.RULE_FIELD_FIELD_NAME_2]
-                    dblib.execute(self.cn2, f"alter table {self.tb2} drop column {const.OQT}{field_name}{const.CQT}")
+                    self.excluded_columns_1.add(field[const.RULE_FIELD_FIELD_NAME_1])
+                    self.excluded_columns_2.add(field[const.RULE_FIELD_FIELD_NAME_2])
         except Exception as err:
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)
