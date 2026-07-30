@@ -1,0 +1,97 @@
+{
+  "datasources": [
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "Agencia",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Conta",
+          "position": 2,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Valor",
+          "position": 3,
+          "type": "Texto",
+          "value": ""
+        }
+      ],
+      "filename": "saldos.csv",
+      "name": "Saldos",
+      "query": "",
+      "side": "Lado 1",
+      "type": "Arquivo",
+      "url": ""
+    },
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "Agencia",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Conta",
+          "position": 2,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Valor",
+          "position": 3,
+          "type": "Texto",
+          "value": ""
+        }
+      ],
+      "filename": "extrato.csv",
+      "name": "Extrato",
+      "query": "",
+      "side": "Lado 2",
+      "type": "Arquivo",
+      "url": ""
+    }
+  ],
+  "description": "Conciliação para demonstração",
+  "name": "Saldos x Extrato",
+  "rules": [
+    {
+      "name": "Batimento de arquivos",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Saldos / Agencia",
+          "field_2": "Saldos / Agencia",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Saldos / Conta",
+          "field_2": "Saldos / Conta",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "Somar",
+          "field_1": "Saldos / Valor",
+          "field_2": "Saldos / Valor",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        }
+      ]
+    }
+  ]
+}

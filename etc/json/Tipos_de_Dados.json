@@ -1,0 +1,117 @@
+{
+  "datasources": [
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "cd",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "ds",
+          "position": 2,
+          "type": "Texto",
+          "value": ""
+        },
+        {
+          "name": "dt",
+          "position": 3,
+          "type": "Data",
+          "value": ""
+        },
+        {
+          "name": "vl",
+          "position": 4,
+          "type": "Decimal",
+          "value": ""
+        }
+      ],
+      "filename": "datatype_1.txt",
+      "name": "Lado 1",
+      "query": "",
+      "side": "Lado 1",
+      "type": "Arquivo",
+      "url": ""
+    },
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "cd",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "ds",
+          "position": 2,
+          "type": "Texto",
+          "value": ""
+        },
+        {
+          "name": "dt",
+          "position": 3,
+          "type": "Data",
+          "value": ""
+        },
+        {
+          "name": "vl",
+          "position": 4,
+          "type": "Decimal",
+          "value": ""
+        }
+      ],
+      "filename": "datatype_2.txt",
+      "name": "Lado 2",
+      "query": "",
+      "side": "Lado 2",
+      "type": "Arquivo",
+      "url": ""
+    }
+  ],
+  "description": "",
+  "name": "Tipos de Dados",
+  "rules": [
+    {
+      "name": "Regra 1",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / cd",
+          "field_2": "Lado 2 / cd",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / ds",
+          "field_2": "Lado 2 / ds",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / dt",
+          "field_2": "Lado 2 / dt",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / vl",
+          "field_2": "Lado 2 / vl",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        }
+      ]
+    }
+  ]
+}
