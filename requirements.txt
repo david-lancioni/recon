@@ -7,6 +7,7 @@ python-dateutil
 pyodbc
 psycopg2
 mysql-connector-python
+apsw
 
 # Programming
 pconst

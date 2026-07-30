@@ -3,10 +3,9 @@ import logging
 import threading
 import pyodbc
 import psycopg2
-import sqlite3
+import apsw
 import mysql.connector
 from mysql.connector import pooling
-from sqlite3 import Error
 from src.core.constlib import const
 
 class DbLib:
@@ -55,31 +54,32 @@ class DbLib:
 
     def get_connection_recon_area(self):
         """ Conexão SQLite in-memory exclusiva para a área de conciliação de uma execução.
-        Cada chamada cria um banco novo e isolado; ele deixa de existir quando a conexão é fechada. """
-        cn = sqlite3.connect(":memory:", isolation_level=None)
+        Cada chamada cria um banco novo e isolado; ele deixa de existir quando a conexão é fechada.
+        Usa apsw (SQLite embutido no pacote) em vez do sqlite3 da stdlib para garantir a mesma
+        versão do SQLite em qualquer ambiente, independente da libsqlite3 do sistema operacional. """
+        cn = apsw.Connection(":memory:")
         return cn
 
     def execute(self, cn, sql):
-        rows_affected = 0
         cursor = cn.cursor()
         cursor.execute(sql)
-        rows_affected = cursor.rowcount
+        rows_affected = cn.changes()
         cursor.close()
         return rows_affected
 
     def execute_many(self, cn, sql, params_list):
-        rows_affected = 0
+        # cn.changes() só reflete a última execução individual do executemany;
+        # total_changes() acumula desde a conexão, então usamos o delta para pegar o lote inteiro.
+        changes_before = cn.total_changes()
         cursor = cn.cursor()
         cursor.executemany(sql, params_list)
-        rows_affected = cursor.rowcount
         cursor.close()
-        return rows_affected
+        return cn.total_changes() - changes_before
 
     def execute_params(self, cn, sql, params):
-        rows_affected = 0
         cursor = cn.cursor()
         cursor.execute(sql, params)
-        rows_affected = cursor.rowcount
+        rows_affected = cn.changes()
         cursor.close()
         return rows_affected
 
@@ -104,7 +104,7 @@ class DbLib:
     # Connections used as conectors for ETL processes. They are not used in the main application, but they can be used in the future if needed.
     #
     def get_connection_sqlite(self, file):
-        conn = sqlite3.connect(file)
+        conn = apsw.Connection(file)
         return conn
     
     def get_connection_mysql(self, hostname, username, password, database):

@@ -1,7 +1,5 @@
 import logging
 import os
-import sqlite3
-from sqlite3 import Error
 from dateutil import parser as dateparser
 from src.core.dblib import DbLib
 from src.core.fslib import FsLib
@@ -107,7 +105,7 @@ class EtlLib(BaseLib):
             elif id_type == const.DB_SQL_SERVER:
                 cn = dblib.get_connection_mssql(hostname, database, username, password)
             elif id_type == const.DB_SQLITE:
-                cn = sqlite3.connect(cs)
+                cn = dblib.get_connection_sqlite(cs)
             else:
                 raise Exception(f"Tipo de banco de dados não suportado para importação: {id_type}")
         except Exception as err:

@@ -1,5 +1,4 @@
 import logging
-from sqlite3 import Error
 from src.core.dblib import DbLib
 from src.core.baselib import BaseLib
 from src.core.loglib import LogLib
@@ -33,8 +32,6 @@ class ReconLib(BaseLib):
         self.divergent = ""
         self.orphan = ""
         self.rule_count = 0
-        self.excluded_columns_1 = set()
-        self.excluded_columns_2 = set()
 
     def field_diff(self, side, field_name, label):
         field_name = str(field_name).replace(const.OQT, "")
@@ -234,9 +231,10 @@ class ReconLib(BaseLib):
                 sql += f"{const.FIELD_RULE}='{rule_name}', "
                 sql += f"{const.FIELD_ID_STATUS}='{const.STATUS_MATCHED}',"
                 sql += f"{const.FIELD_STATUS} = '{self.matched}', "
-                sql += f"{const.FIELD_ID_PARENT} = (select {tmp2}.{const.FIELD_ID} from {tmp2} where {matching_key} limit 1) "
+                sql += f"{const.FIELD_ID_PARENT} = {tmp2}.{const.FIELD_ID} "
+                sql += f"from {tmp2} "
                 sql += f"where {tmp1}.{const.FIELD_ID_STATUS} = '{const.STATUS_ORPHAN}' and "
-                sql += f"exists (select 1 from {tmp2} where {matching_key})"
+                sql += matching_key
                 rows_affected = dblib.execute(self.cn2, sql)
         except Exception as err:
             msg = f"{str(err)}"
@@ -319,8 +317,10 @@ class ReconLib(BaseLib):
                             sql += f"update {temps} set "
                             sql += f"{const.FIELD_ID_STATUS}='{const.STATUS_DIVERGENT}',"
                             sql += f"{const.FIELD_STATUS} = '{self.divergent}', "
-                            sql += f"{field_name} = (select {tmp3}.difference from {tmp3} where {tmp3}.equality = 0 and {matching_key} limit 1) "
-                            sql += f"where exists (select 1 from {tmp3} where {tmp3}.equality = 0 and {matching_key})"
+                            sql += f"{field_name} = {tmp3}.difference "
+                            sql += f"from {tmp3} "
+                            sql += f"where {tmp3}.equality = 0 and "
+                            sql += matching_key
                             rows_affected = dblib.execute(self.cn2, sql)
                 sql = f"drop table if exists {tmp3}"
                 rows_affected = dblib.execute(self.cn2, sql)
@@ -342,18 +342,20 @@ class ReconLib(BaseLib):
             matching_key2 = self.get_sql_key(self.tb2, self.tmp2, rule_field, False, 2)
             """ stamp key information in final table """
             for side in range(1, 3):
+                field_list = ""
+                for field in match_result:
+                    tmp = self.tmp1 if side == 1 else self.tmp2
+                    field_list += f"{field} = {tmp}.{field}, "
+                field_list = field_list.strip()[:-1]
                 tb = self.tb1 if side == 1 else self.tb2
                 tmp = self.tmp1 if side == 1 else self.tmp2
                 matching_key = matching_key1 if side == 1 else matching_key2
-                field_list = ""
-                for field in match_result:
-                    field_list += f"{field} = (select {tmp}.{field} from {tmp} where {matching_key} limit 1), "
-                field_list = field_list.strip()[:-1]
                 sql = ""
                 sql += f"update {tb} set "
                 sql += field_list
+                sql += f" from {tmp}"
                 sql += f" where {tb}.{const.FIELD_ID_STATUS} <> {const.STATUS_MATCHED} and "
-                sql += f"exists (select 1 from {tmp} where {matching_key})"
+                sql += matching_key
                 rows_affected = dblib.execute(self.cn2, sql)
             """ stamp compare information in final table """
             for side in range(1, 3):
@@ -367,8 +369,10 @@ class ReconLib(BaseLib):
                         rows_affected = dblib.execute(self.cn2, sql)
                     sql = ""
                     sql += f"update {tb} set "
-                    sql += f"{field} = (select {tmp}.{field} from {tmp} where {matching_key} limit 1) "
-                    sql += f"where exists (select 1 from {tmp} where {matching_key})"
+                    sql += f"{field} = {tmp}.{field} "
+                    sql += f"from {tmp} "
+                    sql += f"where "
+                    sql += matching_key
                     rows_affected = dblib.execute(self.cn2, sql)
         except Exception as err:
             msg = f"{str(err)}"
@@ -390,31 +394,31 @@ class ReconLib(BaseLib):
         loglib = LogLib("reconlib", "drop_tmp", self.id_user, self.id, self.id_company)
         try:
             for side in range(1, 3):
+                tb = self.tb1 if side == 1 else self.tb2
                 tmp = self.tmp1 if side == 1 else self.tmp2
                 dblib.execute(self.cn2, f"drop table if exists {tmp}")
+                dblib.execute(self.cn2, f"alter table {tb} drop column {const.FIELD_ID_PARENT}")
         except Exception as err:
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)
             raise Exception(msg)
 
-    def _dump_table(self, tablename, exclude_columns=None):
-        exclude_columns = exclude_columns or set()
+    def _dump_table(self, tablename):
         cursor = self.cn2.cursor()
         cursor.execute(f"select * from {tablename}")
         columns = [desc[0] for desc in cursor.description]
         rows = cursor.fetchall()
         cursor.close()
-        keep = [i for i, col in enumerate(columns) if col not in exclude_columns]
         return {
-            "columns": [columns[i] for i in keep],
-            "rows": [[serialize_value(row[i]) for i in keep] for row in rows]
+            "columns": columns,
+            "rows": [[serialize_value(v) for v in row] for row in rows]
         }
 
     def save_file(self):
         loglib = LogLib("reconlib", "save_file", self.id_user, self.id, self.id_company)
         try:
-            lado1 = self._dump_table(self.tb1, self.excluded_columns_1 | {const.FIELD_ID_PARENT})
-            lado2 = self._dump_table(self.tb2, self.excluded_columns_2 | {const.FIELD_ID_PARENT})
+            lado1 = self._dump_table(self.tb1)
+            lado2 = self._dump_table(self.tb2)
             write_result(self.id_company, self.id, lado1, lado2)
         except Exception as err:
             msg = f"{str(err)}"
@@ -426,8 +430,10 @@ class ReconLib(BaseLib):
         try:
             if result in (const.RESULTS_ALL, const.RESULTS_DIFFERENCE):
                 for field in rule_field:
-                    self.excluded_columns_1.add(field[const.RULE_FIELD_FIELD_NAME_1])
-                    self.excluded_columns_2.add(field[const.RULE_FIELD_FIELD_NAME_2])
+                    field_name = field[const.RULE_FIELD_FIELD_NAME_1]
+                    dblib.execute(self.cn2, f"alter table {self.tb1} drop column {const.OQT}{field_name}{const.CQT}")
+                    field_name = field[const.RULE_FIELD_FIELD_NAME_2]
+                    dblib.execute(self.cn2, f"alter table {self.tb2} drop column {const.OQT}{field_name}{const.CQT}")
         except Exception as err:
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)

@@ -1,5 +1,4 @@
 import logging
-from sqlite3 import Error
 from src.core.dblib import DbLib
 from src.core.loglib import LogLib
 from src.core.constlib import const
