@@ -3,7 +3,7 @@ import json
 import datetime
 import decimal
 
-RESULT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "results")
+RESULT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "etc", "results")
 
 
 def get_result_dir(id_company):

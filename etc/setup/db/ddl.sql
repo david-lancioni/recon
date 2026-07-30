@@ -20,8 +20,6 @@ DEFAULT CHARACTER SET = utf8mb3;
 -- -----------------------------------------------------
 -- Table `tb_company`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `tb_company` ;
-
 CREATE TABLE IF NOT EXISTS `tb_company` (
   `id` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
@@ -228,7 +226,7 @@ DEFAULT CHARACTER SET = utf8mb3;
 
 
 -- -----------------------------------------------------
--- Table `tb_log` (removida - substituída por arquivo JSON em recon/logs)
+-- Table `tb_log` (removida - substituída por arquivo JSON em recon/etc/logs)
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `tb_log` ;
 

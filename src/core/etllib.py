@@ -46,7 +46,9 @@ class EtlLib(BaseLib):
         return lines
     
     def get_path(self, ds):
-        path = os.getenv("FILE_PATH")
+        path = os.getenv("FILE_PATH", "").strip()
+        if not path:
+            path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "etc", "upload")
         file = ds[const.DS_FILE]
         path = fslib.join(path, str(self.id))
         path = fslib.join(path, file)

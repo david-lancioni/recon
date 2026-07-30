@@ -14,8 +14,9 @@ env/
 etc/environment.txt
 
 # Runtime data
-/logs/*/*.json
-/results/*/*.json
+/etc/upload/*
+/etc/logs/*/*.json
+/etc/results/*/*.json
 
 # Distribution / build
 dist/

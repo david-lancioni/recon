@@ -10,8 +10,7 @@ os.environ['DB_HOSTNAME'] = 'dlancioni.mysql.pythonanywhere-services.com'
 os.environ['DB_USERNAME'] = 'dlancioni'
 os.environ['DB_PASSWORD'] = '123456abcdef'
 os.environ['DB_1'] = 'dlancioni$db1'
-os.environ['DB_2'] = 'dlancioni$db2'
-os.environ['FILE_PATH'] = '/home/dlancioni/www/recon/upload'
+os.environ['FILE_PATH'] = '/home/dlancioni/www/recon/etc/upload'
 
 # Adiciona o caminho do seu projeto ao Python Path
 path = '/home/dlancioni/www/recon'

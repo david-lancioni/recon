@@ -4,7 +4,7 @@ import datetime
 from datetime import timedelta
 from src.core.baselib import BaseLib
 
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "logs")
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "etc", "logs")
 
 
 def get_log_dir(id_company):

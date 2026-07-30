@@ -26,7 +26,7 @@ echo "🔄 Executing git pull in the repository..."
 git -C "$BACKUP_SOURCE" pull
 
 echo "🗑️ Removing 'etc' folder from the repository..."
-rm -rf "${BACKUP_SOURCE}/etc"
+rm -rf "${BACKUP_SOURCE}/etc/setup"
 
 echo "🗑️ Removing '__pycache__' folders from the repository..."
 find "$BACKUP_SOURCE" -type d -name "__pycache__" -exec rm -rf {} +

@@ -69,7 +69,7 @@ def register(app):
         if request.files:
             file_path = os.environ.get('FILE_PATH', '').strip()
             if not file_path:
-                return jsonify({'error': 'Variável de ambiente FILE_PATH não configurada'}), 500
+                file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "etc", "upload")
             file_path = os.path.join(file_path, str(recon_id))
             os.makedirs(file_path, exist_ok=True)
             for key, uploaded_file in request.files.items():
