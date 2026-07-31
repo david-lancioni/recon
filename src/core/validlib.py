@@ -25,7 +25,7 @@ class ValidLib(BaseLib):
             "DB_HOSTNAME",
             "DB_USERNAME",
             "DB_PASSWORD",
-            "DB_1"
+            "DB_NAME"
         ]
         for item in items:
             if not os.environ.get(item):

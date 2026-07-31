@@ -169,17 +169,19 @@ INSERT INTO `tb_rule_field` (`id`, `id_company`, `id_rule`, `id_rule_type`, `id_
 -- -----------------------------------------------------
 -- Data for table `tb_transaction`
 -- -----------------------------------------------------
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (1, 0, 'Administração', NULL);
+-- FOREIGN_KEY_CHECKS off: rows below are not in parent-before-child order
+SET FOREIGN_KEY_CHECKS = 0;
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (1, NULL, 'Administração', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (2, 22, 'Perfil', 'profile');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (3, 22, 'Transação', 'transaction');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (4, 22, 'Perfil x Transação', 'profile_transaction');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (5, 0, 'Conciliações', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (5, NULL, 'Conciliações', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (6, 24, 'Conciliação', 'recon');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (7, 24, 'Fonte de Dados', 'ds');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (8, 24, 'Campos', 'field');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (9, 24, 'Regras', 'rule');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (10, 24, 'Definição de Regras', 'rule_field');
-INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, 0, 'Resultados', NULL);
+INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (12, NULL, 'Resultados', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (13, 12, 'Visão Geral', 'report_overview');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (14, 12, 'Sintético', 'report_sintetic');
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (15, 12, 'Analítico', 'report_analitic');
@@ -193,6 +195,7 @@ INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (22, 1, 
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (23, 1, 'Organização', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (24, 5, 'Configurar', NULL);
 INSERT INTO `tb_transaction` (`id`, `id_parent`, `name`, `link`) VALUES (25, 5, 'Executar', 'run');
+SET FOREIGN_KEY_CHECKS = 1;
 
 
 -- -----------------------------------------------------

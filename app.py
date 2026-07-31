@@ -17,7 +17,7 @@ from src.web.tokensession import TokenSessionInterface
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     f"mysql+pymysql://{os.environ['DB_USERNAME']}:{os.environ['DB_PASSWORD']}"
-    f"@{os.environ['DB_HOSTNAME']}/{os.environ['DB_1']}"
+    f"@{os.environ['DB_HOSTNAME']}/{os.environ['DB_NAME']}"
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -25,7 +25,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 280,
     # Teto real é max_user_connections da conta MySQL (22), compartilhado entre os 3
-    # processos worker e TODOS os pools que usam essas credenciais (este + o pool DB_1
+    # processos worker e TODOS os pools que usam essas credenciais (este + o pool DB_NAME
     # do dblib). Sem isso, o default do SQLAlchemy (pool_size=5, max_overflow=10 = até
     # 15 conexões só deste pool, por processo) já estoura o teto sozinho.
     'pool_size': int(os.getenv('SQLALCHEMY_POOL_SIZE', '3')),

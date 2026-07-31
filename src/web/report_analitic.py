@@ -82,7 +82,7 @@ def register(app):
         if not recon:
             abort(404)
 
-        cn1 = dblib.get_connection("DB_1")
+        cn1 = dblib.get_connection("DB_NAME")
         try:
             field_order_1 = _get_field_order(cn1, id_recon, 1)
             field_order_2 = _get_field_order(cn1, id_recon, 2)

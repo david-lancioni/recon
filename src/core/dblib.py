@@ -26,7 +26,7 @@ class DbLib:
                     # Teto real de produção é max_user_connections da conta MySQL (22, não o
                     # max_connections do servidor) - compartilhado entre os 3 processos worker
                     # do PythonAnywhere e TODOS os pools que usam essas credenciais (este pool
-                    # DB_1 + o pool separado do SQLAlchemy em app.py). _pools é estado de classe
+                    # DB_NAME + o pool separado do SQLAlchemy em app.py). _pools é estado de classe
                     # por processo, então esse tamanho é replicado nos 3 processos.
                     # MySQLConnectionPool abre pool_size conexões reais já na criação do pool
                     # (não é lazy), então esse valor é aberto de imediato em cada processo.
@@ -40,7 +40,7 @@ class DbLib:
                     )
         return DbLib._pools[pool_name]
 
-    def get_connection(self, db="DB_1"):
+    def get_connection(self, db="DB_NAME"):
         hostname = os.getenv("DB_HOSTNAME")
         username = os.getenv("DB_USERNAME")
         password = os.getenv("DB_PASSWORD")

@@ -28,8 +28,8 @@ class CoreLib(BaseLib):
         t1 = timer()
         try:
 
-            """ cn1: model tables (DB_1), MySQL, autocommit """
-            cn1 = dblib.get_connection("DB_1")
+            """ cn1: model tables (DB_NAME), MySQL, autocommit """
+            cn1 = dblib.get_connection("DB_NAME")
             loglib = LogLib("corelib", "process", id_user, id_recon, id_company)
             loglib.clear()
 

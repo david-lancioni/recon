@@ -51,13 +51,13 @@ def register(app):
     @app.route('/api/transaction', methods=['POST'])
     def api_transactions_create():
         data      = request.get_json()
-        id_parent = data.get('id_parent') or 0
+        id_parent = data.get('id_parent') or None
         name      = (data.get('name') or '').strip()
         link      = (data.get('link') or '').strip() or None
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
         record = Transaction(
-            id=next_id(Transaction), id_parent=int(id_parent), name=name, link=link
+            id=next_id(Transaction), id_parent=int(id_parent) if id_parent else None, name=name, link=link
         )
         db.session.add(record)
         db.session.flush()
@@ -71,12 +71,12 @@ def register(app):
         if not record:
             abort(404)
         data      = request.get_json()
-        id_parent = data.get('id_parent') or 0
+        id_parent = data.get('id_parent') or None
         name      = (data.get('name') or '').strip()
         link      = (data.get('link') or '').strip() or None
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
-        record.id_parent = int(id_parent)
+        record.id_parent = int(id_parent) if id_parent else None
         record.name      = name
         record.link      = link
         db.session.commit()
