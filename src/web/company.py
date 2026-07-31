@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import render_template, jsonify, request, abort
 from src.web.models import (
     db, Company, User, Profile, Transaction, ProfileTransaction,
-    Recon, Ds, Field, Rule, RuleField, next_id
+    Recon, next_id
 )
 from src.core.loglib import get_log_path, get_log_dir
 from src.core.resultlib import get_result_path, get_result_dir
@@ -128,14 +128,6 @@ def register(app):
             db.select(Recon.id).filter_by(id_company=record_id)
         ).scalars().all()
 
-        db.session.execute(db.delete(RuleField).filter_by(id_company=record_id))
-        db.session.execute(db.delete(Rule).filter_by(id_company=record_id))
-        db.session.execute(db.delete(Field).filter_by(id_company=record_id))
-        db.session.execute(db.delete(Ds).filter_by(id_company=record_id))
-        db.session.execute(db.delete(Recon).filter_by(id_company=record_id))
-        db.session.execute(db.delete(ProfileTransaction).filter_by(id_company=record_id))
-        db.session.execute(db.delete(User).filter_by(id_company=record_id))
-        db.session.execute(db.delete(Profile).filter_by(id_company=record_id))
         db.session.delete(record)
         db.session.commit()
 

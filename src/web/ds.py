@@ -1,6 +1,6 @@
 from flask import render_template, jsonify, request, abort, session
 from sqlalchemy import create_engine, text
-from src.web.models import db, Recon, Side, DsType, Ds, Field, RuleField, next_id
+from src.web.models import db, Recon, Side, DsType, Ds, Field, next_id
 
 
 def _validate_ds_fields(id_side, id_type, credentials, query, filename, delimiter, url):
@@ -252,14 +252,6 @@ def register(app):
         ).scalar_one_or_none()
         if not ds:
             abort(404)
-        field_ids = db.session.execute(
-            db.select(Field.id).filter_by(id_ds=record_id)
-        ).scalars().all()
-        if field_ids:
-            db.session.execute(db.delete(RuleField).where(
-                (RuleField.id_field_1.in_(field_ids)) | (RuleField.id_field_2.in_(field_ids))
-            ))
-        db.session.execute(db.delete(Field).filter_by(id_ds=record_id))
         db.session.delete(ds)
         db.session.commit()
         return jsonify({'ok': True})

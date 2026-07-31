@@ -68,10 +68,14 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   INDEX `fk_user_company_idx` (`id_company` ASC) VISIBLE,
   CONSTRAINT `fk_user_profile`
     FOREIGN KEY (`id_profile`)
-    REFERENCES `tb_profile` (`id`),
+    REFERENCES `tb_profile` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_user_company`
     FOREIGN KEY (`id_company`)
-    REFERENCES `tb_company` (`id`))
+    REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -332,10 +336,14 @@ CREATE TABLE IF NOT EXISTS `tb_rule_field` (
     REFERENCES `tb_aggregation` (`id`),
   CONSTRAINT `fk_rule_field_field_1`
     FOREIGN KEY (`id_field_1`)
-    REFERENCES `tb_field` (`id`),
+    REFERENCES `tb_field` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_rule_field_field_2`
     FOREIGN KEY (`id_field_2`)
-    REFERENCES `tb_field` (`id`))
+    REFERENCES `tb_field` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
@@ -350,7 +358,13 @@ CREATE TABLE IF NOT EXISTS `tb_transaction` (
   `id_parent` INT NULL DEFAULT NULL,
   `name` VARCHAR(50) NULL DEFAULT NULL,
   `link` VARCHAR(200) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`))
+  PRIMARY KEY (`id`),
+  INDEX `fk_transaction_parent_idx` (`id_parent` ASC) VISIBLE,
+  CONSTRAINT `fk_transaction_parent`
+    FOREIGN KEY (`id_parent`)
+    REFERENCES `tb_transaction` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 

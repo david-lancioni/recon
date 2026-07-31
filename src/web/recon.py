@@ -70,25 +70,6 @@ def register(app):
         ).scalar_one_or_none()
         if not record:
             abort(404)
-        rule_ids = db.session.execute(
-            db.select(Rule.id).filter_by(id_recon=record_id)
-        ).scalars().all()
-        if rule_ids:
-            db.session.execute(db.delete(RuleField).where(RuleField.id_rule.in_(rule_ids)))
-        db.session.execute(db.delete(Rule).filter_by(id_recon=record_id))
-        ds_ids = db.session.execute(
-            db.select(Ds.id).filter_by(id_recon=record_id)
-        ).scalars().all()
-        if ds_ids:
-            field_ids = db.session.execute(
-                db.select(Field.id).where(Field.id_ds.in_(ds_ids))
-            ).scalars().all()
-            if field_ids:
-                db.session.execute(db.delete(RuleField).where(
-                    (RuleField.id_field_1.in_(field_ids)) | (RuleField.id_field_2.in_(field_ids))
-                ))
-            db.session.execute(db.delete(Field).where(Field.id_ds.in_(ds_ids)))
-        db.session.execute(db.delete(Ds).filter_by(id_recon=record_id))
         db.session.delete(record)
         db.session.commit()
         log_path = get_log_path(session['company_id'], record_id)

@@ -101,7 +101,6 @@ def register(app):
         record = db.session.get(Transaction, record_id)
         if not record:
             abort(404)
-        db.session.execute(db.delete(Transaction).where(Transaction.id_parent == record_id))
         db.session.delete(record)
         db.session.commit()
         return jsonify({'ok': True})

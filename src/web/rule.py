@@ -119,7 +119,6 @@ def register(app):
         ).scalar_one_or_none()
         if not rule:
             abort(404)
-        db.session.execute(db.delete(RuleField).filter_by(id_rule=record_id))
         db.session.delete(rule)
         db.session.commit()
         return jsonify({'ok': True})

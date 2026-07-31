@@ -1,5 +1,5 @@
 from flask import render_template, jsonify, request, abort, session
-from src.web.models import db, Recon, Ds, FieldType, Field, RuleField, next_id
+from src.web.models import db, Recon, Ds, FieldType, Field, next_id
 
 
 def register(app):
@@ -154,9 +154,6 @@ def register(app):
         ).scalar_one_or_none()
         if not field:
             abort(404)
-        db.session.execute(db.delete(RuleField).where(
-            (RuleField.id_field_1 == record_id) | (RuleField.id_field_2 == record_id)
-        ))
         db.session.delete(field)
         db.session.commit()
         return jsonify({'ok': True})
