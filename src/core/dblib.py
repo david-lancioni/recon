@@ -8,6 +8,8 @@ import mysql.connector
 from mysql.connector import pooling
 from src.core.constlib import const
 
+RECON_AREA_DISK_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "sqlite")
+
 class DbLib:
 
     _pools = {}
@@ -52,13 +54,21 @@ class DbLib:
         cursor.close()
         return cn
 
-    def get_connection_recon_area(self):
-        """ Conexão SQLite in-memory exclusiva para a área de conciliação de uma execução.
-        Cada chamada cria um banco novo e isolado; ele deixa de existir quando a conexão é fechada.
+    def get_connection_recon_area(self, id_company=None, id_user=None, id_recon=None, use_disk=False):
+        """ Conexão SQLite exclusiva para a área de conciliação de uma execução.
         Usa apsw (SQLite embutido no pacote) em vez do sqlite3 da stdlib para garantir a mesma
-        versão do SQLite em qualquer ambiente, independente da libsqlite3 do sistema operacional. """
-        cn = apsw.Connection(":memory:")
-        return cn
+        versão do SQLite em qualquer ambiente, independente da libsqlite3 do sistema operacional.
+        Por padrão (use_disk=False) roda em memória: some ao fechar a conexão.
+        Com use_disk=True (tb_recon.id_process_type = Disco), grava em arquivo físico em
+        recon/data/sqlite/db_{empresa}_{usuario}_{recon}.sqlite - usado quando o volume de
+        linhas importadas não cabe na RAM do worker. O arquivo é sobrescrito a cada execução. """
+        if not use_disk:
+            return apsw.Connection(":memory:")
+        os.makedirs(RECON_AREA_DISK_DIR, exist_ok=True)
+        path = os.path.join(RECON_AREA_DISK_DIR, f"db_{id_company}_{id_user}_{id_recon}.sqlite")
+        if os.path.exists(path):
+            os.remove(path)
+        return apsw.Connection(path)
 
     def execute(self, cn, sql):
         cursor = cn.cursor()

@@ -92,3 +92,7 @@ const.DB_POSTGRES = 4
 const.DB_SQL_SERVER = 5
 const.DB_ORACLE = 6
 const.DB_SQLITE = 7
+
+# Process type (tb_recon.id_process_type): área de conciliação em memória ou em disco
+const.PROCESS_TYPE_MEMORY = 1
+const.PROCESS_TYPE_DISK = 2

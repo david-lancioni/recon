@@ -7,6 +7,7 @@ from src.core.baselib import BaseLib
 from src.core.arealib import AreaLib
 from src.core.reconlib import ReconLib
 from src.core.validlib import ValidLib
+from src.core.constlib import const
 from timeit import default_timer as timer
 
 """ general declaration """
@@ -27,10 +28,8 @@ class CoreLib(BaseLib):
         t1 = timer()
         try:
 
-            """ cn1: model tables (DB_1), MySQL, autocommit. cn2: recon area tables, SQLite in-memory,
-            exclusiva para esta execução - some ao fechar a conexão """
+            """ cn1: model tables (DB_1), MySQL, autocommit """
             cn1 = dblib.get_connection("DB_1")
-            cn2 = dblib.get_connection_recon_area()
             loglib = LogLib("corelib", "process", id_user, id_recon, id_company)
             loglib.clear()
 
@@ -40,10 +39,18 @@ class CoreLib(BaseLib):
             loglib.log(loglib.INFO, loglib.message(3))
 
             """ get info """
-            sql = f"select id, name from tb_recon where id = {id_recon} and id_company = {id_company}"
+            sql = f"select id, name, id_process_type from tb_recon where id = {id_recon} and id_company = {id_company}"
             recon = dblib.query(sql, cn1)
             self.id = recon[0][0]
             self.name = recon[0][1]
+            id_process_type = recon[0][2]
+
+            """ cn2: recon area tables. Memória (some ao fechar a conexão) ou arquivo físico em
+            recon/data/sqlite quando a conciliação está configurada para processar em Disco -
+            usado quando o volume de linhas importadas não cabe na RAM do worker. """
+            cn2 = dblib.get_connection_recon_area(
+                id_company, id_user, id_recon, use_disk=(id_process_type == const.PROCESS_TYPE_DISK)
+            )
 
             """ setup the logs """
             loglib.log(loglib.INFO, loglib.message(1))

@@ -46,7 +46,7 @@ class EtlLib(BaseLib):
     def get_path(self, ds):
         path = os.getenv("FILE_PATH", "").strip()
         if not path:
-            path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "etc", "upload")
+            path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "upload")
         file = ds[const.DS_FILE]
         path = fslib.join(path, str(self.id))
         path = fslib.join(path, file)
@@ -164,7 +164,6 @@ class EtlLib(BaseLib):
 
     def import_file(self, ds, fields):
         loglib = LogLib("etllib", "import_file", self.id_user, self.id, self.id_company)
-        path = None
         try:
             row = 0
             name = ds[const.DS_NAME]
@@ -210,10 +209,6 @@ class EtlLib(BaseLib):
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)
             raise Exception(msg)
-        finally:
-            if path is not None:
-                fslib.remove(path)
-                fslib.remove_dir_if_empty(os.path.dirname(path))
 
     def process(self, id_recon):
         loglib = LogLib("etllib", "process", self.id_user, self.id, self.id_company)

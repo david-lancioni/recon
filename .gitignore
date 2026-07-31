@@ -13,7 +13,10 @@ env/
 .env
 etc/environment.txt
 
-# Runtime data
+# Runtime data - nunca deve ser versionado nem sobrescrito pelo git pull do deploy.sh
+/data/
+
+# Legado: logs/results ainda gerados em /etc antes da migração para /data
 /etc/upload/*
 /etc/logs/*/*.json
 /etc/results/*/*.json

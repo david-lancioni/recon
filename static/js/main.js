@@ -1724,7 +1724,8 @@ function clearDsErrors() {
 
 // ── RECON ──
 let reconCache = [];
-const reconState = { pageNum: 1, colName: '', colDesc: '', selectedId: null };
+let reconOptions = { process_types: [] };
+const reconState = { pageNum: 1, colName: '', colDesc: '', colProcessType: '', selectedId: null };
 
 function selectReconRow(id) {
   reconState.selectedId = id;
@@ -1757,7 +1758,12 @@ function footerReconExport() {
 
 async function loadRecon() {
   try {
-    reconCache = await apiFetch('GET', '/api/recon');
+    const [data, options] = await Promise.all([
+      apiFetch('GET', '/api/recon'),
+      apiFetch('GET', '/api/recon/options')
+    ]);
+    reconCache = data;
+    reconOptions = options;
     reconState.selectedId = null;
     populateReconFilters();
     renderRecon();
@@ -1769,11 +1775,13 @@ async function loadRecon() {
 function populateReconFilters() {
   const selName = document.getElementById('filter-recon-name');
   const selDesc = document.getElementById('filter-recon-desc');
+  const selProcessType = document.getElementById('filter-recon-process-type');
   if (!selName || !selDesc) return;
 
   const cols = [
     { sel: selName, vals: [...new Set(reconCache.map(r => r.name))],        key: 'colName' },
     { sel: selDesc, vals: [...new Set(reconCache.map(r => r.description))], key: 'colDesc' },
+    { sel: selProcessType, vals: [...new Set(reconCache.map(r => r.process_type_name))], key: 'colProcessType' },
   ];
 
   cols.forEach(({ sel, vals, key }) => {
@@ -1798,14 +1806,16 @@ function toggleReconFilters() {
 function filterReconByColumn() {
   reconState.colName = document.getElementById('filter-recon-name').value;
   reconState.colDesc = document.getElementById('filter-recon-desc').value;
+  reconState.colProcessType = document.getElementById('filter-recon-process-type').value;
   reconState.pageNum = 1;
   renderRecon();
 }
 
 function getReconFiltered() {
   return reconCache.filter(r =>
-    (!reconState.colName || r.name        === reconState.colName) &&
-    (!reconState.colDesc || r.description === reconState.colDesc)
+    (!reconState.colName        || r.name              === reconState.colName)        &&
+    (!reconState.colDesc        || r.description        === reconState.colDesc)        &&
+    (!reconState.colProcessType || r.process_type_name  === reconState.colProcessType)
   );
 }
 
@@ -1845,6 +1855,7 @@ function renderRecon() {
       <td style="color:var(--gray-400);font-size:12.5px">${r.id}</td>
       <td>${esc(r.name)}</td>
       <td style="color:var(--gray-400);font-size:12.5px">${esc(descDisplay)}</td>
+      <td style="color:var(--gray-400);font-size:12.5px">${esc(r.process_type_name || '')}</td>
     </tr>`;
   }).join('');
 
@@ -1887,6 +1898,12 @@ function changeReconPageSize(value) {
   renderRecon();
 }
 
+function _populateReconDropdowns() {
+  document.getElementById('reconFormProcessType').innerHTML =
+    '<option value="">Selecione...</option>' +
+    reconOptions.process_types.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+}
+
 function openReconForm(id) {
   if (!state.loggedIn) { openModal('loginModal'); toast('Faça login para continuar'); return; }
 
@@ -1897,6 +1914,7 @@ function openReconForm(id) {
   clearReconErrors();
 
   openFormWithLoading('reconFormModal', 'reconFormLoading', 'reconFormFields', () => {
+    _populateReconDropdowns();
     const idGroup = document.getElementById('reconFormIdGroup');
     if (id) {
       const r = reconCache.find(r => r.id === id);
@@ -1904,10 +1922,12 @@ function openReconForm(id) {
       document.getElementById('reconFormId').value = r.id;
       document.getElementById('reconFormName').value = r.name;
       document.getElementById('reconFormDescription').value = r.description || '';
+      document.getElementById('reconFormProcessType').value = r.id_process_type || '';
     } else {
       idGroup.style.display = 'none';
       document.getElementById('reconFormName').value = '';
       document.getElementById('reconFormDescription').value = '';
+      document.getElementById('reconFormProcessType').value = '';
     }
   });
 }
@@ -1915,18 +1935,23 @@ function openReconForm(id) {
 async function saveRecon() {
   const name = document.getElementById('reconFormName').value.trim();
   const description = document.getElementById('reconFormDescription').value.trim();
+  const id_process_type = document.getElementById('reconFormProcessType').value || null;
 
   clearReconErrors();
-  if (!name) { document.getElementById('errReconName').style.display = 'block'; return; }
+  let valid = true;
+  if (!name) { document.getElementById('errReconName').style.display = 'block'; valid = false; }
+  if (!id_process_type) { document.getElementById('errReconProcessType').style.display = 'block'; valid = false; }
+  if (!valid) return;
 
   const btn = document.getElementById('btnSaveRecon');
   setBtnBusy(btn, true);
   try {
+    const body = { name, description, id_process_type: parseInt(id_process_type) };
     if (state.editingId) {
-      await apiFetch('PUT', `/api/recon/${state.editingId}`, { name, description });
+      await apiFetch('PUT', `/api/recon/${state.editingId}`, body);
       toast('Conciliação atualizada com sucesso');
     } else {
-      await apiFetch('POST', '/api/recon', { name, description });
+      await apiFetch('POST', '/api/recon', body);
       toast('Conciliação criada com sucesso');
     }
     closeModal('reconFormModal');
@@ -1948,6 +1973,7 @@ function clearReconErrors() {
   const el = document.getElementById('errReconName');
   el.style.display = 'none';
   el.textContent = 'Nome é obrigatório';
+  document.getElementById('errReconProcessType').style.display = 'none';
 }
 
 function triggerImport() {

@@ -1,7 +1,7 @@
 import os
 from flask import render_template, jsonify, request, abort, session
 from sqlalchemy.orm import aliased
-from src.web.models import db, Recon, Ds, Side, DsType, Field, FieldType, Rule, RuleField, RuleType, Operator, Aggregation, next_id
+from src.web.models import db, Recon, Ds, Side, DsType, Field, FieldType, Rule, RuleField, RuleType, Operator, Aggregation, ProcessType, next_id
 from src.web.access import link_recon_to_areas
 from src.core.loglib import get_log_path
 from src.core.resultlib import get_result_path
@@ -12,29 +12,45 @@ def register(app):
     def conciliacao():
         return render_template('recon.html', current_page='conciliacao')
 
+    @app.route('/api/recon/options')
+    def api_recon_options():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
+        process_types = db.session.execute(db.select(ProcessType).order_by(ProcessType.id)).scalars().all()
+        return jsonify({'process_types': [p.to_dict() for p in process_types]})
+
     @app.route('/api/recon', methods=['GET'])
     def api_recon_list():
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
-        records = db.session.execute(
-            db.select(Recon)
-            .filter_by(id_company=session['company_id'], id_user=session['user_id'])
+        rows = db.session.execute(
+            db.select(Recon, ProcessType.name.label('process_type_name'))
+            .join(ProcessType, Recon.id_process_type == ProcessType.id)
+            .filter(Recon.id_company == session['company_id'], Recon.id_user == session['user_id'])
             .order_by(Recon.id)
-        ).scalars().all()
-        return jsonify([r.to_dict() for r in records])
+        ).all()
+        result = []
+        for r, process_type_name in rows:
+            d = r.to_dict()
+            d['process_type_name'] = process_type_name or ''
+            result.append(d)
+        return jsonify(result)
 
     @app.route('/api/recon', methods=['POST'])
     def api_recon_create():
         if 'user_id' not in session:
             return jsonify({'error': 'Não autenticado'}), 401
-        data        = request.get_json()
-        name        = (data.get('name')        or '').strip()
-        description = (data.get('description') or '').strip() or None
+        data            = request.get_json()
+        name            = (data.get('name')        or '').strip()
+        description     = (data.get('description') or '').strip() or None
+        id_process_type = data.get('id_process_type') or None
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
+        if not id_process_type:
+            return jsonify({'error': 'Tipo de processamento é obrigatório'}), 400
         record = Recon(
             id=next_id(Recon), id_company=session['company_id'], id_user=session['user_id'],
-            name=name, description=description
+            id_process_type=id_process_type, name=name, description=description
         )
         db.session.add(record)
         db.session.flush()
@@ -51,13 +67,17 @@ def register(app):
         ).scalar_one_or_none()
         if not record:
             abort(404)
-        data        = request.get_json()
-        name        = (data.get('name')        or '').strip()
-        description = (data.get('description') or '').strip() or None
+        data            = request.get_json()
+        name            = (data.get('name')        or '').strip()
+        description     = (data.get('description') or '').strip() or None
+        id_process_type = data.get('id_process_type') or None
         if not name:
             return jsonify({'error': 'Nome é obrigatório'}), 400
-        record.name        = name
-        record.description = description
+        if not id_process_type:
+            return jsonify({'error': 'Tipo de processamento é obrigatório'}), 400
+        record.name            = name
+        record.description     = description
+        record.id_process_type = id_process_type
         db.session.commit()
         return jsonify(record.to_dict())
 
@@ -91,17 +111,21 @@ def register(app):
             return jsonify({'error': 'Nome é obrigatório'}), 400
         description = (data.get('description') or '').strip() or None
 
-        sides        = {s.name: s.id for s in db.session.execute(db.select(Side)).scalars().all()}
-        ds_types     = {t.name: t.id for t in db.session.execute(db.select(DsType)).scalars().all()}
-        field_types  = {ft.name: ft.id for ft in db.session.execute(db.select(FieldType)).scalars().all()}
-        rule_types   = {rt.name: rt.id for rt in db.session.execute(db.select(RuleType)).scalars().all()}
-        operators    = {op.name: op.id for op in db.session.execute(db.select(Operator)).scalars().all()}
-        aggregations = {ag.name: ag.id for ag in db.session.execute(db.select(Aggregation)).scalars().all()}
+        sides         = {s.name: s.id for s in db.session.execute(db.select(Side)).scalars().all()}
+        ds_types      = {t.name: t.id for t in db.session.execute(db.select(DsType)).scalars().all()}
+        field_types   = {ft.name: ft.id for ft in db.session.execute(db.select(FieldType)).scalars().all()}
+        rule_types    = {rt.name: rt.id for rt in db.session.execute(db.select(RuleType)).scalars().all()}
+        operators     = {op.name: op.id for op in db.session.execute(db.select(Operator)).scalars().all()}
+        aggregations  = {ag.name: ag.id for ag in db.session.execute(db.select(Aggregation)).scalars().all()}
+        process_types = {p.name: p.id for p in db.session.execute(db.select(ProcessType)).scalars().all()}
+
+        # exports antigos não têm process_type; assume Memória (comportamento anterior)
+        id_process_type = process_types.get(data.get('process_type') or '', 1)
 
         try:
             recon = Recon(
                 id=next_id(Recon), id_company=id_company, id_user=session['user_id'],
-                name=name, description=description
+                id_process_type=id_process_type, name=name, description=description
             )
             db.session.add(recon)
             db.session.flush()
@@ -193,7 +217,7 @@ def register(app):
 
         new_recon = Recon(
             id=next_id(Recon), id_company=id_company, id_user=session['user_id'],
-            name=record.name, description=record.description
+            id_process_type=record.id_process_type, name=record.name, description=record.description
         )
         db.session.add(new_recon)
         db.session.flush()
@@ -271,6 +295,8 @@ def register(app):
         ).scalar_one_or_none()
         if not recon:
             abort(404)
+
+        process_type = db.session.get(ProcessType, recon.id_process_type)
 
         ds_rows = db.session.execute(
             db.select(Ds, Side.name.label('side_name'), DsType.name.label('type_name'))
@@ -357,6 +383,7 @@ def register(app):
         return jsonify({
             'name': recon.name,
             'description': recon.description or '',
+            'process_type': process_type.name if process_type else '',
             'datasources': datasources,
             'rules': rules
         })

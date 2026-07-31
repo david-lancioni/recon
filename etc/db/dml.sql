@@ -20,6 +20,7 @@ DELETE FROM `tb_ds`;
 DELETE FROM `tb_ds_type`;
 DELETE FROM `tb_side`;
 DELETE FROM `tb_recon`;
+DELETE FROM `tb_process_type`;
 DELETE FROM `tb_user`;
 DELETE FROM `tb_profile`;
 DELETE FROM `tb_company`;
@@ -59,9 +60,16 @@ INSERT INTO `tb_area_user` (`id`, `id_company`, `id_area`, `id_user`) VALUES (2,
 
 
 -- -----------------------------------------------------
+-- Data for table `tb_process_type`
+-- -----------------------------------------------------
+INSERT INTO `tb_process_type` (`id`, `name`) VALUES (1, 'Memória');
+INSERT INTO `tb_process_type` (`id`, `name`) VALUES (2, 'Disco');
+
+
+-- -----------------------------------------------------
 -- Data for table `tb_recon`
 -- -----------------------------------------------------
-INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `name`, `description`) VALUES (1, 1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
+INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `id_process_type`, `name`, `description`) VALUES (1, 1, 1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
 
 
 -- -----------------------------------------------------

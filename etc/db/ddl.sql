@@ -81,6 +81,19 @@ DEFAULT CHARACTER SET = utf8mb3;
 
 
 -- -----------------------------------------------------
+-- Table `tb_process_type`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_process_type` ;
+
+CREATE TABLE IF NOT EXISTS `tb_process_type` (
+  `id` INT NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+
+-- -----------------------------------------------------
 -- Table `tb_recon`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `tb_recon` ;
@@ -89,11 +102,13 @@ CREATE TABLE IF NOT EXISTS `tb_recon` (
   `id` INT NOT NULL,
   `id_company` INT NOT NULL,
   `id_user` INT NOT NULL,
+  `id_process_type` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `description` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_recon_user_idx` (`id_user` ASC) VISIBLE,
   INDEX `fk_recon_company_idx` (`id_company` ASC) VISIBLE,
+  INDEX `fk_recon_process_type_idx` (`id_process_type` ASC) VISIBLE,
   CONSTRAINT `fk_recon_user`
     FOREIGN KEY (`id_user`)
     REFERENCES `tb_user` (`id`)
@@ -102,6 +117,11 @@ CREATE TABLE IF NOT EXISTS `tb_recon` (
   CONSTRAINT `fk_recon_company`
     FOREIGN KEY (`id_company`)
     REFERENCES `tb_company` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_recon_process_type`
+    FOREIGN KEY (`id_process_type`)
+    REFERENCES `tb_process_type` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB

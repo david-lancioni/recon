@@ -13,11 +13,21 @@ def _today():
     return f"{d.day:02d}/{d.month:02d}/{d.year}"
 
 
+class ProcessType(db.Model):
+    __tablename__ = 'tb_process_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {'id': self.id, 'name': self.name}
+
+
 class Recon(db.Model):
     __tablename__ = 'tb_recon'
     id = db.Column(db.Integer, primary_key=True)
     id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     id_user = db.Column(db.Integer, db.ForeignKey('tb_user.id'), nullable=True)
+    id_process_type = db.Column(db.Integer, db.ForeignKey('tb_process_type.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
 
@@ -26,6 +36,7 @@ class Recon(db.Model):
             'id': self.id,
             'id_company': self.id_company,
             'id_user': self.id_user,
+            'id_process_type': self.id_process_type,
             'name': self.name,
             'description': self.description or ''
         }
