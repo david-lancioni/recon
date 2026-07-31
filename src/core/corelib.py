@@ -56,19 +56,24 @@ class CoreLib(BaseLib):
             loglib.log(loglib.INFO, loglib.message(1))
             loglib.log(loglib.INFO, loglib.message(2, [self.id, self.name]))
 
-            """ create recon area """
-            arealib = AreaLib(cn1, cn2, self.id, self.name, id_user, id_company)
-            fields, types = arealib.process(id_recon)
-            loglib.log(loglib.INFO, loglib.message(4))
+            """ cn2 runs as a single transaction (apsw context manager: BEGIN on enter,
+            COMMIT on success / ROLLBACK on exception). Without it, apsw commits (fsyncs,
+            in Disco mode) after every individual statement - each execute_many() batch
+            and every DDL/DML in arealib/reconlib - instead of once at the end. """
+            with cn2:
+                """ create recon area """
+                arealib = AreaLib(cn1, cn2, self.id, self.name, id_user, id_company)
+                fields, types = arealib.process(id_recon)
+                loglib.log(loglib.INFO, loglib.message(4))
 
-            """ import files """
-            etllib = EtlLib(cn1, cn2, self.id, self.name, id_user, id_company)
-            etllib.process(id_recon)
-            loglib.log(loglib.INFO, loglib.message(5))
+                """ import files """
+                etllib = EtlLib(cn1, cn2, self.id, self.name, id_user, id_company)
+                etllib.process(id_recon)
+                loglib.log(loglib.INFO, loglib.message(5))
 
-            """ reconcile data """
-            reconlib = ReconLib(cn1, cn2, self.id, self.name, fields, types, id_user, id_company)
-            reconlib.process(id_user, id_recon)
+                """ reconcile data """
+                reconlib = ReconLib(cn1, cn2, self.id, self.name, fields, types, id_user, id_company)
+                reconlib.process(id_user, id_recon)
 
             """ success """
             message = loglib.message(6)
