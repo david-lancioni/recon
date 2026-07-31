@@ -22,7 +22,6 @@ class ValidLib(BaseLib):
     def validate_enviroment_variables(self, id_user, id_recon):
         loglib = LogLib("ValidationLib", "validate_enviroment_variables", id_user, id_recon, self.id_company)
         items = [
-            "FILE_PATH",
             "DB_HOSTNAME",
             "DB_USERNAME",
             "DB_PASSWORD",
