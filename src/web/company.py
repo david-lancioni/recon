@@ -1,12 +1,13 @@
 import os
 from datetime import datetime
-from flask import render_template, jsonify, request, abort
+from flask import render_template, jsonify, request, abort, session
 from src.web.models import (
     db, Company, User, Profile, Transaction, ProfileTransaction,
     Recon, next_id
 )
 from src.core.loglib import get_log_path, get_log_dir
 from src.core.resultlib import get_result_path, get_result_dir
+from src.web.access import is_system_admin
 
 _USER_PROFILE_LINKS = {'run', 'report_sintetic', 'report_analitic', 'report_log'}
 
@@ -52,6 +53,14 @@ def _seed_company(id_company):
     db.session.flush()
 
 
+def _require_system_admin():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Não autenticado'}), 401
+    if not is_system_admin(session['user_id']):
+        return jsonify({'error': 'Acesso negado'}), 403
+    return None
+
+
 def register(app):
     @app.route('/company')
     def companies():
@@ -59,11 +68,17 @@ def register(app):
 
     @app.route('/api/company', methods=['GET'])
     def api_companies_list():
+        denied = _require_system_admin()
+        if denied:
+            return denied
         rows = db.session.execute(db.select(Company).order_by(Company.id)).scalars().all()
         return jsonify([r.to_dict() for r in rows])
 
     @app.route('/api/company', methods=['POST'])
     def api_companies_create():
+        denied = _require_system_admin()
+        if denied:
+            return denied
         data = request.get_json()
         name = (data.get('name') or '').strip()
         if not name:
@@ -83,6 +98,9 @@ def register(app):
 
     @app.route('/api/company/<int:record_id>', methods=['PUT'])
     def api_companies_update(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Company, record_id)
         if not record:
             abort(404)
@@ -103,6 +121,9 @@ def register(app):
 
     @app.route('/api/company/<int:record_id>/duplicate', methods=['POST'])
     def api_companies_duplicate(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Company, record_id)
         if not record:
             abort(404)
@@ -118,6 +139,9 @@ def register(app):
 
     @app.route('/api/company/<int:record_id>', methods=['DELETE'])
     def api_companies_delete(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Company, record_id)
         if not record:
             abort(404)

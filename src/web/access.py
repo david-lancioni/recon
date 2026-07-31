@@ -1,6 +1,22 @@
 from src.web.models import db, User, Profile, Area, AreaUser, AreaRecon, next_id
 
 
+def is_system_admin(user_id):
+    """
+    True if user_id is an Administrador of the system company (id_company=1).
+    Company and Transaction management (etc/db/dml.sql: tb_transaction links
+    'company'/'transaction') are only ever granted to that profile — every
+    other company's Administrador is explicitly skipped in _seed_company —
+    so these two areas are the one place access is gated by this check
+    instead of by área (get_visible_recon_ids) or by company_id from session.
+    """
+    user = db.session.execute(
+        db.select(User).join(Profile, User.id_profile == Profile.id)
+        .filter(User.id == user_id, User.id_company == 1, Profile.name == 'Administrador')
+    ).scalar_one_or_none()
+    return user is not None
+
+
 def get_visible_recon_ids(id_company, user_id):
     """
     Área-based visibility for reports and execution (compliance restriction

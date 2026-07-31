@@ -1,9 +1,18 @@
-from flask import render_template, jsonify, request, abort
+from flask import render_template, jsonify, request, abort, session
 from sqlalchemy.orm import aliased
 from src.web.models import db, Transaction, ProfileTransaction, next_id
+from src.web.access import is_system_admin
 
 _ADMIN_PROFILE_ID = 1
 _ADMIN_COMPANY_ID = 1
+
+
+def _require_system_admin():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Não autenticado'}), 401
+    if not is_system_admin(session['user_id']):
+        return jsonify({'error': 'Acesso negado'}), 403
+    return None
 
 
 def _grant_to_admin(id_transaction):
@@ -25,6 +34,8 @@ def register(app):
 
     @app.route('/api/transaction/options')
     def api_transactions_options():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
         txs = db.session.execute(db.select(Transaction).order_by(Transaction.id)).scalars().all()
         return jsonify({
             'transactions': [t.to_dict() for t in txs]
@@ -32,6 +43,8 @@ def register(app):
 
     @app.route('/api/transaction', methods=['GET'])
     def api_transactions_list():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Não autenticado'}), 401
         Parent = aliased(Transaction)
         stmt = (
             db.select(
@@ -50,6 +63,9 @@ def register(app):
 
     @app.route('/api/transaction', methods=['POST'])
     def api_transactions_create():
+        denied = _require_system_admin()
+        if denied:
+            return denied
         data      = request.get_json()
         id_parent = data.get('id_parent') or None
         name      = (data.get('name') or '').strip()
@@ -67,6 +83,9 @@ def register(app):
 
     @app.route('/api/transaction/<int:record_id>', methods=['PUT'])
     def api_transactions_update(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Transaction, record_id)
         if not record:
             abort(404)
@@ -84,6 +103,9 @@ def register(app):
 
     @app.route('/api/transaction/<int:record_id>/duplicate', methods=['POST'])
     def api_transactions_duplicate(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Transaction, record_id)
         if not record:
             abort(404)
@@ -98,6 +120,9 @@ def register(app):
 
     @app.route('/api/transaction/<int:record_id>', methods=['DELETE'])
     def api_transactions_delete(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
         record = db.session.get(Transaction, record_id)
         if not record:
             abort(404)
