@@ -3,7 +3,8 @@ import os
 import re
 import sys
 
-_project_root = os.path.dirname(os.path.abspath(__file__))
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_script_dir)
 sys.path.insert(0, _project_root)
 
 # Sem isso, o módulo logging usa o "handler de última instância" (só mostra WARNING+, sem
@@ -14,9 +15,9 @@ logging.basicConfig(
     stream=sys.stdout
 )
 
-# Load etc/environment.txt into os.environ (bash export format) - mesma lógica do app.py,
-# necessária aqui porque o script roda fora do processo do Flask (chamado direto pelo cron)
-_env_file = os.path.join(_project_root, 'etc', 'environment.txt')
+# Load run.env (mesma pasta deste script) into os.environ (bash export format) -
+# necessário aqui porque o script roda fora do processo do Flask (chamado direto pelo cron)
+_env_file = os.path.join(_script_dir, 'run.env')
 if os.path.exists(_env_file):
     with open(_env_file) as _f:
         for _line in _f:
