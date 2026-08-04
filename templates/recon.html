@@ -32,6 +32,7 @@
           <th>Nome</th>
           <th>Descrição</th>
           <th style="width:160px">Tipo de Processamento</th>
+          <th style="width:160px">Tipo de Resultado</th>
         </tr>
         <tr class="filter-row" id="filter-row-recon" style="display:none">
           <th></th>
@@ -48,6 +49,11 @@
           </th>
           <th>
             <select id="filter-recon-process-type" class="filter-select" onchange="filterReconByColumn()">
+              <option value="">Todos</option>
+            </select>
+          </th>
+          <th>
+            <select id="filter-recon-result-type" class="filter-select" onchange="filterReconByColumn()">
               <option value="">Todos</option>
             </select>
           </th>
@@ -138,6 +144,13 @@
             <option value="">Selecione...</option>
           </select>
           <div class="form-error" id="errReconProcessType">Tipo de processamento é obrigatório</div>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Resultado</label>
+          <select id="reconFormResultType">
+            <option value="">Selecione...</option>
+          </select>
+          <div class="form-error" id="errReconResultType">Tipo de resultado é obrigatório</div>
         </div>
       </div>
     </div>

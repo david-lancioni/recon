@@ -20,6 +20,7 @@ DELETE FROM `tb_ds`;
 DELETE FROM `tb_ds_type`;
 DELETE FROM `tb_side`;
 DELETE FROM `tb_recon`;
+DELETE FROM `tb_result_type`;
 DELETE FROM `tb_process_type`;
 DELETE FROM `tb_user`;
 DELETE FROM `tb_profile`;
@@ -67,9 +68,19 @@ INSERT INTO `tb_process_type` (`id`, `name`) VALUES (2, 'Disco');
 
 
 -- -----------------------------------------------------
+-- Data for table `tb_result_type`
+-- -----------------------------------------------------
+INSERT INTO `tb_result_type` (`id`, `name`) VALUES (1, 'Todos');
+INSERT INTO `tb_result_type` (`id`, `name`) VALUES (2, 'Diferenças');
+INSERT INTO `tb_result_type` (`id`, `name`) VALUES (3, 'Batidos');
+INSERT INTO `tb_result_type` (`id`, `name`) VALUES (4, 'Divergentes');
+INSERT INTO `tb_result_type` (`id`, `name`) VALUES (5, 'Orfãos');
+
+
+-- -----------------------------------------------------
 -- Data for table `tb_recon`
 -- -----------------------------------------------------
-INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `id_process_type`, `name`, `description`) VALUES (1, 1, 1, 1, 'Saldos x Extrato', 'Conciliação para demonstração');
+INSERT INTO `tb_recon` (`id`, `id_company`, `id_user`, `id_process_type`, `name`, `description`, `id_result_type`) VALUES (1, 1, 1, 1, 'Saldos x Extrato', 'Conciliação para demonstração', 1);
 
 
 -- -----------------------------------------------------

@@ -22,6 +22,15 @@ class ProcessType(db.Model):
         return {'id': self.id, 'name': self.name}
 
 
+class ResultType(db.Model):
+    __tablename__ = 'tb_result_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {'id': self.id, 'name': self.name}
+
+
 class Recon(db.Model):
     __tablename__ = 'tb_recon'
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +39,7 @@ class Recon(db.Model):
     id_process_type = db.Column(db.Integer, db.ForeignKey('tb_process_type.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    id_result_type = db.Column(db.Integer, db.ForeignKey('tb_result_type.id'), nullable=False)
 
     def to_dict(self):
         return {
@@ -38,7 +48,8 @@ class Recon(db.Model):
             'id_user': self.id_user,
             'id_process_type': self.id_process_type,
             'name': self.name,
-            'description': self.description or ''
+            'description': self.description or '',
+            'id_result_type': self.id_result_type
         }
 
 

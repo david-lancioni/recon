@@ -402,12 +402,43 @@ class ReconLib(BaseLib):
             msg = f"{str(err)}"
             loglib.log(loglib.ERROR, msg)
             raise Exception(msg)
+            
+    def filter_results(self):
+        loglib = LogLib("reconlib", "filter_results", self.id_user, self.id, self.id_company)
+        try:
+            sql = f"select id_result_type from tb_recon where id = {self.id}"
+            rs = dblib.query(sql, self.cn1)
+            id_result_type = rs[0][0] if rs else const.RESULT_TYPE_ALL
+            status_to_delete = {
+                const.RESULT_TYPE_DIFFERENCES: [const.STATUS_MATCHED],
+                const.RESULT_TYPE_MATCHED: [const.STATUS_DIVERGENT, const.STATUS_ORPHAN],
+                const.RESULT_TYPE_DIVERGENT: [const.STATUS_MATCHED, const.STATUS_ORPHAN],
+                const.RESULT_TYPE_ORPHAN: [const.STATUS_DIVERGENT, const.STATUS_MATCHED],
+            }.get(id_result_type)
+            if not status_to_delete:
+                return
+            statuses = ", ".join(str(status) for status in status_to_delete)
+            for side in range(1, 3):
+                tb = self.tb1 if side == 1 else self.tb2
+                sql = f"delete from {tb} where {const.FIELD_ID_STATUS} in ({statuses})"
+                rows_affected = dblib.execute(self.cn2, sql)
+        except Exception as err:
+            msg = f"{str(err)}"
+            loglib.log(loglib.ERROR, msg)
+            raise Exception(msg)
 
     def _dump_table(self, tablename):
         cursor = self.cn2.cursor()
         cursor.execute(f"select * from {tablename}")
-        columns = [desc[0] for desc in cursor.description]
         rows = cursor.fetchall()
+        cursor.close()
+        # cursor.description do apsw só fica disponível se a consulta retornar
+        # ao menos 1 linha; com a tabela vazia (ex.: id_result_type = Órfãos
+        # sem nenhum órfão) ele lança "SQL execution never started, or has
+        # completed". pragma table_info não depende de haver dados.
+        cursor = self.cn2.cursor()
+        cursor.execute(f"pragma table_info({tablename})")
+        columns = [col[1] for col in cursor.fetchall()]
         cursor.close()
         return {
             "columns": columns,
@@ -499,6 +530,7 @@ class ReconLib(BaseLib):
                 self.add_diff_field_into_tb(rule_field)
             self.stamp_user_id(id_user)
             self.drop_tmp()
+            self.filter_results()
             self.save_file()
         except Exception as err:
             msg = f"{str(err)}"

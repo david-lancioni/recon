@@ -1724,8 +1724,8 @@ function clearDsErrors() {
 
 // ── RECON ──
 let reconCache = [];
-let reconOptions = { process_types: [] };
-const reconState = { pageNum: 1, colName: '', colDesc: '', colProcessType: '', selectedId: null };
+let reconOptions = { process_types: [], result_types: [] };
+const reconState = { pageNum: 1, colName: '', colDesc: '', colProcessType: '', colResultType: '', selectedId: null };
 
 function selectReconRow(id) {
   reconState.selectedId = id;
@@ -1776,12 +1776,14 @@ function populateReconFilters() {
   const selName = document.getElementById('filter-recon-name');
   const selDesc = document.getElementById('filter-recon-desc');
   const selProcessType = document.getElementById('filter-recon-process-type');
+  const selResultType = document.getElementById('filter-recon-result-type');
   if (!selName || !selDesc) return;
 
   const cols = [
     { sel: selName, vals: [...new Set(reconCache.map(r => r.name))],        key: 'colName' },
     { sel: selDesc, vals: [...new Set(reconCache.map(r => r.description))], key: 'colDesc' },
     { sel: selProcessType, vals: [...new Set(reconCache.map(r => r.process_type_name))], key: 'colProcessType' },
+    { sel: selResultType, vals: [...new Set(reconCache.map(r => r.result_type_name))], key: 'colResultType' },
   ];
 
   cols.forEach(({ sel, vals, key }) => {
@@ -1807,6 +1809,7 @@ function filterReconByColumn() {
   reconState.colName = document.getElementById('filter-recon-name').value;
   reconState.colDesc = document.getElementById('filter-recon-desc').value;
   reconState.colProcessType = document.getElementById('filter-recon-process-type').value;
+  reconState.colResultType = document.getElementById('filter-recon-result-type').value;
   reconState.pageNum = 1;
   renderRecon();
 }
@@ -1815,7 +1818,8 @@ function getReconFiltered() {
   return reconCache.filter(r =>
     (!reconState.colName        || r.name              === reconState.colName)        &&
     (!reconState.colDesc        || r.description        === reconState.colDesc)        &&
-    (!reconState.colProcessType || r.process_type_name  === reconState.colProcessType)
+    (!reconState.colProcessType || r.process_type_name  === reconState.colProcessType) &&
+    (!reconState.colResultType  || r.result_type_name   === reconState.colResultType)
   );
 }
 
@@ -1856,6 +1860,7 @@ function renderRecon() {
       <td>${esc(r.name)}</td>
       <td style="color:var(--gray-400);font-size:12.5px">${esc(descDisplay)}</td>
       <td style="color:var(--gray-400);font-size:12.5px">${esc(r.process_type_name || '')}</td>
+      <td style="color:var(--gray-400);font-size:12.5px">${esc(r.result_type_name || '')}</td>
     </tr>`;
   }).join('');
 
@@ -1902,6 +1907,9 @@ function _populateReconDropdowns() {
   document.getElementById('reconFormProcessType').innerHTML =
     '<option value="">Selecione...</option>' +
     reconOptions.process_types.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  document.getElementById('reconFormResultType').innerHTML =
+    '<option value="">Selecione...</option>' +
+    reconOptions.result_types.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
 }
 
 function openReconForm(id) {
@@ -1923,11 +1931,13 @@ function openReconForm(id) {
       document.getElementById('reconFormName').value = r.name;
       document.getElementById('reconFormDescription').value = r.description || '';
       document.getElementById('reconFormProcessType').value = r.id_process_type || '';
+      document.getElementById('reconFormResultType').value = r.id_result_type || '';
     } else {
       idGroup.style.display = 'none';
       document.getElementById('reconFormName').value = '';
       document.getElementById('reconFormDescription').value = '';
       document.getElementById('reconFormProcessType').value = '';
+      document.getElementById('reconFormResultType').value = '';
     }
   });
 }
@@ -1936,17 +1946,19 @@ async function saveRecon() {
   const name = document.getElementById('reconFormName').value.trim();
   const description = document.getElementById('reconFormDescription').value.trim();
   const id_process_type = document.getElementById('reconFormProcessType').value || null;
+  const id_result_type = document.getElementById('reconFormResultType').value || null;
 
   clearReconErrors();
   let valid = true;
   if (!name) { document.getElementById('errReconName').style.display = 'block'; valid = false; }
   if (!id_process_type) { document.getElementById('errReconProcessType').style.display = 'block'; valid = false; }
+  if (!id_result_type) { document.getElementById('errReconResultType').style.display = 'block'; valid = false; }
   if (!valid) return;
 
   const btn = document.getElementById('btnSaveRecon');
   setBtnBusy(btn, true);
   try {
-    const body = { name, description, id_process_type: parseInt(id_process_type) };
+    const body = { name, description, id_process_type: parseInt(id_process_type), id_result_type: parseInt(id_result_type) };
     if (state.editingId) {
       await apiFetch('PUT', `/api/recon/${state.editingId}`, body);
       toast('Conciliação atualizada com sucesso');
@@ -1974,6 +1986,7 @@ function clearReconErrors() {
   el.style.display = 'none';
   el.textContent = 'Nome é obrigatório';
   document.getElementById('errReconProcessType').style.display = 'none';
+  document.getElementById('errReconResultType').style.display = 'none';
 }
 
 function triggerImport() {

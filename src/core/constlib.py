@@ -96,3 +96,10 @@ const.DB_SQLITE = 7
 # Process type (tb_recon.id_process_type): área de conciliação em memória ou em disco
 const.PROCESS_TYPE_MEMORY = 1
 const.PROCESS_TYPE_DISK = 2
+
+# Result type (tb_recon.id_result_type): filtro aplicado sobre o resultado final da conciliação
+const.RESULT_TYPE_ALL = 1
+const.RESULT_TYPE_DIFFERENCES = 2
+const.RESULT_TYPE_MATCHED = 3
+const.RESULT_TYPE_DIVERGENT = 4
+const.RESULT_TYPE_ORPHAN = 5
