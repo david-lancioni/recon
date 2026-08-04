@@ -11,8 +11,6 @@ env/
 
 # Environment / secrets
 .env
-etc/environment.txt
-job/run.env
 
 # Runtime data - a estrutura de pastas é versionada, mas o conteúdo gerado
 # pelo processamento dos usuários não deve ser versionado nem sobrescrito
