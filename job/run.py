@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import sys
 
 _script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,9 +20,10 @@ _env_file = os.path.join(_script_dir, 'run.env')
 if os.path.exists(_env_file):
     with open(_env_file) as _f:
         for _line in _f:
-            m = re.match(r'^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)=["\']?(.*?)["\']?\s*$', _line.strip())
-            if m:
-                os.environ.setdefault(m.group(1), m.group(2))
+            _line = _line.strip().removeprefix('export ')
+            if _line and '=' in _line:
+                key, _, value = _line.partition('=')
+                os.environ.setdefault(key.strip(), value.strip().strip('"\''))
 
 from src.core.joblib import JobLib
 
