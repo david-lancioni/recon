@@ -232,8 +232,8 @@ class EtlLib(BaseLib):
                 fields = rows
                 if type == const.DATASOURCE_FILE:
                     self.import_file(ds, fields)
-                elif type == const.DATASOURCE_API:
-                    pass
+                elif type == const.DATASOURCE_JSON:
+                    raise Exception(f"Importação de fonte de dados do tipo Json ainda não implementada (ds {ds[const.DS_NAME]})")
                 else:
                     self.import_db(ds, fields)
         except Exception as err:

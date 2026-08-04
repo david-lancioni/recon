@@ -1,0 +1,79 @@
+{
+  "datasources": [
+    {
+      "credentials": "localhost;root;admin;recon",
+      "delimiter": "",
+      "fields": [
+        {
+          "name": "Id",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Name",
+          "position": 2,
+          "type": "Texto",
+          "value": ""
+        }
+      ],
+      "filename": "",
+      "name": "Lado 1",
+      "query": "select * from tb_1;",
+      "side": "Lado 1",
+      "type": "Mysql",
+      "url": ""
+    },
+    {
+      "credentials": "localhost;root;admin;recon",
+      "delimiter": "",
+      "fields": [
+        {
+          "name": "Id",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "Name",
+          "position": 2,
+          "type": "Texto",
+          "value": ""
+        }
+      ],
+      "filename": "",
+      "name": "Lado 2",
+      "query": "select * from tb_2;",
+      "side": "Lado 2",
+      "type": "Mysql",
+      "url": ""
+    }
+  ],
+  "description": "Reconcilia 2 tabelas mysql",
+  "name": "Mysql",
+  "process_type": "Memória",
+  "result_type": "Todos",
+  "rules": [
+    {
+      "name": "Regra 1",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / Id",
+          "field_2": "Lado 2 / Id",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / Name",
+          "field_2": "Lado 2 / Name",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        }
+      ]
+    }
+  ]
+}

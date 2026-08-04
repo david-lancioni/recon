@@ -21,10 +21,9 @@ const.FIELD_DATE = "_date"
 const.MATCH_TYPE_KEY = 1
 const.MATCH_TYPE_COMPARE = 2
 
-# Datasource info
+# Datasource info (tb_ds.id_type / tb_ds_type.id)
 const.DATASOURCE_FILE = 1
-const.DATASOURCE_DB = 2
-const.DATASOURCE_API = 3
+const.DATASOURCE_JSON = 2
 
 # Data types
 const.DATATYPE = [1, 2, 3, 4]
