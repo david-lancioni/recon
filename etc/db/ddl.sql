@@ -343,6 +343,7 @@ CREATE TABLE IF NOT EXISTS `tb_rule_field` (
   `tolerance` DOUBLE NULL DEFAULT '0',
   `id_operator` INT NOT NULL DEFAULT '1',
   `id_aggregation` INT NULL DEFAULT NULL,
+  `decimals` INT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_rule_field_rule_idx` (`id_rule` ASC) VISIBLE,
   INDEX `fk_rule_field_rule_type_idx` (`id_rule_type` ASC) VISIBLE,

@@ -89,6 +89,8 @@ def register(app):
         tolerance    = data.get('tolerance')
         id_operator  = data.get('id_operator')  or None
         id_aggregation = data.get('id_aggregation') or None
+        decimals     = data.get('decimals')
+        decimals     = int(decimals) if decimals not in (None, '') else None
         if not id_rule:
             return jsonify({'error': 'Regra é obrigatória'}), 400
         if not id_rule_type:
@@ -121,10 +123,21 @@ def register(app):
         if not field2:
             return jsonify({'error': 'Campo (Lado 2) inválido'}), 400
 
-        if id_aggregation and const.DATATYPE_TEXT in (field1.id_field_type, field2.id_field_type):
-            return jsonify({'error': 'Não é permitido agregar dados do tipo texto'}), 400
-        if tolerance and float(tolerance) != 0 and const.DATATYPE_TEXT in (field1.id_field_type, field2.id_field_type):
-            return jsonify({'error': 'Não é permitido aplicar tolerância em texto'}), 400
+        if field1.id_field_type != field2.id_field_type:
+            return jsonify({'error': 'Os campos devem ser do mesmo tipo de dado'}), 400
+        if id_aggregation and \
+                (field1.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME, const.DATATYPE_INTEGER) or
+                 field2.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME, const.DATATYPE_INTEGER)):
+            return jsonify({'error': 'Agregação não é permitida para este tipo de dado'}), 400
+        if tolerance and float(tolerance) != 0 and \
+                (field1.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME) or
+                 field2.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME)):
+            return jsonify({'error': 'Tolerância não é permitida para este tipo de dado'}), 400
+        both_decimal = field1.id_field_type == const.DATATYPE_DECIMAL and field2.id_field_type == const.DATATYPE_DECIMAL
+        if decimals is not None and not both_decimal:
+            return jsonify({'error': 'Casas decimais só é permitido quando os dois campos são do tipo Decimal'}), 400
+        if decimals is not None and decimals < 0:
+            return jsonify({'error': 'Casas decimais inválido (deve ser ≥ 0)'}), 400
 
         rf = RuleField(
             id           = next_id(RuleField),
@@ -135,7 +148,8 @@ def register(app):
             id_field_2   = int(id_field_2),
             tolerance    = float(tolerance) if tolerance is not None else 0,
             id_operator  = int(id_operator) if id_operator else None,
-            id_aggregation = int(id_aggregation) if id_aggregation else None
+            id_aggregation = int(id_aggregation) if id_aggregation else None,
+            decimals     = decimals if both_decimal else None
         )
         db.session.add(rf)
         db.session.commit()
@@ -160,6 +174,8 @@ def register(app):
         tolerance    = data.get('tolerance')
         id_operator  = data.get('id_operator')  or None
         id_aggregation = data.get('id_aggregation') or None
+        decimals     = data.get('decimals')
+        decimals     = int(decimals) if decimals not in (None, '') else None
         if not id_rule:
             return jsonify({'error': 'Regra é obrigatória'}), 400
         if not id_rule_type:
@@ -192,10 +208,21 @@ def register(app):
         if not field2:
             return jsonify({'error': 'Campo (Lado 2) inválido'}), 400
 
-        if id_aggregation and const.DATATYPE_TEXT in (field1.id_field_type, field2.id_field_type):
-            return jsonify({'error': 'Não é permitido agregar dados do tipo texto'}), 400
-        if tolerance and float(tolerance) != 0 and const.DATATYPE_TEXT in (field1.id_field_type, field2.id_field_type):
-            return jsonify({'error': 'Não é permitido aplicar tolerância em texto'}), 400
+        if field1.id_field_type != field2.id_field_type:
+            return jsonify({'error': 'Os campos devem ser do mesmo tipo de dado'}), 400
+        if id_aggregation and \
+                (field1.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME, const.DATATYPE_INTEGER) or
+                 field2.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME, const.DATATYPE_INTEGER)):
+            return jsonify({'error': 'Agregação não é permitida para este tipo de dado'}), 400
+        if tolerance and float(tolerance) != 0 and \
+                (field1.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME) or
+                 field2.id_field_type in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME)):
+            return jsonify({'error': 'Tolerância não é permitida para este tipo de dado'}), 400
+        both_decimal = field1.id_field_type == const.DATATYPE_DECIMAL and field2.id_field_type == const.DATATYPE_DECIMAL
+        if decimals is not None and not both_decimal:
+            return jsonify({'error': 'Casas decimais só é permitido quando os dois campos são do tipo Decimal'}), 400
+        if decimals is not None and decimals < 0:
+            return jsonify({'error': 'Casas decimais inválido (deve ser ≥ 0)'}), 400
 
         rf.id_rule        = int(id_rule)
         rf.id_rule_type   = int(id_rule_type) if id_rule_type else None
@@ -204,6 +231,7 @@ def register(app):
         rf.tolerance      = float(tolerance) if tolerance is not None else 0
         rf.id_operator    = int(id_operator) if id_operator else None
         rf.id_aggregation = int(id_aggregation) if id_aggregation else None
+        rf.decimals       = decimals if both_decimal else None
         db.session.commit()
         return jsonify(rf.to_dict())
 
@@ -227,7 +255,8 @@ def register(app):
             id_field_2=rf.id_field_2,
             tolerance=rf.tolerance,
             id_operator=rf.id_operator,
-            id_aggregation=rf.id_aggregation
+            id_aggregation=rf.id_aggregation,
+            decimals=rf.decimals
         )
         db.session.add(new_rf)
         db.session.commit()

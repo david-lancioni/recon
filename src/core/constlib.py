@@ -83,6 +83,7 @@ const.RULE_FIELD_FIELD_TYPE_ID_2 = 9        # 1 Inteiro, 2 Decimal, 3 Texto, 4 D
 const.RULE_FIELD_FIELD_TOLERANCE = 10       # 0, 0.01, 10, 5%
 const.RULE_FIELD_FIELD_OPERATOR = 11        # =, <, >, <=, >=, <>
 const.RULE_FIELD_FIELD_AGGREGATION = 12     # 1 Soma, 2 Média, 3 Contagem
+const.RULE_FIELD_FIELD_DECIMALS = 13        # 0, 2, 8 - casas decimais usadas no Round() de campos Decimal
 
 const.OQT = "`"
 const.CQT = "`"

@@ -71,9 +71,11 @@ class ReconLib(BaseLib):
                     if no_tolerance and not is_decimal_key:
                         sql += f"{tb1}.{field_name_1} {operator} {tb2}.{other_field_2} "
                     else:
-                        # chave decimal: mesmo critério do compare() - tolera diferença até a 8ª casa
+                        # chave decimal: mesmo critério do compare() - tolera diferença até a casa
+                        # configurada em tb_rule_field.decimals (default 8)
                         tol = '0' if no_tolerance else tolerance
-                        sql += f"abs(round({tb1}.{field_name_1} - {tb2}.{other_field_2}, 8)) <= {tol}"
+                        decimals = field[const.RULE_FIELD_FIELD_DECIMALS]
+                        sql += f"abs(round({tb1}.{field_name_1} - {tb2}.{other_field_2}, {decimals})) <= {tol}"
             sql = sql.strip()
             return sql
         except Exception as err:
@@ -131,7 +133,7 @@ class ReconLib(BaseLib):
                     field_type = field[const.RULE_FIELD_FIELD_TYPE_ID_2]
                     field_alias = field[const.RULE_FIELD_FIELD_NAME_2]
                 field_name = f"{const.OQT}{field_name}{const.CQT}"
-                decimals = 8
+                decimals = field[const.RULE_FIELD_FIELD_DECIMALS]
                 if aggregation == True:
                     id_function = field[const.RULE_FIELD_FIELD_AGGREGATION]
                     # sem agregação explícita, agrupamos com Max: identidade quando a
@@ -261,25 +263,28 @@ class ReconLib(BaseLib):
                 tablename = self.tmp3            
                 tablename += str(count)           
                 tolerance = field[const.RULE_FIELD_FIELD_TOLERANCE]
+                decimals = field[const.RULE_FIELD_FIELD_DECIMALS]
                 sql = f"drop table if exists {tablename}"
                 dblib.execute(self.cn2, sql)
                 sql = ""
                 tmp1 = f"{self.tmp1}.{field[const.RULE_FIELD_FIELD_NAME_1]}"
                 tmp2 = f"{self.tmp2}.{field[const.RULE_FIELD_FIELD_NAME_2]}"
-                is_text = const.DATATYPE_TEXT in (
-                    field[const.RULE_FIELD_FIELD_TYPE_ID_1], field[const.RULE_FIELD_FIELD_TYPE_ID_2]
-                )
+                type1 = field[const.RULE_FIELD_FIELD_TYPE_ID_1]
+                type2 = field[const.RULE_FIELD_FIELD_TYPE_ID_2]
+                is_text_or_date = type1 in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME) \
+                    or type2 in (const.DATATYPE_TEXT, const.DATATYPE_DATETIME)
                 sql += f" create table {tablename} as"
                 sql += f" select"
                 sql += f" {fields_key_1}, {fields_key_2}"
                 sql += f", ({tmp1} || ' / ' || {tmp2}) AS difference"
-                if is_text:
-                    # campo texto: subtração numérica quebraria (MySQL tenta converter para DOUBLE)
+                if is_text_or_date:
+                    # texto ou data: subtração numérica não faz sentido (e quebraria a query)
                     sql += f", ({tmp1} = {tmp2}) equality"
                 else:
                     # tolerance vem sempre numérica (ifnull(rf.tolerance, 0)), nunca ''
-                    # arredonda em 8 casas para não mascarar divergências decimais finas
-                    sql += f", (abs(round({tmp1} - {tmp2}, 8)) <= {tolerance}) equality"
+                    # arredonda nas casas configuradas em tb_rule_field.decimals (default 8)
+                    # para não mascarar divergências decimais finas
+                    sql += f", (abs(round({tmp1} - {tmp2}, {decimals})) <= {tolerance}) equality"
                 sql += f" from {self.tmp1}, {self.tmp2}"
                 sql += f" where {self.tmp1}.{const.FIELD_STATUS} = '{self.matched}'"
                 sql += f" and {matching_key}"
@@ -511,7 +516,8 @@ class ReconLib(BaseLib):
                     f2.id_field_type id_field_type_2,
                     ifnull(rf.tolerance, 0) tolerance,
                     op.name,
-                    ifnull(rf.id_aggregation, 0) id_aggregation
+                    ifnull(rf.id_aggregation, 0) id_aggregation,
+                    ifnull(rf.decimals, 8) decimals
                 from tb_rule_field rf
                 inner join tb_field f1 on rf.id_field_1 = f1.id
                 inner join tb_field f2 on rf.id_field_2 = f2.id

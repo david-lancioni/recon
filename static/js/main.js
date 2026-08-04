@@ -2373,7 +2373,7 @@ async function checkSession() {
 // ── RULE FIELD ──
 let rfCache = [];
 let rfOptions = { rules: [], fields: [], rule_types: [], operators: [], aggregations: [] };
-const rfState = { pageNum: 1, colRecon: '', colRule: '', colType: '', colField1: '', colField2: '', colAggregation: '', colOperator: '', colTolerance: '', selectedId: null };
+const rfState = { pageNum: 1, colRecon: '', colRule: '', colType: '', colField1: '', colField2: '', colAggregation: '', colOperator: '', colTolerance: '', colDecimals: '', selectedId: null };
 
 function selectRfRow(id) {
   rfState.selectedId = id;
@@ -2467,6 +2467,7 @@ function filterRfByColumn() {
   rfState.colField2      = document.getElementById('filter-rf-field-2').value;
   rfState.colAggregation = document.getElementById('filter-rf-aggregation').value;
   rfState.colTolerance   = document.getElementById('filter-rf-tolerance').value.trim();
+  rfState.colDecimals    = document.getElementById('filter-rf-decimals').value.trim();
   rfState.pageNum = 1;
   renderRuleField();
 }
@@ -2480,7 +2481,8 @@ function getRfFiltered() {
     (!rfState.colOperator    || r.operator_name    === rfState.colOperator)    &&
     (!rfState.colField2      || r.field2_name      === rfState.colField2)      &&
     (!rfState.colAggregation || r.aggregation_name === rfState.colAggregation) &&
-    (!rfState.colTolerance   || formatDecimalPlain(r.tolerance) === rfState.colTolerance)
+    (!rfState.colTolerance   || formatDecimalPlain(r.tolerance) === rfState.colTolerance) &&
+    (!rfState.colDecimals    || String(r.decimals != null ? r.decimals : '') === rfState.colDecimals)
   );
 }
 
@@ -2525,6 +2527,7 @@ function renderRuleField() {
       <td>${esc(r.field2_name)}</td>
       <td style="font-size:12.5px">${esc(r.aggregation_name)}</td>
       <td style="text-align:right; font-variant-numeric:tabular-nums">${r.tolerance != null ? formatDecimalPlain(r.tolerance) : '—'}</td>
+      <td style="text-align:right; font-variant-numeric:tabular-nums">${r.decimals != null ? r.decimals : ''}</td>
     </tr>
   `).join('');
 
@@ -2561,6 +2564,42 @@ function changeRfPageSize(value) {
   applyPageSize(value);
   rfState.pageNum = 1;
   renderRuleField();
+}
+
+function updateRfTypeDependentFields() {
+  const selField1 = document.getElementById('rfFormField1');
+  const selField2 = document.getElementById('rfFormField2');
+  const field1Obj = rfOptions.fields.find(f => String(f.id) === String(selField1.value));
+  const field2Obj = rfOptions.fields.find(f => String(f.id) === String(selField2.value));
+  const type1 = field1Obj ? field1Obj.id_field_type : null;
+  const type2 = field2Obj ? field2Obj.id_field_type : null;
+  const isTextOrDate = t => t === 3 || t === 4;
+  const isInteger = t => t === 1;
+
+  // Texto/Data: não fazem sentido agregação nem tolerância nem decimais
+  const hideTolerance = isTextOrDate(type1) || isTextOrDate(type2);
+  // Inteiro também não permite agregação (além de texto/data)
+  const hideAggregation = hideTolerance || isInteger(type1) || isInteger(type2);
+  const bothDecimal = field1Obj && field2Obj && type1 === 2 && type2 === 2;
+
+  const aggGroup = document.getElementById('rfFormAggregationGroup');
+  const tolGroup = document.getElementById('rfFormToleranceGroup');
+  const decGroup = document.getElementById('rfFormDecimalsGroup');
+  const decimalsInput = document.getElementById('rfFormDecimals');
+
+  aggGroup.style.display = hideAggregation ? 'none' : '';
+  if (hideAggregation) document.getElementById('rfFormAggregation').value = '';
+
+  tolGroup.style.display = hideTolerance ? 'none' : '';
+  if (hideTolerance) document.getElementById('rfFormTolerance').value = '';
+
+  decGroup.style.display = bothDecimal ? '' : 'none';
+  if (!bothDecimal) {
+    decimalsInput.value = '';
+  } else if (!state.editingId && decimalsInput.value === '') {
+    // inclusão: sugere 2 casas decimais como ponto de partida
+    decimalsInput.value = '2';
+  }
 }
 
 function openRfForm(id) {
@@ -2617,6 +2656,7 @@ function openRfForm(id) {
     selField2.innerHTML = '<option value="">Selecione...</option>' + options2;
     if (selectedFieldId1) selField1.value = selectedFieldId1;
     if (selectedFieldId2) selField2.value = selectedFieldId2;
+    updateRfTypeDependentFields();
   };
 
   selOperator.innerHTML = '<option value="">Selecione...</option>' +
@@ -2636,6 +2676,8 @@ function openRfForm(id) {
     selOperator.value    = r.id_operator  || '';
     selAggregation.value = r.id_aggregation || '';
     document.getElementById('rfFormTolerance').value = r.tolerance != null ? formatDecimalPlain(r.tolerance) : '';
+    document.getElementById('rfFormDecimals').value = r.decimals != null ? String(r.decimals) : '';
+    updateRfTypeDependentFields();
   } else {
     idGroup.style.display = 'none';
     selRule.value        = '';
@@ -2644,9 +2686,13 @@ function openRfForm(id) {
     selOperator.value    = '';
     selAggregation.value = '';
     document.getElementById('rfFormTolerance').value = '';
+    document.getElementById('rfFormDecimals').value = '';
+    updateRfTypeDependentFields();
   }
 
   selRule.addEventListener('change', () => populateFields(selRule.value, '', ''));
+  selField1.addEventListener('change', updateRfTypeDependentFields);
+  selField2.addEventListener('change', updateRfTypeDependentFields);
   });
 }
 
@@ -2658,6 +2704,7 @@ async function saveRuleField() {
   const id_operator    = document.getElementById('rfFormOperator').value;
   const id_aggregation = document.getElementById('rfFormAggregation').value;
   const tolRaw         = document.getElementById('rfFormTolerance').value.trim();
+  const decimalsRaw    = document.getElementById('rfFormDecimals').value.trim();
 
   clearRfErrors();
   let valid = true;
@@ -2669,32 +2716,46 @@ async function saveRuleField() {
 
   const field1Obj = rfOptions.fields.find(f => String(f.id) === id_field_1);
   const field2Obj = rfOptions.fields.find(f => String(f.id) === id_field_2);
-  const hasTextField = (field1Obj && field1Obj.id_field_type === 3) || (field2Obj && field2Obj.id_field_type === 3);
+  const isTextOrDate = t => t === 3 || t === 4;
+  const isInteger = t => t === 1;
+  const blockTolerance = (field1Obj && isTextOrDate(field1Obj.id_field_type)) || (field2Obj && isTextOrDate(field2Obj.id_field_type));
+  const blockAggregation = blockTolerance ||
+    (field1Obj && isInteger(field1Obj.id_field_type)) || (field2Obj && isInteger(field2Obj.id_field_type));
+  const bothDecimal = field1Obj && field2Obj && field1Obj.id_field_type === 2 && field2Obj.id_field_type === 2;
 
-  if (id_aggregation) {
-    if (field1Obj && field1Obj.id_field_type === 3) {
-      const el1 = document.getElementById('errRfField1');
-      el1.textContent = 'Não é permitido agregar dados do tipo texto';
-      el1.style.display = 'block';
-      valid = false;
-    }
-    if (field2Obj && field2Obj.id_field_type === 3) {
-      const el2 = document.getElementById('errRfField2');
-      el2.textContent = 'Não é permitido agregar dados do tipo texto';
-      el2.style.display = 'block';
-      valid = false;
-    }
+  if (field1Obj && field2Obj && field1Obj.id_field_type !== field2Obj.id_field_type) {
+    const el2 = document.getElementById('errRfField2');
+    el2.textContent = 'Os campos devem ser do mesmo tipo de dado';
+    el2.style.display = 'block';
+    valid = false;
+  }
+
+  // Campo já fica oculto no form para esses tipos; validação aqui é apenas rede de segurança
+  if (id_aggregation && blockAggregation) {
+    const el1 = document.getElementById('errRfField1');
+    el1.textContent = 'Agregação não é permitida para este tipo de dado';
+    el1.style.display = 'block';
+    valid = false;
   }
 
   const tolerance = tolRaw === '' ? 0 : parseFloat(tolRaw);
   if (isNaN(tolerance) || tolerance < 0) {
     document.getElementById('errRfTolerance').style.display = 'block';
     valid = false;
-  } else if (tolerance !== 0 && hasTextField) {
+  } else if (tolerance !== 0 && blockTolerance) {
     const elTol = document.getElementById('errRfTolerance');
-    elTol.textContent = 'Não é permitido aplicar tolerância em texto';
+    elTol.textContent = 'Tolerância não é permitida para este tipo de dado';
     elTol.style.display = 'block';
     valid = false;
+  }
+
+  let decimals = null;
+  if (bothDecimal && decimalsRaw !== '') {
+    decimals = parseInt(decimalsRaw, 10);
+    if (isNaN(decimals) || decimals < 0) {
+      document.getElementById('errRfDecimals').style.display = 'block';
+      valid = false;
+    }
   }
 
   if (!valid) return;
@@ -2706,7 +2767,8 @@ async function saveRuleField() {
     id_field_2:   parseInt(id_field_2),
     id_operator:  id_operator  ? parseInt(id_operator)  : null,
     id_aggregation: id_aggregation ? parseInt(id_aggregation) : null,
-    tolerance
+    tolerance,
+    decimals
   };
 
   const btn = document.getElementById('btnSaveRuleField');
@@ -2756,6 +2818,8 @@ function clearRfErrors() {
   const elTolerance = document.getElementById('errRfTolerance');
   elTolerance.style.display = 'none';
   elTolerance.textContent = 'Tolerância inválida (deve ser ≥ 0)';
+  const elDecimals = document.getElementById('errRfDecimals');
+  if (elDecimals) elDecimals.style.display = 'none';
 }
 
 // ── PROFILES ──

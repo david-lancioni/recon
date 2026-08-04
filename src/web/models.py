@@ -344,6 +344,7 @@ class RuleField(db.Model):
     tolerance = db.Column(db.Float, nullable=True, default=0)
     id_operator = db.Column(db.Integer, db.ForeignKey('tb_operator.id'), nullable=True, default=1)
     id_aggregation = db.Column(db.Integer, db.ForeignKey('tb_aggregation.id'), nullable=True)
+    decimals = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         return {
@@ -355,7 +356,8 @@ class RuleField(db.Model):
             'id_field_2': self.id_field_2,
             'tolerance': self.tolerance if self.tolerance is not None else 0,
             'id_operator': self.id_operator,
-            'id_aggregation': self.id_aggregation
+            'id_aggregation': self.id_aggregation,
+            'decimals': self.decimals
         }
 
 
