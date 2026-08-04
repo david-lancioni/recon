@@ -129,10 +129,10 @@ INSERT INTO `tb_field_type` (`id`, `name`) VALUES (4, 'Data');
 -- -----------------------------------------------------
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (1, 1, 1, 1, 'Agencia', 1, NULL);
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (2, 1, 1, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (3, 1, 1, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (3, 1, 1, 3, 'Valor', 2, NULL);
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 1, 2, 1, 'Agencia', 1, NULL);
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 1, 2, 2, 'Conta', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 1, 2, 3, 'Valor', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 1, 2, 3, 'Valor', 2, NULL);
 
 
 -- -----------------------------------------------------
