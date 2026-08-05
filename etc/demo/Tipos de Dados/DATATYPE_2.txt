@@ -1,0 +1,4 @@
+cd;ds;dt;vl
+1;   Transação de Venda;       2026-07-20 10:30:00;   1500.12340002
+2;   Pagamento de Fornecedor;  2026-07-22 14:15:30;   4320.12340003
+3;   Reembolso de Desp;        2026-07-28 09:45:12;   5125.75100001

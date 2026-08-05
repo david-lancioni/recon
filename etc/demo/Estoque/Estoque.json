@@ -1,0 +1,79 @@
+{
+  "datasources": [
+    {
+      "credentials": "",
+      "delimiter": "|",
+      "fields": [
+        {
+          "name": "Produto",
+          "position": 1,
+          "type": "Texto",
+          "value": ""
+        },
+        {
+          "name": "Quantidade",
+          "position": 2,
+          "type": "Inteiro",
+          "value": ""
+        }
+      ],
+      "filename": "estoque 1",
+      "name": "Loja 1",
+      "query": "",
+      "side": "Lado 1",
+      "type": "Arquivo",
+      "url": ""
+    },
+    {
+      "credentials": "",
+      "delimiter": "|",
+      "fields": [
+        {
+          "name": "Produto",
+          "position": 1,
+          "type": "Texto",
+          "value": ""
+        },
+        {
+          "name": "Quantidade",
+          "position": 2,
+          "type": "Inteiro",
+          "value": ""
+        }
+      ],
+      "filename": "estoque 2",
+      "name": "Loja 2",
+      "query": "",
+      "side": "Lado 2",
+      "type": "Arquivo",
+      "url": ""
+    }
+  ],
+  "description": "Batimento de chave por campo texto e quantidade por campo inteiro, aplicando tolerancia",
+  "name": "Estoque",
+  "process_type": "Disco",
+  "result_type": "Todos",
+  "rules": [
+    {
+      "name": "Regra 1",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Loja 1 / Produto",
+          "field_2": "Loja 2 / Produto",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Loja 1 / Quantidade",
+          "field_2": "Loja 2 / Quantidade",
+          "operator": "=",
+          "tolerance": 10,
+          "type": "Critério de Comparação"
+        }
+      ]
+    }
+  ]
+}

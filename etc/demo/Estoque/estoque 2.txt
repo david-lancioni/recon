@@ -1,0 +1,4 @@
+Produto | Quantidade
+Tijolo a vista | 1001
+Saco de cimento | 205
+Porcelanato | 5009
