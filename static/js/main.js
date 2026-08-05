@@ -1007,9 +1007,9 @@ async function loadFields() {
     if (dsIdParam) {
       const ds = fieldsOptions.datasources.find(d => String(d.id) === dsIdParam);
       if (ds) {
-        fieldsState.colDs = ds.name;
+        fieldsState.colDs = String(ds.id);
         const sel = document.getElementById('filter-field-ds');
-        if (sel) sel.value = ds.name;
+        if (sel) sel.value = String(ds.id);
       }
     }
 
@@ -1025,7 +1025,6 @@ function populateFieldFilters() {
 
   const cols = [
     { id: ids[0], vals: [...new Set(fieldsCache.map(r => r.recon_name))],     key: 'colRecon' },
-    { id: ids[1], vals: [...new Set(fieldsCache.map(r => r.ds_name))],        key: 'colDs'   },
     { id: ids[2], vals: [...new Set(fieldsCache.map(r => String(r.position)))], key: 'colPos'  },
     { id: ids[3], vals: [...new Set(fieldsCache.map(r => r.name))],           key: 'colName' },
     { id: ids[4], vals: [...new Set(fieldsCache.map(r => r.field_type_name))], key: 'colType' },
@@ -1039,6 +1038,13 @@ function populateFieldFilters() {
     sel.value = fieldsState[key];
     fieldsState[key] = sel.value;
   });
+
+  const dsSel = document.getElementById(ids[1]);
+  const dsOptions = [...fieldsOptions.datasources].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  dsSel.innerHTML = '<option value="">Todos</option>' +
+    dsOptions.map(ds => `<option value="${ds.id}">${esc(ds.name)}</option>`).join('');
+  dsSel.value = fieldsState.colDs;
+  fieldsState.colDs = dsSel.value;
 }
 
 function toggleFieldFilters() {
@@ -1065,7 +1071,7 @@ function getFieldsFiltered() {
   return fieldsCache.filter(r =>
     (!fieldsState.colRecon || r.recon_name             === fieldsState.colRecon) &&
     (!fieldsState.colName || r.name                    === fieldsState.colName) &&
-    (!fieldsState.colDs   || r.ds_name                 === fieldsState.colDs)   &&
+    (!fieldsState.colDs   || String(r.id_ds)            === fieldsState.colDs)   &&
     (!fieldsState.colPos  || String(r.position)        === fieldsState.colPos)  &&
     (!fieldsState.colType || r.field_type_name         === fieldsState.colType)
   );
@@ -1350,9 +1356,9 @@ async function loadDatasource() {
     if (reconIdParam) {
       const recon = dsOptions.recons.find(r => String(r.id) === reconIdParam);
       if (recon) {
-        dsState.colRecon = recon.name;
+        dsState.colRecon = String(recon.id);
         const sel = document.getElementById('filter-ds-recon');
-        if (sel) sel.value = recon.name;
+        if (sel) sel.value = String(recon.id);
       }
     }
 
@@ -1382,7 +1388,6 @@ function populateDsFilters() {
 
   const cols = [
     { id: ids[0], vals: [...new Set(dsCache.map(r => r.name))],                key: 'colName'       },
-    { id: ids[1], vals: [...new Set(dsCache.map(r => r.recon_name))],           key: 'colRecon'      },
     { id: ids[2], vals: [...new Set(dsCache.map(r => r.side_name))],            key: 'colSide'       },
     { id: ids[3], vals: [...new Set(dsCache.map(r => r.ds_type_name))],         key: 'colType'       },
     { id: ids[4], vals: [...new Set(dsCache.map(r => r.credentials || ''))].filter(Boolean), key: 'colCredentials' },
@@ -1399,6 +1404,13 @@ function populateDsFilters() {
     sel.value = dsState[key];
     dsState[key] = sel.value;
   });
+
+  const reconSel = document.getElementById(ids[1]);
+  const reconOptions = [...dsOptions.recons].sort((a, b) => a.name.localeCompare(b.name));
+  reconSel.innerHTML = '<option value="">Todos</option>' +
+    reconOptions.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  reconSel.value = dsState.colRecon;
+  dsState.colRecon = reconSel.value;
 }
 
 function toggleDsFilters() {
@@ -1427,7 +1439,7 @@ function filterDsByColumn() {
 function getDsFiltered() {
   return dsCache.filter(r =>
     (!dsState.colName       || r.name               === dsState.colName)       &&
-    (!dsState.colRecon      || r.recon_name         === dsState.colRecon)      &&
+    (!dsState.colRecon      || String(r.id_recon)   === dsState.colRecon)      &&
     (!dsState.colSide       || r.side_name          === dsState.colSide)       &&
     (!dsState.colType        || r.ds_type_name       === dsState.colType)       &&
     (!dsState.colCredentials || r.credentials        === dsState.colCredentials) &&
@@ -2413,9 +2425,9 @@ async function loadRuleField() {
     if (ruleIdParam) {
       const rule = rfOptions.rules.find(r => String(r.id) === ruleIdParam);
       if (rule) {
-        rfState.colRule = rule.name;
+        rfState.colRule = String(rule.id);
         const sel = document.getElementById('filter-rf-rule');
-        if (sel) sel.value = rule.name;
+        if (sel) sel.value = String(rule.id);
       }
     }
 
@@ -2431,7 +2443,6 @@ function populateRfFilters() {
 
   const cols = [
     { id: ids[0], vals: [...new Set(rfCache.map(r => r.recon_name))],       key: 'colRecon'      },
-    { id: ids[1], vals: [...new Set(rfCache.map(r => r.rule_name))],        key: 'colRule'       },
     { id: ids[2], vals: [...new Set(rfCache.map(r => r.rule_type_name))],   key: 'colType'       },
     { id: ids[3], vals: [...new Set(rfCache.map(r => r.field1_name))],      key: 'colField1'     },
     { id: ids[4], vals: [...new Set(rfCache.map(r => r.operator_name))],    key: 'colOperator'   },
@@ -2446,6 +2457,13 @@ function populateRfFilters() {
     sel.value = rfState[key];
     rfState[key] = sel.value;
   });
+
+  const ruleSel = document.getElementById(ids[1]);
+  const ruleOptions = [...rfOptions.rules].sort((a, b) => a.name.localeCompare(b.name));
+  ruleSel.innerHTML = '<option value="">Todos</option>' +
+    ruleOptions.map(rule => `<option value="${rule.id}">${esc(rule.name)}</option>`).join('');
+  ruleSel.value = rfState.colRule;
+  rfState.colRule = ruleSel.value;
 }
 
 function toggleRfFilters() {
@@ -2475,7 +2493,7 @@ function filterRfByColumn() {
 function getRfFiltered() {
   return rfCache.filter(r =>
     (!rfState.colRecon       || r.recon_name       === rfState.colRecon)       &&
-    (!rfState.colRule        || r.rule_name        === rfState.colRule)        &&
+    (!rfState.colRule        || String(r.id_rule)   === rfState.colRule)        &&
     (!rfState.colType        || r.rule_type_name   === rfState.colType)        &&
     (!rfState.colField1      || r.field1_name      === rfState.colField1)      &&
     (!rfState.colOperator    || r.operator_name    === rfState.colOperator)    &&
@@ -4060,9 +4078,9 @@ async function loadProfileTransactions() {
     if (profileIdParam) {
       const profile = profileTransactionsOptions.profiles.find(p => String(p.id) === profileIdParam);
       if (profile) {
-        profileTransactionsState.colProfile = profile.name;
+        profileTransactionsState.colProfile = String(profile.id);
         const sel = document.getElementById('filter-pt-profile');
-        if (sel) sel.value = profile.name;
+        if (sel) sel.value = String(profile.id);
       }
     }
     renderProfileTransactions();
@@ -4070,15 +4088,19 @@ async function loadProfileTransactions() {
 }
 
 function populateProfileTransactionFilters() {
-  const map = {
-    'filter-pt-profile':     { vals: [...new Set(profileTransactionsCache.map(r => r.profile_name))].sort(),     key: 'colProfile' },
-    'filter-pt-transaction': { vals: [...new Set(profileTransactionsCache.map(r => r.transaction_name))].sort(), key: 'colTransaction' }
-  };
-  for (const [selId, { vals, key }] of Object.entries(map)) {
-    const sel = document.getElementById(selId);
-    if (!sel) continue;
-    sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
-    sel.value = profileTransactionsState[key];
+  const txSel = document.getElementById('filter-pt-transaction');
+  if (txSel) {
+    const vals = [...new Set(profileTransactionsCache.map(r => r.transaction_name))].sort();
+    txSel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    txSel.value = profileTransactionsState.colTransaction;
+  }
+
+  const profileSel = document.getElementById('filter-pt-profile');
+  if (profileSel) {
+    const profileOptions = [...profileTransactionsOptions.profiles].sort((a, b) => a.name.localeCompare(b.name));
+    profileSel.innerHTML = '<option value="">Todos</option>' +
+      profileOptions.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    profileSel.value = profileTransactionsState.colProfile;
   }
 }
 
@@ -4101,7 +4123,7 @@ function filterProfileTransactionsByColumn() {
 
 function getProfileTransactionsFiltered() {
   return profileTransactionsCache.filter(r =>
-    (!profileTransactionsState.colProfile     || r.profile_name === profileTransactionsState.colProfile) &&
+    (!profileTransactionsState.colProfile     || String(r.id_profile) === profileTransactionsState.colProfile) &&
     (!profileTransactionsState.colTransaction || r.transaction_name === profileTransactionsState.colTransaction)
   );
 }
