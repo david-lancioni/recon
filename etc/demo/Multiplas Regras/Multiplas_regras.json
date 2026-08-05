@@ -1,0 +1,100 @@
+{
+  "datasources": [
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "cd",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "vl",
+          "position": 2,
+          "type": "Decimal",
+          "value": ""
+        }
+      ],
+      "filename": "file_1.txt",
+      "name": "Lado 1",
+      "query": "",
+      "side": "Lado 1",
+      "type": "Arquivo",
+      "url": ""
+    },
+    {
+      "credentials": "",
+      "delimiter": ";",
+      "fields": [
+        {
+          "name": "cd",
+          "position": 1,
+          "type": "Inteiro",
+          "value": ""
+        },
+        {
+          "name": "vl",
+          "position": 2,
+          "type": "Decimal",
+          "value": ""
+        }
+      ],
+      "filename": "file_2.txt",
+      "name": "Lado 2",
+      "query": "",
+      "side": "Lado 2",
+      "type": "Arquivo",
+      "url": ""
+    }
+  ],
+  "description": "Conciliação com duas regras, onde a segunda bate o valor com tolerancia",
+  "name": "Multiplas regras",
+  "process_type": "Disco",
+  "result_type": "Todos",
+  "rules": [
+    {
+      "name": "Regra 1",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / cd",
+          "field_2": "Lado 2 / cd",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / vl",
+          "field_2": "Lado 2 / vl",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Critério de Comparação"
+        }
+      ]
+    },
+    {
+      "name": "Regra 2 (tol)",
+      "rule_fields": [
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / cd",
+          "field_2": "Lado 2 / cd",
+          "operator": "=",
+          "tolerance": 0,
+          "type": "Chave de Batimento"
+        },
+        {
+          "aggregation": "",
+          "field_1": "Lado 1 / vl",
+          "field_2": "Lado 2 / vl",
+          "operator": "=",
+          "tolerance": 0.05,
+          "type": "Critério de Comparação"
+        }
+      ]
+    }
+  ]
+}
