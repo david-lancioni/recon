@@ -137,24 +137,6 @@ def register(app):
         db.session.commit()
         return jsonify(record.to_dict())
 
-    @app.route('/api/company/<int:record_id>/duplicate', methods=['POST'])
-    def api_companies_duplicate(record_id):
-        denied = _require_system_admin()
-        if denied:
-            return denied
-        record = db.session.get(Company, record_id)
-        if not record:
-            abort(404)
-        new_record = Company(
-            id=next_id(Company), name=record.name,
-            create_at=datetime.now(), expire_date=record.expire_date
-        )
-        db.session.add(new_record)
-        db.session.flush()
-        _seed_company(new_record.id)
-        db.session.commit()
-        return jsonify(new_record.to_dict()), 201
-
     @app.route('/api/company/<int:record_id>', methods=['DELETE'])
     def api_companies_delete(record_id):
         denied = _require_system_admin()

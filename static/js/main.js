@@ -448,7 +448,6 @@ async function confirmDuplicate() {
     else if (section === 'rules') await duplicateRule(id);
     else if (section === 'rf') await duplicateRuleField(id);
     else if (section === 'profiles') await duplicateProfile(id);
-    else if (section === 'companies') await duplicateCompany(id);
     else if (section === 'transactions') await duplicateTransaction(id);
     else if (section === 'areas') await duplicateArea(id);
   } finally {
@@ -3645,7 +3644,7 @@ function selectCompanyRow(id) {
 
 function updateCompanyFooterButtons() {
   const hasSelection = companiesState.selectedId != null;
-  ['btnCompanyEdit', 'btnCompanyDuplicate', 'btnCompanyDelete', 'btnCompanyExport'].forEach(id => {
+  ['btnCompanyEdit', 'btnCompanyDelete', 'btnCompanyExport'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn) btn.disabled = !hasSelection;
   });
@@ -3653,10 +3652,6 @@ function updateCompanyFooterButtons() {
 
 function footerCompanyEdit() {
   if (companiesState.selectedId != null) openCompanyForm(companiesState.selectedId);
-}
-
-function footerCompanyDuplicate() {
-  if (companiesState.selectedId != null) openDuplicate('companies', companiesState.selectedId);
 }
 
 function footerCompanyDelete() {
@@ -3821,14 +3816,6 @@ function clearCompanyErrors() {
   el.style.display = 'none';
   el.textContent = 'Nome é obrigatório';
   document.getElementById('errCompanyExpireDate').style.display = 'none';
-}
-
-async function duplicateCompany(id) {
-  try {
-    await apiFetch('POST', `/api/company/${id}/duplicate`);
-    toast('Empresa duplicada com sucesso');
-    await loadCompanies();
-  } catch { toast('Erro ao duplicar empresa'); }
 }
 
 function footerCompanyExport() {
