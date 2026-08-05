@@ -1,0 +1,85 @@
+Backlog de pontos levantados em revisao (2026-08-05) - a tratar
+================================================================
+
+SEGURANCA
+---------
+
+1. [ALTA] Escalacao de privilegio para Administrador via /api/user, /api/profile,
+   /api/profile_transaction
+   Arquivos: src/web/user.py:80-118 (PUT /api/user/<user_id>)
+             src/web/profile.py:43-58 (PUT /api/profile/<record_id>)
+             src/web/profile_transaction.py:62-93,137-173
+   Problema: esses endpoints so checam 'company_id' in session (logado em alguma
+   empresa), sem validar se o usuario autenticado tem perfil Administrador daquela
+   empresa. PUT /api/user/<user_id> tambem nao restringe o alvo ao proprio usuario
+   (so filtra por id_company) - qualquer usuario logado pode editar qualquer outro
+   usuario da mesma empresa.
+   Exploracao: usuario comum descobre o id do perfil Administrador via
+   GET /api/user/options e chama PUT /api/user/<seu_id> trocando id_profile para
+   Administrador -> auto-promocao a admin da empresa. A partir dai pode tambem usar
+   /api/profile_transaction para se conceder qualquer permissao.
+   Fix: criar _require_company_admin() (equivalente a _require_system_admin() de
+   company.py) e aplicar nos endpoints de escrita de user.py, profile.py e
+   profile_transaction.py. Em api_users_update/delete, decidir se usuario pode
+   editar a si mesmo (nome/senha) vs exigir admin para editar outros ou trocar
+   id_profile.
+
+2. [ALTA] Bypass da restricao de visibilidade por area via /api/area_user/sync
+   Arquivo: src/web/area_user.py:48-81
+   Problema: mesma falta de checagem de admin. tb_area_user e o mecanismo de
+   "compliance restriction between areas" (ver access.py:20-34, get_visible_recon_ids)
+   que decide quais reconciliacoes cada usuario ve.
+   Exploracao: usuario comum sem acesso a uma area descobre o id_area via
+   /api/area_user/options e chama PUT /api/area_user/sync incluindo o proprio id na
+   lista -> passa a ver todas as reconciliacoes vinculadas aquela area, furando a
+   barreira de compliance entre areas.
+   Fix: mesma checagem de admin da empresa sugerida no item 1, aplicada em
+   PUT /api/area_user/sync e DELETE /api/area_user/<id>.
+
+
+PERFORMANCE / MEMORIA / CPU
+----------------------------
+
+3. [ALTO IMPACTO] N+1 de leitura de arquivo inteiro em /api/report_sintetic
+   Arquivo: src/web/report_sintetic.py:48-63
+   Problema: para cada reconciliacao visivel do usuario, carrega o JSON de
+   resultado INTEIRO (todas as linhas, todas as colunas, dos dois lados) via
+   read_result() so para contar quantas linhas caem em cada status. Com varias
+   reconciliacoes por empresa, cada uma com milhares de linhas, essa tela de
+   resumo/dashboard le e desserializa por completo todos os arquivos de resultado
+   a cada request.
+   Fix: gravar contadores por status agregados (poucos numeros) num JSON pequeno
+   separado no momento do write_result, e ler so esse resumo aqui, sem tocar nos
+   dados linha-a-linha.
+
+4. [BAIXO RISCO, FACIL] write_result usa json.dump(..., indent=2)
+   Arquivo: src/core/resultlib.py:32-42
+   Problema: o JSON de resultado e dado puro pra maquina (relido por
+   report_analitic/report_sintetic), nunca lido por humano direto no arquivo.
+   indent=2 infla o tamanho em disco e o custo de parse na leitura, piorando ainda
+   mais o item 3.
+   Fix: remover o indent=2.
+
+5. [BAIXO RISCO, FACIL] Fetch de tabela inteira dentro de hot loop em
+   add_diff_field_into_tmp
+   Arquivo: src/core/reconlib.py:310-311
+   Problema: dentro do loop (por regra x por campo de comparacao x por lado), roda
+   "select equality from {tmp3}" sem limit e traz a tabela inteira pra memoria via
+   fetchall(), mas so usa rs[0][0]. Como equality e booleano (0 ou 1), o teste
+   "rs[0][0] == 0 or rs[0][0] == 1" e sempre verdadeiro quando ha alguma linha -
+   ou seja, e so um teste de existencia.
+   Fix: adicionar "limit 1" na query. Nao muda o comportamento, elimina o fetch
+   redundante.
+
+6. [ESTRUTURAL, sem fix trivial] Execucao sincrona em /api/run
+   Arquivo: src/web/run.py:88-96
+   Problema: CoreLib().process(...) roda inline dentro do handler HTTP, segurando
+   uma conexao do pool DB_NAME (DB_POOL_SIZE=3/processo) pelo tempo todo da
+   conciliacao. Com so 3 workers e teto de 22 conexoes MySQL no total (ver memoria
+   project_recon_infra), uma ou duas conciliacoes longas concorrentes ja prendem
+   workers e disputam conexao com quem so esta vendo relatorios.
+   Observacao: recons via upload de arquivo precisam do request pra receber o
+   arquivo, entao nao da pra tirar do caminho da request sem redesenhar o fluxo
+   (ex.: upload separado da execucao + fila). job/run.py/JobLib ja existe como
+   caminho assincrono, mas so cobre recons de datasource em banco, nao upload de
+   arquivo. Ficar de olho se o volume de uso crescer.
