@@ -213,7 +213,7 @@ def register(app):
             id=next_id(Ds),
             id_company=session['company_id'],
             id_recon=ds.id_recon,
-            id_side=ds.id_side,
+            id_side=2 if ds.id_side == 1 else 1,
             id_type=ds.id_type,
             name=ds.name,
             credentials=ds.credentials,
