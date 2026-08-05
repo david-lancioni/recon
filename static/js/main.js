@@ -2063,7 +2063,10 @@ function downloadExport() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${_exportData.name.replace(/\s+/g, '_')}.json`;
+  const label = Array.isArray(_exportData)
+    ? (_exportData.length === 1 ? _exportData[0].name : `empresas_${_exportData.length}`)
+    : _exportData.name;
+  a.download = `${label.replace(/\s+/g, '_')}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -3644,7 +3647,7 @@ function selectCompanyRow(id) {
 
 function updateCompanyFooterButtons() {
   const hasSelection = companiesState.selectedId != null;
-  ['btnCompanyEdit', 'btnCompanyDelete', 'btnCompanyExport'].forEach(id => {
+  ['btnCompanyEdit', 'btnCompanyDelete'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn) btn.disabled = !hasSelection;
   });
@@ -3818,22 +3821,81 @@ function clearCompanyErrors() {
   document.getElementById('errCompanyExpireDate').style.display = 'none';
 }
 
-function footerCompanyExport() {
-  if (companiesState.selectedId != null) exportCompany(companiesState.selectedId);
+// Reused by both export (picks among existing companies) and import (picks among the
+// companies found inside the uploaded JSON file) — same checkbox-list + "select all" UI.
+let companyPickerMode = null;       // 'export' | 'import'
+let companyPickerImportData = null; // parsed file contents, import mode only
+
+function openCompanyExportPicker() {
+  if (!state.loggedIn) { openModal('loginModal'); toast('Faça login para continuar'); return; }
+  companyPickerMode = 'export';
+  companyPickerImportData = null;
+  document.getElementById('companyPickerTitle').textContent = 'Selecionar empresas para exportar';
+  document.getElementById('btnCompanyPickerConfirm').textContent = 'Exportar';
+  renderCompanyPicker(companiesCache.filter(c => c.id !== 1).map(c => ({ id: c.id, label: c.name })));
+  openModal('companyPickerModal');
 }
 
-async function exportCompany(id) {
-  const btn = document.getElementById('btnCompanyExport');
-  setBtnBusy(btn, true, 'Exportando...');
-  try {
-    _exportData = await apiFetch('GET', `/api/company/${id}/export`);
-    document.getElementById('exportTitle').textContent = `Exportar — ${_exportData.name}`;
-    document.getElementById('exportContent').textContent = JSON.stringify(_exportData, null, 2);
-    openModal('exportModal');
-  } catch {
-    toast('Erro ao exportar empresa');
-  } finally {
-    setBtnBusy(btn, false);
+function renderCompanyPicker(items) {
+  const list = document.getElementById('companyPickerList');
+  const empty = document.getElementById('companyPickerEmpty');
+  document.getElementById('companyPickerSelectAll').checked = false;
+  document.getElementById('companyPickerCount').textContent =
+    `${items.length} empresa${items.length === 1 ? '' : 's'} na lista`;
+  if (items.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = items.map(it => `
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer">
+      <input type="checkbox" class="company-picker-checkbox" value="${it.id}">
+      <span>${esc(it.label)}</span>
+    </label>
+  `).join('');
+}
+
+function toggleCompanyPickerAll() {
+  const checked = document.getElementById('companyPickerSelectAll').checked;
+  document.querySelectorAll('.company-picker-checkbox').forEach(b => { b.checked = checked; });
+}
+
+async function confirmCompanyPicker() {
+  const selected = [...document.querySelectorAll('.company-picker-checkbox')].filter(b => b.checked).map(b => b.value);
+  if (selected.length === 0) { toast('Selecione ao menos uma empresa'); return; }
+
+  const btn = document.getElementById('btnCompanyPickerConfirm');
+  if (companyPickerMode === 'export') {
+    setBtnBusy(btn, true, 'Exportando...');
+    try {
+      _exportData = await apiFetch('POST', '/api/company/export', { ids: selected.map(Number) });
+      closeModal('companyPickerModal');
+      const label = _exportData.length === 1 ? _exportData[0].name : `${_exportData.length} empresas`;
+      document.getElementById('exportTitle').textContent = `Exportar — ${label}`;
+      document.getElementById('exportContent').textContent = JSON.stringify(_exportData, null, 2);
+      openModal('exportModal');
+    } catch {
+      toast('Erro ao exportar empresas');
+    } finally {
+      setBtnBusy(btn, false);
+    }
+  } else if (companyPickerMode === 'import') {
+    setBtnBusy(btn, true, 'Importando...');
+    let okCount = 0;
+    try {
+      for (const idx of selected.map(Number)) {
+        await apiFetch('POST', '/api/company/import', companyPickerImportData[idx]);
+        okCount++;
+      }
+      closeModal('companyPickerModal');
+      toast(`${okCount} empresa(s) importada(s) com sucesso`);
+      await loadCompanies();
+    } catch (err) {
+      toast(err.error || `Erro ao importar (${okCount} de ${selected.length} concluídas)`);
+    } finally {
+      setBtnBusy(btn, false);
+    }
   }
 }
 
@@ -3853,17 +3915,15 @@ async function handleCompanyImportFile(event) {
     toast('Arquivo JSON inválido');
     return;
   }
-  const btn = document.getElementById('btnImportCompany');
-  setBtnBusy(btn, true, 'Importando...');
-  try {
-    const company = await apiFetch('POST', '/api/company/import', data);
-    toast(`Empresa "${company.name}" importada com sucesso`);
-    await loadCompanies();
-  } catch (err) {
-    toast(err.error || 'Erro ao importar empresa');
-  } finally {
-    setBtnBusy(btn, false);
-  }
+  const list = Array.isArray(data) ? data : [data];
+  if (list.length === 0) { toast('Arquivo não contém empresas'); return; }
+
+  companyPickerMode = 'import';
+  companyPickerImportData = list;
+  document.getElementById('companyPickerTitle').textContent = 'Selecionar empresas para importar';
+  document.getElementById('btnCompanyPickerConfirm').textContent = 'Importar';
+  renderCompanyPicker(list.map((c, idx) => ({ id: idx, label: c.name || `Empresa ${idx + 1}` })));
+  openModal('companyPickerModal');
 }
 
 // ── TRANSACTIONS ──

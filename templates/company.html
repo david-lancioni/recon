@@ -18,6 +18,7 @@
   <div class="toolbar">
     <div style="margin-left:auto;display:flex;gap:8px">
       <button class="btn btn-primary" id="btnImportCompany" onclick="triggerCompanyImport()">Importar</button>
+      <button class="btn btn-primary" id="btnExportCompany" onclick="openCompanyExportPicker()">Exportar</button>
       <button class="btn btn-primary" onclick="openCompanyForm()">+ Nova empresa</button>
     </div>
     <input type="file" id="importCompanyFileInput" accept=".json" style="display:none" onchange="handleCompanyImportFile(event)">
@@ -72,7 +73,6 @@
   <div class="btn-voltar-wrap">
     <button type="button" class="btn-voltar" id="btnCompanyEdit" disabled onclick="footerCompanyEdit()">Editar</button>
     <button type="button" class="btn-voltar" id="btnCompanyDelete" disabled onclick="footerCompanyDelete()">Excluir</button>
-    <button type="button" class="btn-voltar" id="btnCompanyExport" disabled onclick="footerCompanyExport()">Exportar</button>
     <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
   </div>
   </div>
@@ -80,6 +80,31 @@
 {% endblock %}
 
 {% block extra_modals %}
+<!-- COMPANY PICKER MODAL (export/import multi-select) -->
+<div class="modal-overlay" id="companyPickerModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2 id="companyPickerTitle">Selecionar empresas</h2>
+      <button class="modal-close" onclick="closeModal('companyPickerModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer">
+        <input type="checkbox" id="companyPickerSelectAll" onchange="toggleCompanyPickerAll()">
+        Selecionar tudo
+      </label>
+      <div id="companyPickerList" style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px 12px"></div>
+      <div id="companyPickerEmpty" class="empty-state" style="display:none">
+        <strong>Nenhuma empresa encontrada</strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span id="companyPickerCount" style="margin-right:auto;color:var(--gray-400);font-size:12.5px"></span>
+      <button class="btn btn-secondary" onclick="closeModal('companyPickerModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnCompanyPickerConfirm" onclick="confirmCompanyPicker()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal" style="max-width:720px">
