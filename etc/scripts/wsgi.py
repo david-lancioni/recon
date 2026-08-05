@@ -5,7 +5,10 @@ import time
 os.environ['TZ'] = 'America/Sao_Paulo'
 time.tzset()
 
-# 1. Define as variáveis de ambiente diretamente aqui
+# 1. Chave que criptografa a sessão do usuário.
+os.environ['SECRET_KEY'] = 'J8WBXXnRvmr1fVWuXYayjVMh41zk5YqWDiGqWbICdxQ='
+
+# 2. Credenciais do banco de dados MySQL.
 os.environ['DB_HOSTNAME'] = 'dlancioni.mysql.pythonanywhere-services.com'
 os.environ['DB_USERNAME'] = 'dlancioni'
 os.environ['DB_PASSWORD'] = '123456abcdef'

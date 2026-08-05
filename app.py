@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'max_overflow': int(os.getenv('SQLALCHEMY_MAX_OVERFLOW', '0')),
     'pool_timeout': int(os.getenv('SQLALCHEMY_POOL_TIMEOUT', '60')),
 }
-app.secret_key = 'recon-secret-key-change-in-production'
+app.secret_key = os.environ['SECRET_KEY']
 app.session_interface = TokenSessionInterface()
 
 db.init_app(app)
