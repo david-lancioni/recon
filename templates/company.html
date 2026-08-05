@@ -16,9 +16,11 @@
 
   <div id="companies-content" style="display:none">
   <div class="toolbar">
-    <button class="btn btn-primary" onclick="openCompanyForm()" style="margin-left:auto">
-      + Nova empresa
-    </button>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-primary" id="btnImportCompany" onclick="triggerCompanyImport()">Importar</button>
+      <button class="btn btn-primary" onclick="openCompanyForm()">+ Nova empresa</button>
+    </div>
+    <input type="file" id="importCompanyFileInput" accept=".json" style="display:none" onchange="handleCompanyImportFile(event)">
   </div>
 
   <div class="table-wrap">
@@ -71,6 +73,7 @@
     <button type="button" class="btn-voltar" id="btnCompanyEdit" disabled onclick="footerCompanyEdit()">Editar</button>
     <button type="button" class="btn-voltar" id="btnCompanyDuplicate" disabled onclick="footerCompanyDuplicate()">Duplicar</button>
     <button type="button" class="btn-voltar" id="btnCompanyDelete" disabled onclick="footerCompanyDelete()">Excluir</button>
+    <button type="button" class="btn-voltar" id="btnCompanyExport" disabled onclick="footerCompanyExport()">Exportar</button>
     <button type="button" class="btn-voltar" onclick="history.back()">Voltar</button>
   </div>
   </div>
@@ -78,6 +81,23 @@
 {% endblock %}
 
 {% block extra_modals %}
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <h2 id="exportTitle">Exportar Empresa</h2>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <pre id="exportContent" style="margin:0;padding:20px 24px;max-height:60vh;overflow:auto;font-size:12.5px;line-height:1.6;background:var(--gray-50,#f9fafb);border-radius:0;white-space:pre-wrap;word-break:break-all"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="copyExport()">Copiar</button>
+      <button class="btn btn-secondary" onclick="downloadExport()">Baixar JSON</button>
+      <button class="btn btn-secondary" onclick="closeModal('exportModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- COMPANY FORM MODAL -->
 <div class="modal-overlay" id="companyFormModal">
   <div class="modal">

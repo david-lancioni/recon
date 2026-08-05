@@ -3645,7 +3645,7 @@ function selectCompanyRow(id) {
 
 function updateCompanyFooterButtons() {
   const hasSelection = companiesState.selectedId != null;
-  ['btnCompanyEdit', 'btnCompanyDuplicate', 'btnCompanyDelete'].forEach(id => {
+  ['btnCompanyEdit', 'btnCompanyDuplicate', 'btnCompanyDelete', 'btnCompanyExport'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn) btn.disabled = !hasSelection;
   });
@@ -3829,6 +3829,54 @@ async function duplicateCompany(id) {
     toast('Empresa duplicada com sucesso');
     await loadCompanies();
   } catch { toast('Erro ao duplicar empresa'); }
+}
+
+function footerCompanyExport() {
+  if (companiesState.selectedId != null) exportCompany(companiesState.selectedId);
+}
+
+async function exportCompany(id) {
+  const btn = document.getElementById('btnCompanyExport');
+  setBtnBusy(btn, true, 'Exportando...');
+  try {
+    _exportData = await apiFetch('GET', `/api/company/${id}/export`);
+    document.getElementById('exportTitle').textContent = `Exportar — ${_exportData.name}`;
+    document.getElementById('exportContent').textContent = JSON.stringify(_exportData, null, 2);
+    openModal('exportModal');
+  } catch {
+    toast('Erro ao exportar empresa');
+  } finally {
+    setBtnBusy(btn, false);
+  }
+}
+
+function triggerCompanyImport() {
+  if (!state.loggedIn) { openModal('loginModal'); toast('Faça login para continuar'); return; }
+  document.getElementById('importCompanyFileInput').value = '';
+  document.getElementById('importCompanyFileInput').click();
+}
+
+async function handleCompanyImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    toast('Arquivo JSON inválido');
+    return;
+  }
+  const btn = document.getElementById('btnImportCompany');
+  setBtnBusy(btn, true, 'Importando...');
+  try {
+    const company = await apiFetch('POST', '/api/company/import', data);
+    toast(`Empresa "${company.name}" importada com sucesso`);
+    await loadCompanies();
+  } catch (err) {
+    toast(err.error || 'Erro ao importar empresa');
+  } finally {
+    setBtnBusy(btn, false);
+  }
 }
 
 // ── TRANSACTIONS ──

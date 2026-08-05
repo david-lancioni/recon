@@ -3,11 +3,12 @@ from datetime import datetime
 from flask import render_template, jsonify, request, abort, session
 from src.web.models import (
     db, Company, User, Profile, Transaction, ProfileTransaction,
-    Recon, next_id
+    Area, AreaUser, AreaRecon, Recon, next_id
 )
 from src.core.loglib import get_log_path, get_log_dir
 from src.core.resultlib import get_result_path, get_result_dir
 from src.web.access import is_system_admin
+from src.web.recon import recon_import_lookup_maps, import_recon_from_dict, build_recon_export_dict
 
 _USER_PROFILE_LINKS = {'run', 'report_sintetic', 'report_analitic', 'report_log'}
 
@@ -51,6 +52,23 @@ def _seed_company(id_company):
     ))
 
     db.session.flush()
+
+
+def _transaction_key(tx, by_id):
+    """
+    Stable natural key for a tb_transaction row, usable across environments even though
+    tb_transaction is global (not company-scoped) and isn't itself part of a company export.
+    Leaf items have a unique `link` (route slug); container/category rows have link=NULL, so
+    those fall back to their full name path from the root (e.g. "Administração > Organização").
+    """
+    if tx.link:
+        return tx.link
+    parts = [tx.name]
+    cur = tx
+    while cur.id_parent and by_id.get(cur.id_parent):
+        cur = by_id[cur.id_parent]
+        parts.append(cur.name)
+    return ' > '.join(reversed(parts))
 
 
 def _require_system_admin():
@@ -172,3 +190,187 @@ def register(app):
             pass
 
         return jsonify({'ok': True})
+
+    @app.route('/api/company/<int:record_id>/export')
+    def api_companies_export(record_id):
+        denied = _require_system_admin()
+        if denied:
+            return denied
+        company = db.session.get(Company, record_id)
+        if not company:
+            abort(404)
+
+        profiles = db.session.execute(
+            db.select(Profile).filter_by(id_company=record_id).order_by(Profile.id)
+        ).scalars().all()
+        profile_name_by_id = {p.id: (p.name or '') for p in profiles}
+
+        users = db.session.execute(
+            db.select(User).filter_by(id_company=record_id).order_by(User.id)
+        ).scalars().all()
+        username_by_id = {u.id: u.username for u in users}
+
+        areas = db.session.execute(
+            db.select(Area).filter_by(id_company=record_id).order_by(Area.id)
+        ).scalars().all()
+        area_name_by_id = {a.id: (a.name or '') for a in areas}
+
+        area_users = db.session.execute(
+            db.select(AreaUser).filter_by(id_company=record_id).order_by(AreaUser.id)
+        ).scalars().all()
+
+        recons = db.session.execute(
+            db.select(Recon).filter_by(id_company=record_id).order_by(Recon.id)
+        ).scalars().all()
+        recon_name_by_id = {r.id: r.name for r in recons}
+
+        area_recons = db.session.execute(
+            db.select(AreaRecon).filter_by(id_company=record_id).order_by(AreaRecon.id)
+        ).scalars().all()
+
+        profile_transactions = db.session.execute(
+            db.select(ProfileTransaction).filter_by(id_company=record_id).order_by(ProfileTransaction.id)
+        ).scalars().all()
+        tx_by_id = {t.id: t for t in db.session.execute(db.select(Transaction)).scalars().all()}
+
+        return jsonify({
+            'name': company.name,
+            'expire_date': company.expire_date.isoformat() if company.expire_date else None,
+            'profiles': [{'name': p.name or ''} for p in profiles],
+            'users': [
+                {
+                    'name': u.name,
+                    'username': u.username,
+                    'password': u.password,
+                    'profile': profile_name_by_id.get(u.id_profile, '')
+                }
+                for u in users
+            ],
+            'areas': [{'name': a.name or ''} for a in areas],
+            'area_users': [
+                {
+                    'area': area_name_by_id.get(au.id_area, ''),
+                    'username': username_by_id.get(au.id_user, '')
+                }
+                for au in area_users
+            ],
+            'profile_transactions': [
+                {
+                    'profile': profile_name_by_id.get(pt.id_profile, ''),
+                    'transaction': _transaction_key(tx_by_id[pt.id_transaction], tx_by_id)
+                }
+                for pt in profile_transactions if pt.id_transaction in tx_by_id
+            ],
+            'recons': [
+                dict(build_recon_export_dict(r), owner_username=username_by_id.get(r.id_user) or '')
+                for r in recons
+            ],
+            'area_recons': [
+                {
+                    'area': area_name_by_id.get(ar.id_area, ''),
+                    'recon': recon_name_by_id.get(ar.id_recon, '')
+                }
+                for ar in area_recons
+            ]
+        })
+
+    @app.route('/api/company/import', methods=['POST'])
+    def api_companies_import():
+        denied = _require_system_admin()
+        if denied:
+            return denied
+        data = request.get_json()
+        name = (data.get('name') or '').strip()
+        if not name:
+            return jsonify({'error': 'Nome é obrigatório'}), 400
+        try:
+            expire_date = datetime.fromisoformat(data['expire_date']) if data.get('expire_date') else None
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Data de expiração inválida'}), 400
+
+        try:
+            company = Company(id=next_id(Company), name=name, create_at=datetime.now(), expire_date=expire_date)
+            db.session.add(company)
+            db.session.flush()
+            id_company = company.id
+
+            next_profile_id = next_id(Profile)
+            profile_id_by_name = {}
+            for p_data in (data.get('profiles') or []):
+                p_name = p_data.get('name') or ''
+                db.session.add(Profile(id=next_profile_id, id_company=id_company, name=p_name))
+                profile_id_by_name[p_name] = next_profile_id
+                next_profile_id += 1
+            db.session.flush()
+
+            next_user_id = next_id(User)
+            user_id_by_username = {}
+            for u_data in (data.get('users') or []):
+                username = (u_data.get('username') or '').strip()
+                id_profile = profile_id_by_name.get(u_data.get('profile') or '')
+                if not username or not id_profile:
+                    continue
+                db.session.add(User(
+                    id=next_user_id, id_profile=id_profile, id_company=id_company,
+                    name=u_data.get('name') or username, username=username,
+                    password=u_data.get('password') or username
+                ))
+                user_id_by_username[username] = next_user_id
+                next_user_id += 1
+            db.session.flush()
+
+            next_area_id = next_id(Area)
+            area_id_by_name = {}
+            for a_data in (data.get('areas') or []):
+                a_name = a_data.get('name') or ''
+                db.session.add(Area(id=next_area_id, id_company=id_company, name=a_name))
+                area_id_by_name[a_name] = next_area_id
+                next_area_id += 1
+            db.session.flush()
+
+            next_au_id = next_id(AreaUser)
+            for au_data in (data.get('area_users') or []):
+                id_area = area_id_by_name.get(au_data.get('area') or '')
+                id_user = user_id_by_username.get(au_data.get('username') or '')
+                if not id_area or not id_user:
+                    continue
+                db.session.add(AreaUser(id=next_au_id, id_company=id_company, id_area=id_area, id_user=id_user))
+                next_au_id += 1
+
+            tx_by_id = {t.id: t for t in db.session.execute(db.select(Transaction)).scalars().all()}
+            tx_id_by_key = {_transaction_key(t, tx_by_id): t.id for t in tx_by_id.values()}
+            next_pt_id = next_id(ProfileTransaction)
+            for pt_data in (data.get('profile_transactions') or []):
+                id_profile = profile_id_by_name.get(pt_data.get('profile') or '')
+                id_transaction = tx_id_by_key.get(pt_data.get('transaction') or '')
+                if not id_profile or not id_transaction:
+                    continue
+                db.session.add(ProfileTransaction(
+                    id=next_pt_id, id_company=id_company, id_profile=id_profile, id_transaction=id_transaction
+                ))
+                next_pt_id += 1
+
+            maps = recon_import_lookup_maps()
+            recon_id_by_name = {}
+            for r_data in (data.get('recons') or []):
+                owner_id = user_id_by_username.get(r_data.get('owner_username') or '')
+                recon = import_recon_from_dict(id_company, owner_id, r_data, maps, link_areas=False)
+                recon_id_by_name[recon.name] = recon.id
+
+            next_ar_id = next_id(AreaRecon)
+            for ar_data in (data.get('area_recons') or []):
+                id_area = area_id_by_name.get(ar_data.get('area') or '')
+                id_recon = recon_id_by_name.get(ar_data.get('recon') or '')
+                if not id_area or not id_recon:
+                    continue
+                db.session.add(AreaRecon(id=next_ar_id, id_company=id_company, id_area=id_area, id_recon=id_recon))
+                next_ar_id += 1
+
+            db.session.commit()
+            return jsonify(company.to_dict()), 201
+        except ValueError as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 400
+        except Exception:
+            db.session.rollback()
+            return jsonify({'error': 'Erro ao importar empresa'}), 500
