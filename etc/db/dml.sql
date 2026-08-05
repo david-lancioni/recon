@@ -244,20 +244,5 @@ INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_tran
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (30, 1, 1, 23);
 INSERT INTO `tb_profile_transaction` (`id`, `id_company`, `id_profile`, `id_transaction`) VALUES (31, 1, 1, 24);
 
-
--- -----------------------------------------------------
--- Data for table `tb_1`
--- -----------------------------------------------------
-INSERT INTO `tb_1` (`id`, `name`) VALUES (1, 'Example 1');
-INSERT INTO `tb_1` (`id`, `name`) VALUES (2, 'Example 2');
-INSERT INTO `tb_1` (`id`, `name`) VALUES (3, 'Example 3');
-
--- -----------------------------------------------------
--- Data for table `tb_2`
--- -----------------------------------------------------
-INSERT INTO `tb_2` (`id`, `name`) VALUES (1, 'Example 1');
-INSERT INTO `tb_2` (`id`, `name`) VALUES (2, 'Example 22');
-
-
 COMMIT;
 SET SQL_SAFE_UPDATES = 1;

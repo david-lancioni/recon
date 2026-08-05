@@ -4,5 +4,4 @@ D:\git\recon\.venv\Scripts\python.exe job\run.py
 Para testar no python anyware:
 /home/dlancioni/.virtualenvs/recon/bin/python /home/dlancioni/www/recon/job/run.py
 
-
 Lembrar de atualizar os valores de job/run.env

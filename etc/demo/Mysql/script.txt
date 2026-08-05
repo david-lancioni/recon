@@ -1,0 +1,34 @@
+-- -----------------------------------------------------
+-- Table `tb_1`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_1` ;
+
+CREATE TABLE IF NOT EXISTS `tb_1` (
+  `id` INT NOT NULL,
+  `name` VARCHAR(255) NOT NULL)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `tb_2`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `tb_2` ;
+
+CREATE TABLE IF NOT EXISTS `tb_2` (
+  `id` INT NOT NULL,
+  `name` VARCHAR(255) NOT NULL)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Data for table `tb_1`
+-- -----------------------------------------------------
+INSERT INTO `tb_1` (`id`, `name`) VALUES (1, 'Example 1');
+INSERT INTO `tb_1` (`id`, `name`) VALUES (2, 'Example 2');
+INSERT INTO `tb_1` (`id`, `name`) VALUES (3, 'Example 3');
+
+-- -----------------------------------------------------
+-- Data for table `tb_2`
+-- -----------------------------------------------------
+INSERT INTO `tb_2` (`id`, `name`) VALUES (1, 'Example 1');
+INSERT INTO `tb_2` (`id`, `name`) VALUES (2, 'Example 22');
