@@ -1,4 +1,5 @@
 from flask import jsonify, request, session
+from werkzeug.security import check_password_hash
 from src.web.models import db, User, Company, Transaction, ProfileTransaction
 
 
@@ -23,7 +24,7 @@ def register(app):
         ).scalar_one_or_none()
         if not user:
             return jsonify({'error': 'Usuário não encontrado'}), 401
-        if user.password != password:
+        if not check_password_hash(user.password, password):
             return jsonify({'error': 'Senha incorreta'}), 401
         session['user_id']       = user.id
         session['user_name']     = user.name

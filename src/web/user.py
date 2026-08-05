@@ -1,4 +1,5 @@
 from flask import render_template, jsonify, request, abort, session
+from werkzeug.security import generate_password_hash
 from src.web.models import db, User, Profile, Company, next_id
 from src.web.access import sync_areas_for_admin_user
 
@@ -66,7 +67,7 @@ def register(app):
         ).scalar_one_or_none():
             return jsonify({'error': 'Usuário já cadastrado nesta empresa'}), 409
         user = User(
-            id=next_id(User), name=name, username=username, password=password,
+            id=next_id(User), name=name, username=username, password=generate_password_hash(password),
             id_profile=id_profile, id_company=id_company
         )
         db.session.add(user)
@@ -110,7 +111,7 @@ def register(app):
         user.username   = username
         user.id_profile = id_profile
         if password:
-            user.password = password
+            user.password = generate_password_hash(password)
         if _is_admin_profile(id_company, id_profile):
             sync_areas_for_admin_user(id_company, user.id)
         db.session.commit()

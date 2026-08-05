@@ -185,7 +185,7 @@ class User(db.Model):
     id_company = db.Column(db.Integer, db.ForeignKey('tb_company.id'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     username = db.Column(db.String(255), nullable=False)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
 
     def to_dict(self):
         return {

@@ -49,8 +49,8 @@ INSERT INTO `tb_area` (`id`, `id_company`, `name`) VALUES (1, 1, 'Area 1');
 -- -----------------------------------------------------
 -- Data for table `tb_user`
 -- -----------------------------------------------------
-INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (1, 1, 1, 'Administrador', 'admin', 'admin');
-INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (2, 2, 1, 'Demo', 'demo', 'demo');
+INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (1, 1, 1, 'Administrador', 'admin', 'scrypt:32768:8:1$FeZpsPRZTgTpJbkd$e7884567f6913167962e72f3e515dfb5e1a9dd388872116435364d9c4a8bb651df6b20f66846c97972a688df1b1cc403fe45695928e84c544ed06492ee6ba63c');
+INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (2, 2, 1, 'Demo', 'demo', 'scrypt:32768:8:1$48gkIR1ueh6sKxIR$4d79aca153487ce5a6ad21626740c0edbd3af11c8dce0d20a262d715f6ee46f90b91a22b4738a0290786db687f7d80bf8309299cecefbf53381003e3caeeebfe');
 
 
 -- -----------------------------------------------------

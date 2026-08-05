@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from flask import render_template, jsonify, request, abort, session
+from werkzeug.security import generate_password_hash
 from src.web.models import (
     db, Company, User, Profile, Transaction, ProfileTransaction,
     Area, AreaUser, AreaRecon, Recon, next_id
@@ -48,7 +49,7 @@ def _seed_company(id_company):
 
     db.session.add(User(
         id=next_id(User), id_company=id_company, id_profile=admin_profile.id,
-        name='Administrador', username='admin', password='admin'
+        name='Administrador', username='admin', password=generate_password_hash('admin')
     ))
 
     db.session.flush()
@@ -304,10 +305,12 @@ def register(app):
                 id_profile = profile_id_by_name.get(u_data.get('profile') or '')
                 if not username or not id_profile:
                     continue
+                # 'password' vem do export já com o hash armazenado (ver _build_company_export_dict);
+                # só quando ausente (arquivo montado à mão) é que geramos um hash novo aqui.
                 db.session.add(User(
                     id=next_user_id, id_profile=id_profile, id_company=id_company,
                     name=u_data.get('name') or username, username=username,
-                    password=u_data.get('password') or username
+                    password=u_data.get('password') or generate_password_hash(username)
                 ))
                 user_id_by_username[username] = next_user_id
                 next_user_id += 1

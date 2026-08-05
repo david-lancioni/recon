@@ -1,3 +1,5 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- -----------------------------------------------------
 -- Table `tb_aggregation`
 -- -----------------------------------------------------
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `id_company` INT NOT NULL,
   `name` VARCHAR(50) NOT NULL,
   `username` VARCHAR(50) NOT NULL,
-  `password` VARCHAR(50) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `uk_user_company_username` (`id_company` ASC, `username` ASC) VISIBLE,
   INDEX `fk_user_profile_idx` (`id_profile` ASC) VISIBLE,
@@ -539,3 +541,5 @@ CREATE TABLE IF NOT EXISTS `tb_lead` (
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
+
+SET FOREIGN_KEY_CHECKS = 1;
