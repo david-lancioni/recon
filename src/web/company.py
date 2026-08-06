@@ -49,7 +49,7 @@ def _seed_company(id_company):
 
     admin_user = User(
         id=next_id(User), id_company=id_company, id_profile=admin_profile.id,
-        name='Administrador', username='admin', password=generate_password_hash('admin')
+        name='Administrador', username='admin', password=generate_password_hash('admin@recon')
     )
     db.session.add(admin_user)
     db.session.flush()

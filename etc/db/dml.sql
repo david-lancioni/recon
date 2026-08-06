@@ -49,7 +49,7 @@ INSERT INTO `tb_area` (`id`, `id_company`, `name`) VALUES (1, 1, 'Area 1');
 -- -----------------------------------------------------
 -- Data for table `tb_user`
 -- -----------------------------------------------------
-INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (1, 1, 1, 'Administrador', 'admin', 'scrypt:32768:8:1$FeZpsPRZTgTpJbkd$e7884567f6913167962e72f3e515dfb5e1a9dd388872116435364d9c4a8bb651df6b20f66846c97972a688df1b1cc403fe45695928e84c544ed06492ee6ba63c');
+INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (1, 1, 1, 'Administrador', 'admin', 'scrypt:32768:8:1$2sffEdbrA4FzQQzd$f0f3e70f9b6d427eb8091850c5d33f6ccf4b34d757404cfebe5f115355cbdd7f971df1c24ba41abb5d285aef6ff3a0423d04a15eb681bc24ae85c5e2f9f4e861');
 INSERT INTO `tb_user` (`id`, `id_profile`, `id_company`, `name`, `username`, `password`) VALUES (2, 2, 1, 'Demo', 'demo', 'scrypt:32768:8:1$48gkIR1ueh6sKxIR$4d79aca153487ce5a6ad21626740c0edbd3af11c8dce0d20a262d715f6ee46f90b91a22b4738a0290786db687f7d80bf8309299cecefbf53381003e3caeeebfe');
 
 
@@ -127,11 +127,11 @@ INSERT INTO `tb_field_type` (`id`, `name`) VALUES (4, 'Data');
 -- -----------------------------------------------------
 -- Data for table `tb_field`
 -- -----------------------------------------------------
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (1, 1, 1, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (2, 1, 1, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (1, 1, 1, 1, 'Agencia', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (2, 1, 1, 2, 'Conta', 3, NULL);
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (3, 1, 1, 3, 'Valor', 2, NULL);
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 1, 2, 1, 'Agencia', 1, NULL);
-INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 1, 2, 2, 'Conta', 1, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (4, 1, 2, 1, 'Agencia', 3, NULL);
+INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (5, 1, 2, 2, 'Conta', 3, NULL);
 INSERT INTO `tb_field` (`id`, `id_company`, `id_ds`, `position`, `name`, `id_field_type`, `value`) VALUES (6, 1, 2, 3, 'Valor', 2, NULL);
 
 
