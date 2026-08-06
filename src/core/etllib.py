@@ -1,5 +1,6 @@
 import logging
 import os
+import datetime
 from dateutil import parser as dateparser
 from src.core.dblib import DbLib
 from src.core.fslib import FsLib
@@ -43,11 +44,32 @@ class EtlLib(BaseLib):
             lines = len(file.readlines())
         return lines
     
+    def resolve_date_placeholders(self, value):
+        if not value:
+            return value
+        now = datetime.datetime.now()
+        replacements = {
+            "{yyyy}": f"{now.year:04d}",
+            "{yy}": f"{now.year % 100:02d}",
+            "{mm}": f"{now.month:02d}",
+            "{dd}": f"{now.day:02d}",
+        }
+        for token, replacement in replacements.items():
+            value = value.replace(token, replacement)
+        return value
+
     def get_path(self, ds):
+        file = ds[const.DS_FILE]
+        if ds[const.DS_ID_TYPE] == const.DATASOURCE_FILE:
+            # Arquivo já existente em disco: caminho completo (pasta + nome) fixo, cadastrado
+            # no próprio campo Arquivo da fonte de dados (ex: c:\dados\file.txt), sem a
+            # convenção de upload (sem subpasta por recon, sem fallback de FILE_PATH).
+            # Pode referenciar a data da execução via {dd}/{mm}/{yy}/{yyyy}.
+            path = self.resolve_date_placeholders(file)
+            return path, path
         path = os.getenv("FILE_PATH", "").strip()
         if not path:
             path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "upload")
-        file = ds[const.DS_FILE]
         path = fslib.join(path, str(self.id))
         path = fslib.join(path, file)
         return path, file
@@ -214,7 +236,7 @@ class EtlLib(BaseLib):
         loglib = LogLib("etllib", "process", self.id_user, self.id, self.id_company)
         try:
             sql = f"""
-            select id, id_recon, id_side, id_type, name, credentials, query, filename, delimiter, url
+            select id, id_recon, id_side, id_type, name, credentials, query, filename, delimiter, url, path
             from tb_ds where id_recon = {id_recon}
             """
             rows = dblib.query(sql, self.cn1)
@@ -230,7 +252,7 @@ class EtlLib(BaseLib):
                 """
                 rows = dblib.query(sql, self.cn1)
                 fields = rows
-                if type == const.DATASOURCE_FILE:
+                if type in (const.DATASOURCE_UPLOAD, const.DATASOURCE_FILE):
                     self.import_file(ds, fields)
                 elif type == const.DATASOURCE_JSON:
                     raise Exception(f"Importação de fonte de dados do tipo Json ainda não implementada (ds {ds[const.DS_NAME]})")

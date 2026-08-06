@@ -1,6 +1,7 @@
 from flask import render_template, jsonify, request, abort, session
 from sqlalchemy import create_engine, text
 from src.web.models import db, Recon, Side, DsType, Ds, Field, next_id
+from src.core.constlib import const
 
 
 def _validate_ds_fields(id_side, id_type, credentials, query, filename, delimiter, url):
@@ -9,12 +10,12 @@ def _validate_ds_fields(id_side, id_type, credentials, query, filename, delimite
     if not id_type:
         return 'Tipo é obrigatório'
     id_type = int(id_type)
-    if id_type == 1:
+    if id_type in (const.DATASOURCE_UPLOAD, const.DATASOURCE_FILE):
         if not filename:
             return 'Arquivo é obrigatório'
         if not delimiter:
             return 'Delimitador é obrigatório'
-    elif id_type == 2:
+    elif id_type == const.DATASOURCE_JSON:
         if not url:
             return 'URL é obrigatória'
     else:
@@ -38,7 +39,7 @@ def register(app):
             db.select(Recon).filter_by(id_company=session['company_id'], id_user=session['user_id']).order_by(Recon.name)
         ).scalars().all()
         sides    = db.session.execute(db.select(Side).order_by(Side.name)).scalars().all()
-        ds_types = db.session.execute(db.select(DsType).order_by(DsType.name)).scalars().all()
+        ds_types = db.session.execute(db.select(DsType).order_by(DsType.id)).scalars().all()
         return jsonify({
             'recons':   [r.to_dict() for r in recons],
             'sides':    [s.to_dict() for s in sides],
@@ -189,7 +190,7 @@ def register(app):
             url = _build_url(credentials)
             engine = create_engine(url)
             with engine.connect() as conn:
-                if id_type == 2:
+                if id_type == const.DB_MYSQL:
                     conn.execute(text('SELECT 1'))
                     return jsonify({'message': 'Conexão MySQL validada com sucesso'}), 200
                 if not query:

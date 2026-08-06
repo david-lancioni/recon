@@ -22,8 +22,9 @@ const.MATCH_TYPE_KEY = 1
 const.MATCH_TYPE_COMPARE = 2
 
 # Datasource info (tb_ds.id_type / tb_ds_type.id)
-const.DATASOURCE_FILE = 1
-const.DATASOURCE_JSON = 2
+const.DATASOURCE_UPLOAD = 1   # Upload manual do arquivo na tela de Executar
+const.DATASOURCE_FILE = 2     # Arquivo já existente em disco, caminho e nome fixos cadastrados na fonte de dados
+const.DATASOURCE_JSON = 3
 
 # Data types
 const.DATATYPE = [1, 2, 3, 4]
@@ -87,11 +88,11 @@ const.RULE_FIELD_FIELD_DECIMALS = 13        # 0, 2, 8 - casas decimais usadas no
 const.OQT = "`"
 const.CQT = "`"
 
-const.DB_MYSQL = 3
-const.DB_POSTGRES = 4
-const.DB_SQL_SERVER = 5
-const.DB_ORACLE = 6
-const.DB_SQLITE = 7
+const.DB_MYSQL = 4
+const.DB_POSTGRES = 5
+const.DB_SQL_SERVER = 6
+const.DB_ORACLE = 7
+const.DB_SQLITE = 8
 
 # Process type (tb_recon.id_process_type): área de conciliação em memória ou em disco
 const.PROCESS_TYPE_MEMORY = 1

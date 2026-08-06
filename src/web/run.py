@@ -3,6 +3,7 @@ from flask import render_template, jsonify, session, abort, request
 from src.web.models import db, Recon, Ds, Side
 from src.web.access import get_visible_recon_ids
 from src.core.dblib import DbLib
+from src.core.constlib import const
 
 dblib = DbLib()
 
@@ -39,7 +40,7 @@ def register(app):
             .join(Recon, Ds.id_recon == Recon.id)
             .outerjoin(Side, Ds.id_side == Side.id)
             .filter(
-                Ds.id_recon == recon_id, Ds.id_type.in_([1, 2]),
+                Ds.id_recon == recon_id, Ds.id_type == const.DATASOURCE_UPLOAD,
                 Recon.id_company == session['company_id']
             )
             .order_by(Ds.id_side, Ds.id)

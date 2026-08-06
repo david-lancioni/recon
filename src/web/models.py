@@ -245,7 +245,7 @@ class Ds(db.Model):
     name = db.Column(db.String(255), nullable=False)
     credentials = db.Column(db.String(500), nullable=True)
     query = db.Column(db.Text, nullable=True)
-    filename = db.Column(db.String(50), nullable=True)
+    filename = db.Column(db.String(500), nullable=True)
     delimiter = db.Column(db.String(10), nullable=True)
     url = db.Column(db.Text, nullable=True)
 

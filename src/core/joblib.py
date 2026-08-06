@@ -4,6 +4,7 @@ from src.core.dblib import DbLib
 from src.core.corelib import CoreLib
 from src.core.loglib import read_log
 from src.core.baselib import BaseLib
+from src.core.constlib import const
 
 """ general declaration """
 dblib = DbLib()
@@ -27,14 +28,14 @@ class JobLib(BaseLib):
             cn1 = dblib.get_connection("DB_NAME")
             self.logger.info("Conexão com DB_NAME aberta")
 
-            sql = """
+            sql = f"""
                 select r.id, r.id_company, r.id_user
                 from tb_recon r
                 inner join tb_ds d on d.id_recon = r.id
                 group by r.id, r.id_company, r.id_user
-                having sum(case when d.id_type in (1, 2) then 1 else 0 end) = 0
+                having sum(case when d.id_type = {const.DATASOURCE_UPLOAD} then 1 else 0 end) = 0
             """
-            self.logger.info("Buscando recons elegíveis (sem datasource de Arquivo/Json)...")
+            self.logger.info("Buscando recons elegíveis (sem datasource de Upload)...")
             recons = dblib.query(sql, cn1)
             self.logger.info(f"{len(recons)} recon(s) elegível(is) encontrada(s)")
 

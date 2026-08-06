@@ -99,13 +99,14 @@ INSERT INTO `tb_side` (`id`, `name`) VALUES (2, 'Lado 2');
 -- -----------------------------------------------------
 -- Data for table `tb_ds_type`
 -- -----------------------------------------------------
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (1, 'Arquivo');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (2, 'Json');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (3, 'Mysql');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (4, 'Postgres');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (5, 'Sql Server');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (6, 'Oracle');
-INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (7, 'SQLite');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (1, 'Upload');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (2, 'Arquivo');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (3, 'Json');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (4, 'Mysql');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (5, 'Postgres');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (6, 'Sql Server');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (7, 'Oracle');
+INSERT INTO `tb_ds_type` (`id`, `name`) VALUES (8, 'SQLite');
 
 
 -- -----------------------------------------------------

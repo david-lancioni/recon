@@ -1547,29 +1547,34 @@ function _populateDsDropdowns() {
   document.getElementById('dsFormType').addEventListener('change', updateDsFieldVisibility);
 }
 
+// Tipos de fonte de dados (tb_ds_type): 1 Upload, 2 Arquivo (caminho fixo), 3 Json, 4+ Banco de dados
+const DS_TYPE_UPLOAD = 1;
+const DS_TYPE_FILE = 2;
+const DS_TYPE_JSON = 3;
+
 function updateDsFieldVisibility() {
   const typeValue = document.getElementById('dsFormType')?.value;
   const typeId = typeValue ? parseInt(typeValue, 10) : null;
 
-  const hideConnectionFields = typeId === 1 || typeId === 2;
-  const hideFileFields = typeId !== 1 && typeId !== 2;
-  const hideUrlForType1 = typeId === 1;
-  const hideType2SpecificFields = typeId === 2;
-  const showTestButton = typeId !== null && typeId > 2;
+  const showFile = typeId === DS_TYPE_UPLOAD || typeId === DS_TYPE_FILE;
+  const showUrl = typeId === DS_TYPE_JSON;
+  const showDb = typeId !== null && typeId > DS_TYPE_JSON;
 
   const connectionGroup = document.getElementById('dsFormCredentials')?.closest('.form-group');
   const queryGroup = document.getElementById('dsFormQuery')?.closest('.form-group');
-  const filenameGroup = document.getElementById('dsFormFilename')?.closest('.form-group');
+  const filenameInput = document.getElementById('dsFormFilename');
+  const filenameGroup = filenameInput?.closest('.form-group');
   const delimiterGroup = document.getElementById('dsFormDelimiter')?.closest('.form-group');
   const urlGroup = document.getElementById('dsFormUrl')?.closest('.form-group');
   const testButton = document.getElementById('btnTestConnection');
 
-  if (connectionGroup) connectionGroup.style.display = (hideConnectionFields || hideType2SpecificFields) ? 'none' : '';
-  if (queryGroup) queryGroup.style.display = (hideConnectionFields || hideType2SpecificFields) ? 'none' : '';
-  if (filenameGroup) filenameGroup.style.display = (hideFileFields || hideType2SpecificFields) ? 'none' : '';
-  if (delimiterGroup) delimiterGroup.style.display = (hideFileFields || hideType2SpecificFields) ? 'none' : '';
-  if (urlGroup) urlGroup.style.display = (hideFileFields || hideUrlForType1) ? 'none' : '';
-  if (testButton) testButton.style.display = showTestButton ? '' : 'none';
+  if (connectionGroup) connectionGroup.style.display = showDb ? '' : 'none';
+  if (queryGroup) queryGroup.style.display = showDb ? '' : 'none';
+  if (filenameGroup) filenameGroup.style.display = showFile ? '' : 'none';
+  if (filenameInput) filenameInput.placeholder = typeId === DS_TYPE_FILE ? '/home/files/file_{dd}{mm}{yy}.txt' : '';
+  if (delimiterGroup) delimiterGroup.style.display = showFile ? '' : 'none';
+  if (urlGroup) urlGroup.style.display = showUrl ? '' : 'none';
+  if (testButton) testButton.style.display = showDb ? '' : 'none';
 }
 
 function openDsForm(id) {
@@ -1633,10 +1638,10 @@ async function saveDs() {
   if (!id_recon) { document.getElementById('errDsRecon').style.display = 'block'; valid = false; }
   if (!id_side) { document.getElementById('errDsSide').style.display = 'block'; valid = false; }
   if (!typeId) { document.getElementById('errDsType').style.display = 'block'; valid = false; }
-  if (typeId === 1) {
+  if (typeId === DS_TYPE_UPLOAD || typeId === DS_TYPE_FILE) {
     if (!filename)  { document.getElementById('errDsFilename').style.display  = 'block'; valid = false; }
     if (!delimiter) { document.getElementById('errDsDelimiter').style.display = 'block'; valid = false; }
-  } else if (typeId === 2) {
+  } else if (typeId === DS_TYPE_JSON) {
     if (!url) { document.getElementById('errDsUrl').style.display = 'block'; valid = false; }
   } else if (typeId) {
     if (!credentials) { document.getElementById('errDsCredentials').style.display = 'block'; valid = false; }
@@ -1692,7 +1697,7 @@ async function testDsConnection() {
     return;
   }
 
-  if (id_type !== 2 && !query) {
+  if (!query) {
     toast('Preencha a Query para testar a conexão');
     return;
   }
