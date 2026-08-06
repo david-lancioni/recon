@@ -11,7 +11,7 @@ from src.core.resultlib import get_result_path, get_result_dir
 from src.web.access import is_system_admin
 from src.web.recon import recon_import_lookup_maps, import_recon_from_dict, build_recon_export_dict
 
-_USER_PROFILE_LINKS = {'run', 'report_sintetic', 'report_analitic', 'report_log'}
+_USER_PROFILE_LINKS = {'run', 'report_overview', 'report_sintetic', 'report_analitic', 'report_log'}
 
 
 def _parse_expire_date(value):
@@ -47,10 +47,28 @@ def _seed_company(id_company):
         ))
         next_pt_id += 1
 
-    db.session.add(User(
+    admin_user = User(
         id=next_id(User), id_company=id_company, id_profile=admin_profile.id,
         name='Administrador', username='admin', password=generate_password_hash('admin')
-    ))
+    )
+    db.session.add(admin_user)
+    db.session.flush()
+
+    demo_user = User(
+        id=next_id(User), id_company=id_company, id_profile=user_profile.id,
+        name='Demo', username='demo', password=generate_password_hash('demo')
+    )
+    db.session.add(demo_user)
+    db.session.flush()
+
+    area = Area(id=next_id(Area), id_company=id_company, name='Area 1')
+    db.session.add(area)
+    db.session.flush()
+
+    next_au_id = next_id(AreaUser)
+    for user in (admin_user, demo_user):
+        db.session.add(AreaUser(id=next_au_id, id_company=id_company, id_area=area.id, id_user=user.id))
+        next_au_id += 1
 
     db.session.flush()
 

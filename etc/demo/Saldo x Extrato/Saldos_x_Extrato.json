@@ -7,19 +7,19 @@
         {
           "name": "Agencia",
           "position": 1,
-          "type": "Inteiro",
+          "type": "Texto",
           "value": ""
         },
         {
           "name": "Conta",
           "position": 2,
-          "type": "Inteiro",
+          "type": "Texto",
           "value": ""
         },
         {
           "name": "Valor",
           "position": 3,
-          "type": "Texto",
+          "type": "Decimal",
           "value": ""
         }
       ],
@@ -37,19 +37,19 @@
         {
           "name": "Agencia",
           "position": 1,
-          "type": "Inteiro",
+          "type": "Texto",
           "value": ""
         },
         {
           "name": "Conta",
           "position": 2,
-          "type": "Inteiro",
+          "type": "Texto",
           "value": ""
         },
         {
           "name": "Valor",
           "position": 3,
-          "type": "Texto",
+          "type": "Decimal",
           "value": ""
         }
       ],
@@ -63,6 +63,8 @@
   ],
   "description": "Conciliação para demonstração",
   "name": "Saldos x Extrato",
+  "process_type": "Memória",
+  "result_type": "Todos",
   "rules": [
     {
       "name": "Batimento de arquivos",

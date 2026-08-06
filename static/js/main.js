@@ -2087,6 +2087,15 @@ async function copyExport() {
 let _companySearchTimer = null;
 let _companyDropdownIndex = -1;
 
+function onCompanyFocus() {
+  const input = document.getElementById('loginCompany');
+  const idInput = document.getElementById('loginCompanyId');
+  if (idInput.value === '1' && input.value === 'Recon') {
+    input.value = '';
+    idInput.value = '';
+  }
+}
+
 function onCompanySearch(value) {
   document.getElementById('loginCompanyId').value = '';
   const input = document.getElementById('loginCompany');
