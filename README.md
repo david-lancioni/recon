@@ -58,7 +58,7 @@ flowchart LR
 
     subgraph Storage["Armazenamento"]
         MYSQL[("MySQL 8<br/>tabelas de configuração<br/>+ áreas de conciliação")]
-        FS[("FILE_PATH/&lt;id_recon&gt;/<br/>arquivos enviados")]
+        FS[("FILE_PATH/#lt;id_recon#gt;/<br/>arquivos enviados")]
         EXT[("Bancos externos<br/>Postgres / SQL Server / SQLite")]
     end
 
@@ -205,17 +205,17 @@ sequenceDiagram
     participant X as ReconLib
     participant M as MySQL
 
-    U->>R: POST /api/run/{id} (multipart: file_<id_ds>)
+    U->>R: POST /api/run/{id} (multipart, file_{id_ds})
     R->>R: Salva arquivos em FILE_PATH/{id_recon}/
     R->>C: process(id_user, id_recon, id_company)
-    C->>M: Abre conexão e transação; limpa logs da execução anterior
+    C->>M: Abre conexão e transação, limpa logs da execução anterior
     C->>V: validate()
     C->>A: process() → cria tb_* e tmp_* por lado
     C->>E: process() → importa arquivos / bancos externos
     C->>X: process() → aplica cada regra em sequência
     C->>M: commit + log de tempo de processamento
     C-->>R: mensagem de sucesso ou erro
-    R-->>U: { ok, message } / { ok: false, error }
+    R-->>U: JSON com ok e message, ou ok=false e error
 ```
 
 ### 5.2 Validação (`ValidLib`)
@@ -287,7 +287,7 @@ flowchart TD
     C["insert_tmp_group_key<br/>carrega tmp_* com registros ≠ Batido,<br/>agrupados pela chave com agregação"] --> D
     D["match_key<br/>UPDATE ... JOIN pela chave:<br/>marca Batido e _id_parent nos dois lados"] --> E
     E["compare<br/>para cada critério cria tmp_..._3N com<br/>'valor1 / valor2' e flag de igualdade"] --> F
-    F["add_diff_field_into_tmp<br/>adiciona coluna '&lt;campo&gt; (Diferença)'<br/>e marca Divergente onde houver diferença"] --> G
+    F["add_diff_field_into_tmp<br/>adiciona coluna '#lt;campo#gt; (Diferença)'<br/>e marca Divergente onde houver diferença"] --> G
     G["add_diff_field_into_tb<br/>propaga status, regra e diferenças<br/>das tmp_* para as tb_*"]
 ```
 
@@ -313,30 +313,30 @@ O script completo está em [etc/db/ddl.sql](etc/db/ddl.sql). Todas as tabelas us
 
 ```mermaid
 erDiagram
-    tb_company ||--o{ tb_profile : possui
-    tb_company ||--o{ tb_user : possui
-    tb_company ||--o{ tb_area : possui
-    tb_company ||--o{ tb_recon : possui
-    tb_profile ||--o{ tb_user : classifica
-    tb_profile ||--o{ tb_profile_transaction : concede
+    tb_company ||--o{ tb_profile : "possui"
+    tb_company ||--o{ tb_user : "possui"
+    tb_company ||--o{ tb_area : "possui"
+    tb_company ||--o{ tb_recon : "possui"
+    tb_profile ||--o{ tb_user : "classifica"
+    tb_profile ||--o{ tb_profile_transaction : "concede"
     tb_transaction ||--o{ tb_profile_transaction : "é concedida"
-    tb_area ||--o{ tb_area_user : contém
-    tb_user ||--o{ tb_area_user : participa
-    tb_area ||--o{ tb_area_recon : contém
+    tb_area ||--o{ tb_area_user : "contém"
+    tb_user ||--o{ tb_area_user : "participa"
+    tb_area ||--o{ tb_area_recon : "contém"
     tb_recon ||--o{ tb_area_recon : "é visível em"
     tb_user ||--o{ tb_recon : "é dono de"
     tb_recon ||--o{ tb_ds : "tem fontes"
-    tb_side ||--o{ tb_ds : lado
-    tb_ds_type ||--o{ tb_ds : tipo
+    tb_side ||--o{ tb_ds : "lado"
+    tb_ds_type ||--o{ tb_ds : "tipo"
     tb_ds ||--o{ tb_field : "tem campos"
-    tb_field_type ||--o{ tb_field : tipo
+    tb_field_type ||--o{ tb_field : "tipo"
     tb_recon ||--o{ tb_rule : "tem regras"
-    tb_rule ||--o{ tb_rule_field : define
+    tb_rule ||--o{ tb_rule_field : "define"
     tb_field ||--o{ tb_rule_field : "campo 1 / campo 2"
-    tb_rule_type ||--o{ tb_rule_field : tipo
-    tb_operator ||--o{ tb_rule_field : operador
-    tb_aggregation ||--o{ tb_rule_field : agregação
-    tb_recon ||--o{ tb_log : registra
+    tb_rule_type ||--o{ tb_rule_field : "tipo"
+    tb_operator ||--o{ tb_rule_field : "operador"
+    tb_aggregation ||--o{ tb_rule_field : "agregação"
+    tb_recon ||--o{ tb_log : "registra"
 ```
 
 ### Tabelas de domínio (carga em `dml.sql`)
